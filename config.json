@@ -1,0 +1,8 @@
+{
+    "camera": {
+        "move_speed": 100.0,
+        "zoom_speed": 0.5,
+        "min_zoom": 0.01,
+        "max_zoom": null
+    }
+}
