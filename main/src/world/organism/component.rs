@@ -5,32 +5,72 @@ use bevy::{
 
 use crate::{
     consts::{MAX_MUSCLE_LEN, MIN_MUSCLE_LEN},
-    world::organism::{brain::Brain, node_type::NodeType},
+    world::organism::{
+        body::Body,
+        brain::Brain,
+        node_type::NodeType,
+        organism::Organism,
+        stats::{StaticStats, VariableStats},
+    },
 };
 
 #[derive(Component)]
-pub struct Organism {
-    pub brain: Option<Brain>,
-    pub joints: Vec<Entity>,
-    pub bones: Vec<Entity>,
-    pub muscle_bones: Vec<[usize; 2]>,
-    pub muscles: Vec<Entity>,
+pub struct OrganismEntity {
+    pub organism: Organism,
+    variable_stats: VariableStats,
+    pub joint_ents: Vec<Entity>,
+    pub bone_ents: Vec<Entity>,
+    pub muscle_ents: Vec<Entity>,
 }
-impl Organism {
+impl OrganismEntity {
     pub fn new(
-        brain: Option<Brain>,
+        organism: Organism,
         joints: Vec<Entity>,
         bones: Vec<Entity>,
-        muscle_bones: Vec<[usize; 2]>,
         muscles: Vec<Entity>,
     ) -> Self {
         Self {
-            brain,
-            joints,
-            bones,
-            muscle_bones,
-            muscles,
+            organism,
+            joint_ents: joints,
+            bone_ents: bones,
+            muscle_ents: muscles,
+            variable_stats: VariableStats::new(),
         }
+    }
+
+    pub fn update_variable_stats(&mut self, dt: f32) {
+        self.variable_stats.time_alive += dt;
+    }
+
+    pub fn get_static_stats<'a>(&'a self) -> &'a StaticStats {
+        return self.organism.get_static_stats();
+    }
+    pub fn get_variable_stats<'a>(&'a self) -> &'a VariableStats {
+        return &self.variable_stats;
+    }
+
+    pub fn get_mut_organism<'a>(&'a mut self) -> &'a mut Organism {
+        return &mut self.organism;
+    }
+
+    pub fn get_mut_body<'a>(&'a mut self) -> &'a mut Body {
+        return &mut self.get_mut_organism().body;
+    }
+
+    pub fn get_mut_brain<'a>(&'a mut self) -> Option<&'a mut Brain> {
+        return self.get_mut_organism().brain.as_mut();
+    }
+
+    pub fn get_organism<'a>(&'a self) -> &'a Organism {
+        return &self.organism;
+    }
+
+    pub fn get_body<'a>(&'a self) -> &'a Body {
+        return &self.get_organism().body;
+    }
+
+    pub fn get_brain<'a>(&'a self) -> &'a Option<Brain> {
+        return &self.get_organism().brain;
     }
 }
 
@@ -70,8 +110,12 @@ impl Muscle {
         };
     }
 
+    pub fn get_cur_len(&self) -> f32 {
+        self.cur_len
+    }
+
     pub fn set_len(&mut self, len: f32) -> f32 {
-        if len > MIN_MUSCLE_LEN || len < MAX_MUSCLE_LEN {
+        if len < MIN_MUSCLE_LEN || len > MAX_MUSCLE_LEN {
             error!(
                 "new muscle length is out of bounds, abort set. {} < {}  {}",
                 MIN_MUSCLE_LEN, len, MAX_MUSCLE_LEN

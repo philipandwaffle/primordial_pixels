@@ -32,13 +32,35 @@ impl Mut for NodeType {
     }
 }
 impl NodeType {
-    // pub fn get_input(&self) -> Option<f32> {}
+    pub fn get_in(&self) -> usize {
+        match self {
+            NodeType::Energy(energy) => energy.get_in(),
+            NodeType::PheromoneRead(pheromone_read) => pheromone_read.get_in(),
+            NodeType::PheromoneWrite(pheromone_write) => pheromone_write.get_in(),
+            NodeType::Thruster(thruster) => thruster.get_in(),
+        }
+    }
+    pub fn get_out(&self) -> usize {
+        match self {
+            NodeType::Energy(energy) => energy.get_out(),
+            NodeType::PheromoneRead(pheromone_read) => pheromone_read.get_out(),
+            NodeType::PheromoneWrite(pheromone_write) => pheromone_write.get_out(),
+            NodeType::Thruster(thruster) => thruster.get_out(),
+        }
+    }
+    pub fn get_in_out(&self) -> [usize; 2] {
+        return [self.get_in(), self.get_out()];
+    }
 }
 
 pub trait Node<A> {
     // Update the state and return the energy cost of doing so
     fn update_state(&mut self, node_config: NodeConfig, args: A) -> f32;
-    fn get_in_out(&self) -> [usize; 2];
+    fn get_in(&self) -> usize;
+    fn get_out(&self) -> usize;
+    fn get_in_out(&self) -> [usize; 2] {
+        return [self.get_in(), self.get_out()];
+    }
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -57,8 +79,12 @@ impl Node<&mut Environment<N, KN>> for Energy {
         todo!()
     }
 
-    fn get_in_out(&self) -> [usize; 2] {
-        return [0, 0];
+    fn get_in(&self) -> usize {
+        0
+    }
+
+    fn get_out(&self) -> usize {
+        0
     }
 }
 
@@ -83,7 +109,11 @@ impl Node<f32> for PheromoneRead {
         return diff * node_config.pheromone_read_efficiency;
     }
 
-    fn get_in_out(&self) -> [usize; 2] {
+    fn get_in(&self) -> usize {
+        todo!()
+    }
+
+    fn get_out(&self) -> usize {
         todo!()
     }
 }
@@ -99,6 +129,22 @@ impl PheromoneWrite {
             state: 0.0,
             layer_id,
         }
+    }
+}
+impl Node<f32> for PheromoneWrite {
+    fn update_state(&mut self, node_config: NodeConfig, state: f32) -> f32 {
+        let diff = (self.state - state).abs();
+        self.state = state;
+
+        return diff * node_config.pheromone_write_efficiency;
+    }
+
+    fn get_in(&self) -> usize {
+        todo!()
+    }
+
+    fn get_out(&self) -> usize {
+        todo!()
     }
 }
 
@@ -120,7 +166,11 @@ impl Node<f32> for Thruster {
         return diff * node_config.thruster_efficiency;
     }
 
-    fn get_in_out(&self) -> [usize; 2] {
-        return [1, 1];
+    fn get_in(&self) -> usize {
+        todo!()
+    }
+
+    fn get_out(&self) -> usize {
+        todo!()
     }
 }

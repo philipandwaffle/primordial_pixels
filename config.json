@@ -4,5 +4,16 @@
         "zoom_speed": 0.5,
         "min_zoom": 0.01,
         "max_zoom": null
+    },
+    "organism": {
+        "muscle_efficiency": 1.0,
+        "learn_rate": 1.0,
+        "learn_factor": 1.0
+    },
+    "node": {
+        "energy_collect_rate": 1.0,
+        "pheromone_read_efficiency": 1.0,
+        "pheromone_write_efficiency": 1.0,
+        "thruster_efficiency": 1.0
     }
 }

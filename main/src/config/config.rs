@@ -8,6 +8,7 @@ use my_derive::ConfigTag;
 pub struct Config {
     pub camera: Camera,
     pub organism: Organism,
+    pub node: Node,
 }
 
 #[derive(ConfigTag, Serialize, Deserialize, Clone, Copy, Resource)]
@@ -21,11 +22,9 @@ pub struct Camera {
 
 #[derive(ConfigTag, Serialize, Deserialize, Clone, Copy, Resource)]
 pub struct Organism {
-    pub energy_collect_rate: f32,
     pub muscle_efficiency: f32,
     pub learn_rate: f32,
     pub learn_factor: f32,
-    pub node: Node,
 }
 
 #[derive(ConfigTag, Serialize, Deserialize, Clone, Copy, Resource)]

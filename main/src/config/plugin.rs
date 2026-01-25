@@ -9,6 +9,8 @@ pub struct ConfigPlugin;
 impl Plugin for ConfigPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         let config = CFG::load_cfg(CONFIG_PATH);
-        app.insert_resource(config.camera);
+        app.insert_resource(config.camera)
+            .insert_resource(config.organism)
+            .insert_resource(config.node);
     }
 }

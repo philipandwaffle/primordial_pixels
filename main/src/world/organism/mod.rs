@@ -1,5 +1,5 @@
 pub mod body;
-mod brain;
+pub mod brain;
 mod chromosome;
 mod component;
 mod distribution;
@@ -10,3 +10,4 @@ pub mod node_type;
 pub mod organism;
 pub mod plugin;
 pub mod seed;
+mod stats;

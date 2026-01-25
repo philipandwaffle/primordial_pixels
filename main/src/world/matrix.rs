@@ -1,4 +1,5 @@
 use nalgebra::DMatrix;
+use rand::Rng;
 use serde::{Deserialize, Deserializer, Serialize, de::Visitor, ser::SerializeSeq};
 
 pub type Matrix = DMatrix<f32>;
@@ -6,6 +7,38 @@ pub type Matrix = DMatrix<f32>;
 // Wrapper struct so that the nalgebra crate can be extended
 #[derive(Clone, Debug)]
 pub struct MxNMatrix(pub Matrix);
+impl MxNMatrix {
+    pub fn rand(rows: usize, cols: usize) -> MxNMatrix {
+        let mut rng = rand::thread_rng();
+        let mut m = DMatrix::zeros(rows, cols);
+
+        for cell in m.iter_mut() {
+            *cell = rng.r#gen_range(-1.0..=1.0);
+        }
+
+        return MxNMatrix(m);
+    }
+
+    pub fn insert_row(&mut self, i: usize) {
+        let temp = self.0.clone();
+        self.0 = temp.insert_row(i, 0.0);
+    }
+
+    pub fn remove_row(&mut self, i: usize) {
+        let temp = self.0.clone();
+        self.0 = temp.remove_row(i);
+    }
+
+    pub fn insert_col(&mut self, i: usize) {
+        let temp = self.0.clone();
+        self.0 = temp.insert_column(i, 0.0);
+    }
+
+    pub fn remove_col(&mut self, i: usize) {
+        let temp = self.0.clone();
+        self.0 = temp.remove_column(i);
+    }
+}
 impl Serialize for MxNMatrix {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

@@ -1,4 +1,4 @@
-use bevy::math::Vec2;
+use bevy::{core_pipeline::prepass::node, math::Vec2};
 use rand::{Rng, rngs::ThreadRng, seq::SliceRandom};
 
 use crate::{
@@ -214,12 +214,25 @@ impl Mut for Body {
         o: &Organism,
     ) -> Option<Vec<Mutation>> {
         match self {
-            Body::AddNode { joint, node_type } => node_type.get_cascading(rng, oc, o),
-            // match node_type {
-            //     NodeType::Energy(energy) => None,
-            //     NodeType::PheromoneWrite(pheromone) => todo!(),
-            //     NodeType::Thruster(thruster) => todo!(),
-            // },
+            Body::AddNode { joint, node_type } => {
+                let mut muts = vec![];
+
+                let input_index_offset = o.get_node_inputs(*joint);
+                for i in 0..node_type.get_in() {
+                    muts.push(Mutation::Brain(Brain::AddInput {
+                        index: input_index_offset + i,
+                    }));
+                }
+
+                let output_index_offset = o.get_node_outputs(*joint);
+                for i in 0..node_type.get_out() {
+                    muts.push(Mutation::Brain(Brain::AddOutput {
+                        index: output_index_offset + i,
+                    }));
+                }
+
+                if muts.is_empty() { None } else { Some(muts) }
+            }
             Body::AddJoint { pos: _ } => {
                 let num_joints = o.body.joints.len();
                 Some(vec![Mutation::Body(Body::AddBone {
@@ -227,7 +240,14 @@ impl Mut for Body {
                 })])
             }
             Body::AddBone { bone: _ } => None,
-            Body::AddMuscle { muscle } => vec![Mutation::Brain(Brain::AddInput { index: o })],
+            Body::AddMuscle { muscle } => Some(vec![
+                Mutation::Brain(Brain::AddInput {
+                    index: o.body.muscles.len(),
+                }),
+                Mutation::Brain(Brain::AddOutput {
+                    index: o.body.muscles.len(),
+                }),
+            ]),
             Body::RemoveNode { joint, node } => todo!(),
             Body::RemoveJoint { joint } => todo!(),
             Body::RemoveBone { bone } => None,

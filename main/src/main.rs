@@ -7,6 +7,7 @@ use bevy::{
 use crate::{
     assets::plugin::HandlesPlugin, camera::PanningCamPlugin, config::plugin::ConfigPlugin,
     performance_info::plugin::PerformanceInfoPlugin, sandbox::SandboxPlugin,
+    world::plugin::WorldPlugin,
 };
 mod assets;
 mod camera;
@@ -46,6 +47,7 @@ fn main() {
         HandlesPlugin,
         PanningCamPlugin,
         PhysicsPlugins::default(),
+        WorldPlugin,
     ));
 
     a.run();

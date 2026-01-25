@@ -14,7 +14,7 @@ use bevy::{
 
 use crate::{
     assets::handles::{Handles, MatKey, MeshKey},
-    world::organism::{body::Body, joint::Joint, organism::Organism, seed::Seed},
+    world::organism::{body::Body, brain::Brain, joint::Joint, organism::Organism, seed::Seed},
 };
 
 pub struct SandboxPlugin;
@@ -62,7 +62,7 @@ impl SandboxPlugin {
             let s = Seed::new(
                 vec2(0.0, 0.0),
                 Organism::new(
-                    None,
+                    Some(Brain::new(vec![2, 4, 1])),
                     Body::new(
                         vec![
                             Joint::new(vec2(-5.0, 0.0), vec![]),

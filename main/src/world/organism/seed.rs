@@ -1,4 +1,4 @@
-use avian2d::prelude::{Collider, DistanceJoint, RevoluteJoint, RigidBody};
+use avian2d::prelude::{Collider, DistanceJoint, LockedAxes, RevoluteJoint, RigidBody};
 use bevy::{
     ecs::{entity::Entity, system::Commands},
     math::{Quat, Vec2, vec3},
@@ -7,9 +7,9 @@ use bevy::{
 
 use crate::{
     assets::handles::{Handles, MatKey, MeshKey},
-    consts::{BONE_WIDTH, BONE_Z, JOINT_RADIUS, JOINT_Z, MUSCLE_WIDTH, MUSCLE_Z},
+    consts::{BONE_WIDTH, BONE_Z, JOINT_RADIUS, JOINT_Z, MUSCLE_COMPLIANCE, MUSCLE_WIDTH, MUSCLE_Z},
     world::organism::{
-        component::{Bone, Joint, Muscle, Organism as OrganismMarker},
+        component::{Bone, Joint, Muscle, OrganismEntity as OrganismMarker},
         node_type::NodeType,
         organism::Organism,
     },
@@ -59,10 +59,9 @@ impl Seed {
         commands
             .spawn((
                 OrganismMarker::new(
-                    o.brain.clone(),
+                    o.clone(),
                     joint_ents.clone(),
                     bone_ents.clone(),
-                    o.body.muscles.clone(),
                     muscle_ents.clone(),
                 ),
                 Transform::default().with_translation(pos.extend(0.0)),
@@ -75,6 +74,7 @@ impl Seed {
 
     pub fn spawn_joint(pos: Vec2, nodes: &Vec<NodeType>, c: &mut Commands, h: &Handles) -> Entity {
         c.spawn((
+            LockedAxes::ROTATION_LOCKED,
             Joint::new(nodes),
             RigidBody::Dynamic,
             Transform::default()
@@ -147,7 +147,7 @@ impl Seed {
             DistanceJoint::new(b_ents[a], b_ents[b])
                 // .with_local_anchor1(mid - pos_a)
                 // .with_local_anchor2(mid - pos_b)
-                .with_limits(length, length),
+                .with_limits(length, length).with_compliance(MUSCLE_COMPLIANCE),
             Transform::default()
                 .with_translation((mid).extend(MUSCLE_Z))
                 .with_rotation(Quat::from_rotation_z(z_rot))

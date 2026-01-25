@@ -11,11 +11,27 @@ pub const JOINT_Z: f32 = ORGANISM_Z - 0.1;
 pub const BONE_Z: f32 = ORGANISM_Z - 0.2;
 pub const MUSCLE_Z: f32 = ORGANISM_Z - 0.3;
 
-pub const MIN_MUSCLE_LEN: f32 = 0.5;
-pub const MAX_MUSCLE_LEN: f32 = 1.5;
+// Muscle
+pub const MIN_MUSCLE_LEN: f32 = 0.0;
+pub const MAX_MUSCLE_LEN: f32 = 1.0;
+pub const MUSCLE_COMPLIANCE: f32 = 0.0001;
 
+// Mutation
 pub const NUM_BODY_MUTATIONS: usize = 2;
 pub const NUM_BRAIN_MUTATIONS: usize = 2;
+
+// Brain
+pub const NUM_BASE_STIMULI: usize = 1;
+// 3 slots for random stuff,
+pub const NUM_BASE_MEMORY: usize = 0;
+pub const BASE_BRAIN_STRUCTURE: [usize; 6] = [
+    NUM_BASE_STIMULI + NUM_BASE_MEMORY,
+    8,
+    8,
+    8,
+    8,
+    NUM_BASE_MEMORY,
+];
 
 // Environment
 pub const N: usize = 100;
