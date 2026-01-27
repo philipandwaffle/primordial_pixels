@@ -1,10 +1,13 @@
 use bevy::{
+    asset::Handle,
     ecs::{component::Component, entity::Entity},
     log::error,
     math::Vec2,
+    sprite_render::ColorMaterial,
 };
 
 use crate::{
+    assets::handles::{Handles, MatKey},
     consts::{MAX_MUSCLE_LEN, MIN_MUSCLE_LEN},
     world::organism::{
         body::Body,
@@ -120,22 +123,29 @@ impl Muscle {
         self.cur_len
     }
 
-    pub fn set_len(&mut self, len: f32) -> f32 {
-        if len < MIN_MUSCLE_LEN || len > MAX_MUSCLE_LEN {
-            error!(
-                "new muscle length is out of bounds, abort set. {} < {}  {}",
-                MIN_MUSCLE_LEN, len, MAX_MUSCLE_LEN
-            );
-            return 0.0;
-        }
-
-        let abs_diff = (len - self.cur_len).abs();
-        self.cur_len = len;
+    pub fn set_len(&mut self, brain_out: f32) -> f32 {
+        let abs_diff = (brain_out - self.cur_len).abs();
+        self.cur_len = brain_out;
 
         abs_diff
     }
 
+    pub fn get_mat(&self, h: &Handles) -> Handle<ColorMaterial> {
+        if self.cur_len <= -0.6 {
+            h.get_mat_handle(&MatKey::Red)
+        } else if self.cur_len <= -0.2 {
+            h.get_mat_handle(&MatKey::Crimson)
+        } else if self.cur_len <= 0.2 {
+            h.get_mat_handle(&MatKey::Magenta)
+        } else if self.cur_len <= 0.6 {
+            h.get_mat_handle(&MatKey::Purple)
+        } else {
+            h.get_mat_handle(&MatKey::Blue)
+        }
+    }
+
     pub fn get_absolute_len(&self) -> f32 {
-        self.cur_len * self.rest_len
+        let scaled_len = 1.0 + self.cur_len * 0.5;
+        ((MAX_MUSCLE_LEN - MIN_MUSCLE_LEN) * scaled_len + MIN_MUSCLE_LEN) * self.rest_len
     }
 }

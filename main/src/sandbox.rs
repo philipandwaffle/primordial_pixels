@@ -17,6 +17,11 @@ use crate::{
     world::organism::{body::Body, brain::Brain, joint::Joint, organism::Organism, seed::Seed},
 };
 
+#[derive(Default)]
+struct SandboxRes {
+    seed: Seed,
+}
+
 pub struct SandboxPlugin;
 impl Plugin for SandboxPlugin {
     fn build(&self, app: &mut bevy::app::App) {
@@ -60,7 +65,7 @@ impl SandboxPlugin {
     fn spawn_balls(mut commands: Commands, keys: Res<ButtonInput<KeyCode>>, h: Res<Handles>) {
         if keys.just_released(KeyCode::Space) {
             let s = Seed::new(
-                vec2(0.0, 0.0),
+                vec2(10.0, 0.0),
                 Organism::new(
                     Some(Brain::new(vec![2, 4, 1])),
                     Body::new(
@@ -74,7 +79,7 @@ impl SandboxPlugin {
                     ),
                 ),
             );
-            s.spawn(&mut commands, &h);
+            s.clone().spawn(&mut commands, &h);
             // OrganismSpawner::spawn(s, &mut commands, &h);
         }
     }

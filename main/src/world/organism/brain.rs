@@ -17,7 +17,7 @@ use crate::{
 // use super::mutation::{BrainMutateType, Mutable, Mutation};
 
 // Basic neural network
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Brain {
     weights: Vec<Matrix>,
     biases: Vec<Matrix>,
@@ -31,20 +31,20 @@ impl Default for Brain {
     }
 }
 impl Mutable for Brain {
-    fn mutate(&mut self, mutation: Mutation) -> bool {
+    fn mutate(&mut self, mutation: &Mutation) -> bool {
         match mutation {
             Mutation::Brain(mutation) => {
                 info!("Mutating brain: {mutation:?}");
                 match mutation {
-                    BrainMutation::AddInput { index } => self.add_input(index),
-                    BrainMutation::RemoveInput { index } => self.remove_input(index),
-                    BrainMutation::AddOutput { index } => self.add_output(index),
-                    BrainMutation::RemoveOutput { index } => self.remove_output(index),
+                    BrainMutation::AddInput { index } => self.add_input(*index),
+                    BrainMutation::RemoveInput { index } => self.remove_input(*index),
+                    BrainMutation::AddOutput { index } => self.add_output(*index),
+                    BrainMutation::RemoveOutput { index } => self.remove_output(*index),
                     BrainMutation::Learn {
-                        learn_rate: _,
-                        learn_factor: _,
+                        learn_rate,
+                        learn_factor,
                     } => {
-                        error!("Mutate structure called with learn mutation, this shouldn't happen")
+                        self.mutate_connections(&mut rand::rng(), *learn_rate, *learn_factor);
                     }
                 }
             }
@@ -152,18 +152,13 @@ impl Brain {
     }
 
     // Mutate brain connections based on learning rate and learning factor
-    fn mutate_connections(
-        &mut self,
-        rng: &mut ThreadRng,
-        learning_rate: f32,
-        learning_factor: f32,
-    ) {
+    fn mutate_connections(&mut self, rng: &mut ThreadRng, learn_rate: f32, learn_factor: f32) {
         for weight in self.weights.iter_mut() {
-            Self::mutate_matrix(rng, weight, learning_rate, learning_factor);
+            Self::mutate_matrix(rng, weight, learn_rate, learn_factor);
         }
 
         for bias in self.biases.iter_mut() {
-            Self::mutate_matrix(rng, bias, learning_rate, learning_factor);
+            Self::mutate_matrix(rng, bias, learn_rate, learn_factor);
         }
     }
 

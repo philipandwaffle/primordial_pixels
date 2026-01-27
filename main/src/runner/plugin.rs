@@ -67,6 +67,7 @@ impl Plugin for RunnerPlugin {
             self.save_interval,
             self.cur_generation,
         ))
+        .add_message::<LogOrganismsEvent>()
         .add_systems(Startup, Self::init_generation)
         .add_systems(
             Update,
@@ -175,7 +176,7 @@ impl RunnerPlugin {
                 &organism_config,
             ));
 
-            cur_pos.y += generation.cage_size.y;
+            cur_pos.y += generation.cage_size.y * 0.5;
             id += 1;
         }
         trace!("Picked: {picked:?}");
@@ -208,7 +209,7 @@ impl RunnerPlugin {
                 &mut commands,
                 &mut rng,
                 generation.init_seed.clone(),
-                cur_pos,
+                cur_pos * 0.5,
                 &id.to_string(),
                 generation.initial_num_mutations,
                 &handles,
@@ -237,24 +238,43 @@ impl RunnerPlugin {
         handles: &Handles,
         oc: &OrganismConfig,
     ) -> Entity {
-        for _ in 0..num_muts {
-            let o = s.get_organism();
-            if let Some(mutation) = Mutation::rand(rng, oc, o) {
-                s.mutate(mutation);
+        let m = vec![
+            Mutation::Body(crate::world::organism::mutation::Body::AddJoint {
+                pos: vec2(0.0, 10.0),
+            }),
+            Mutation::Body(crate::world::organism::mutation::Body::RemoveJoint { joint: 3 }),
+        ];
+        info!("{:?}", s.get_body());
+        for m in m {
+            info!("Attempt mutation {:?}", m);
+            if s.mutate(&m) {
+                info!("Mutated seed {:?}", m);
             }
+            info!("{:?}", s.get_body());
         }
+        // for _ in 0..num_muts {
+        //     let o = s.get_organism();
+
+        //     if let Some(m) = Mutation::rand(rng, oc, o) {
+        //         info!("Attempt mutation {:?}", m);
+        //         if s.mutate(&m) {
+        //             info!("Mutated seed {:?}", m);
+        //         }
+        //     }
+        // }
 
         let mut offset = vec2(0.0, 0.0);
         for j in s.get_body().joints.iter() {
-            if offset.y > j.pos.y {
+            if j.pos.y < offset.y {
                 offset.y = j.pos.y;
             }
             offset.x += j.pos.x
         }
-        offset.y -= JOINT_RADIUS;
+        offset.y += JOINT_RADIUS;
         offset.x /= s.get_body().joints.len() as f32;
         s.set_pos(spawn_pos + offset);
 
+        info!("Spawning seed {:?}", s.get_body());
         s.spawn(commands, handles)
     }
 }

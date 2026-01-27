@@ -98,7 +98,7 @@ impl OrganismPlugin {
                 let mut total_muscle_delta = 0.0;
                 for m in organism_ent.muscle_ents.iter() {
                     if let Ok(mut muscle) = muscle.get_mut(*m) {
-                        total_muscle_delta += muscle.set_len(0.5 * (1.0 + output.pop().unwrap()));
+                        total_muscle_delta += muscle.set_len(output.pop().unwrap());
                     }
                 }
                 total_muscle_delta *= organism_config.muscle_efficiency;

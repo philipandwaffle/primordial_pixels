@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use bevy::{core_pipeline::prepass::node, math::Vec2};
 use rand::{Rng, rngs::ThreadRng, seq::SliceRandom};
 
@@ -37,7 +39,7 @@ impl Mut for Mutation {
 }
 
 pub trait Mutable {
-    fn mutate(&mut self, mutation: Mutation) -> bool;
+    fn mutate(&mut self, mutation: &Mutation) -> bool;
 }
 
 pub trait Mut {
@@ -131,20 +133,48 @@ impl Mut for Body {
             }
             // RemoveJoint
             5 => {
-                let mut bone_joints = o.body.bones.iter().flat_map(|b| *b).collect::<Vec<usize>>();
-                bone_joints.sort();
-                for j in shuffled_indexes(rng, o.body.joints.len()) {
-                    let edges = bone_joints
-                        .iter()
-                        .filter(|bone_joint| **bone_joint == j)
-                        .collect::<Vec<&usize>>()
-                        .len();
+                let muscled_bone_indexes = o
+                    .body
+                    .muscles
+                    .iter()
+                    .flat_map(|m| *m)
+                    .collect::<Vec<usize>>();
 
-                    if edges == 1 {
-                        return Some(Body::RemoveJoint { joint: j });
-                    }
+                let mut joint_edge_count = HashMap::<usize, usize>::new();
+                for [a, b] in o.body.bones.iter().filter(|b| {
+                    !(muscled_bone_indexes.contains(&b[0]) || muscled_bone_indexes.contains(&b[1]))
+                }) {
+                    *joint_edge_count.entry(*a).or_insert(1) += 1;
+                    *joint_edge_count.entry(*b).or_insert(1) += 1;
                 }
-                None
+
+                // Get eligible nodes
+                let eligible_nodes = joint_edge_count
+                    .iter()
+                    .filter(|(_, v)| **v == 1)
+                    .map(|(k, _)| *k)
+                    .collect::<Vec<usize>>();
+                if eligible_nodes.is_empty() {
+                    return None;
+                }
+
+                let joint = eligible_nodes[rng.random_range(0..eligible_nodes.len())];
+                return Some(Body::RemoveJoint { joint });
+
+                // let mut bone_joints = o.body.bones.iter().flat_map(|b| *b).collect::<Vec<usize>>();
+                // bone_joints.sort();
+                // for j in shuffled_indexes(rng, o.body.joints.len()) {
+                //     let edges = bone_joints
+                //         .iter()
+                //         .filter(|bone_joint| **bone_joint == j)
+                //         .collect::<Vec<&usize>>()
+                //         .len();
+
+                //     if edges == 1 {
+                //         return Some(Body::RemoveJoint { joint: j });
+                //     }
+                // }
+                // None
             }
             // RemoveBone
             6 => {
@@ -237,7 +267,7 @@ impl Brain {
             if add {
                 res.push(Mutation::Brain(Brain::AddInput { index: i }));
             } else {
-                res.push(Mutation::Brain(Brain::RemoveInput { index: i }));
+                res.push(Mutation::Brain(Brain::RemoveInput { index: i - 1 }));
             }
         }
 
@@ -248,7 +278,7 @@ impl Brain {
             if add {
                 res.push(Mutation::Brain(Brain::AddOutput { index: i }));
             } else {
-                res.push(Mutation::Brain(Brain::RemoveOutput { index: i }));
+                res.push(Mutation::Brain(Brain::RemoveOutput { index: i - 1 }));
             }
         }
         res

@@ -5,23 +5,23 @@ use serde::{Deserialize, Serialize};
 use crate::world::organism::joint::Joint;
 use crate::world::organism::mutation::{self, Mutable, Mutation};
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Body {
     pub joints: Vec<Joint>,
     pub bones: Vec<[usize; 2]>,
     pub muscles: Vec<[usize; 2]>,
 }
-impl Mutable for Body {
-    fn mutate(&mut self, mutation: Mutation) -> bool {
-        let mut o = self.clone();
-        match mutation {
-            Mutation::Body(_) => todo!(),
-            _ => unreachable!("Tried to mutate body using invalid mutation {:?}", mutation),
-        }
+// impl Mutable for Body {
+//     fn mutate(&mut self, mutation: &Mutation) -> bool {
+//         let mut o = self.clone();
+//         match mutation {
+//             Mutation::Body(_) => todo!(),
+//             _ => unreachable!("Tried to mutate body using invalid mutation {:?}", mutation),
+//         }
 
-        false
-    }
-}
+//         false
+//     }
+// }
 impl Body {
     pub fn new(joints: Vec<Joint>, bones: Vec<[usize; 2]>, muscles: Vec<[usize; 2]>) -> Self {
         Self {

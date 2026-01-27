@@ -1,4 +1,7 @@
 pub const CONFIG_PATH: &'static str = "config.json";
+// Physics lock
+pub const PHYS_LOCK_DUR: f32 = 0.5;
+pub const PHYS_LOCK_DAMP: f32 = 50.0;
 
 // Organism sizes
 pub const JOINT_RADIUS: f32 = 0.5;
@@ -12,9 +15,9 @@ pub const BONE_Z: f32 = ORGANISM_Z - 0.2;
 pub const MUSCLE_Z: f32 = ORGANISM_Z - 0.3;
 
 // Muscle
-pub const MIN_MUSCLE_LEN: f32 = 0.0;
-pub const MAX_MUSCLE_LEN: f32 = 1.0;
-pub const MUSCLE_COMPLIANCE: f32 = 0.0001;
+pub const MIN_MUSCLE_LEN: f32 = 0.75;
+pub const MAX_MUSCLE_LEN: f32 = 1.25;
+pub const MUSCLE_COMPLIANCE: f32 = 0.01;
 
 // Mutation
 pub const NUM_BODY_MUTATIONS: usize = 2;

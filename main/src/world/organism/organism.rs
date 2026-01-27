@@ -15,27 +15,27 @@ use crate::{
     },
 };
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Organism {
     pub brain: Option<Brain>,
     pub body: Body,
     static_stats: StaticStats,
 }
 impl Mutable for Organism {
-    fn mutate(&mut self, mutation: Mutation) -> bool {
+    fn mutate(&mut self, mutation: &Mutation) -> bool {
         let mut o = self.clone();
         match mutation {
             Mutation::Body(body) => match body {
                 BodyMut::AddNode { joint, node_type } => {
-                    let out_in_offset = o.joint_out_in(joint).into();
+                    let out_in_offset = o.joint_out_in(*joint).into();
                     let out_in = [MUSCLE_OUTPUTS, MUSCLE_INPUTS];
 
                     for m in BrainMut::from_in_out(out_in_offset, out_in, true) {
-                        self.mutate(m);
+                        self.mutate(&m);
                     }
 
                     // Add node
-                    self.body.joints[joint].nodes.push(node_type);
+                    self.body.joints[*joint].nodes.push(*node_type);
                     return true;
                 }
                 BodyMut::AddJoint { pos } => {
@@ -54,17 +54,16 @@ impl Mutable for Organism {
                         return false;
                     }
 
-                    // Add joint
-                    self.body.joints.push(Joint::new(pos, vec![]));
-
                     // Add shortest bone
-                    self.mutate(Mutation::Body(BodyMut::AddBone {
-                        bone: [distances[0].0, self.body.bones.len()],
+                    self.mutate(&Mutation::Body(BodyMut::AddBone {
+                        bone: [distances[0].0, self.body.joints.len()],
                     }));
+                    // Add joint
+                    self.body.joints.push(Joint::new(*pos, vec![]));
                     return true;
                 }
                 BodyMut::AddBone { bone } => {
-                    self.body.bones.push(bone);
+                    self.body.bones.push(*bone);
                     return true;
                 }
                 BodyMut::AddMuscle { muscle } => {
@@ -72,30 +71,45 @@ impl Mutable for Organism {
                     let out_in = [MUSCLE_OUTPUTS, MUSCLE_INPUTS];
 
                     for m in BrainMut::from_in_out(out_in_offset, out_in, true) {
-                        self.mutate(m);
+                        self.mutate(&m);
                     }
 
-                    self.body.muscles.push(muscle);
+                    self.body.muscles.push(*muscle);
                     return true;
                 }
                 BodyMut::RemoveNode { joint, node } => {
-                    let out_in_offset = o.joint_node_out_in(joint, node).into();
-                    let out_in = self.body.joints[joint].nodes[node].out_con_in_prod().into();
+                    let out_in_offset = o.joint_node_out_in(*joint, *node).into();
+                    let out_in = self.body.joints[*joint].nodes[*node]
+                        .out_con_in_prod()
+                        .into();
 
                     for m in BrainMut::from_in_out(out_in_offset, out_in, false) {
-                        self.mutate(m);
+                        self.mutate(&m);
                     }
 
                     // remove node
-                    self.body.joints[joint].nodes.remove(node);
+                    self.body.joints[*joint].nodes.remove(*node);
                     return true;
                 }
-                BodyMut::RemoveJoint { joint: index } => {
-                    self.body.joints.remove(index);
+                BodyMut::RemoveJoint { joint } => {
+                    self.body.joints.remove(*joint);
+
+                    self.body.bones = self
+                        .body
+                        .bones
+                        .iter()
+                        .filter(|[a, b]| a != joint && b != joint)
+                        .map(|[a, b]| {
+                            [
+                                if a > joint { a - 1 } else { *a },
+                                if b > joint { b - 1 } else { *b },
+                            ]
+                        })
+                        .collect::<Vec<[usize; 2]>>();
                     return true;
                 }
                 BodyMut::RemoveBone { bone } => {
-                    self.body.bones.remove(bone);
+                    self.body.bones.remove(*bone);
                     return true;
                 }
                 BodyMut::RemoveMuscle { muscle } => {
@@ -103,10 +117,10 @@ impl Mutable for Organism {
                     let out_in = [MUSCLE_OUTPUTS, MUSCLE_INPUTS];
 
                     for m in BrainMut::from_in_out(out_in_offset, out_in, false) {
-                        self.mutate(m);
+                        self.mutate(&m);
                     }
 
-                    self.body.muscles.remove(muscle);
+                    self.body.muscles.remove(*muscle);
                     return true;
                 }
             },

@@ -12,7 +12,9 @@ use crate::{
     config::config_tag::ConfigTag,
     consts::{
         BONE_WIDTH, BONE_Z, JOINT_RADIUS, JOINT_Z, MUSCLE_COMPLIANCE, MUSCLE_WIDTH, MUSCLE_Z,
+        PHYS_LOCK_DAMP, PHYS_LOCK_DUR,
     },
+    physics_lock::PhysicsLockBundle,
     world::organism::{
         body::Body,
         brain::Brain,
@@ -25,7 +27,7 @@ use crate::{
     },
 };
 
-#[derive(Clone, ConfigTag, Serialize, Deserialize)]
+#[derive(Clone, ConfigTag,Debug, Serialize, Deserialize)]
 pub struct Seed {
     pos: Vec2,
     organism: Organism,
@@ -51,7 +53,7 @@ impl Default for Seed {
     }
 }
 impl Mutable for Seed {
-    fn mutate(&mut self, mutation: Mutation) -> bool {
+    fn mutate(&mut self, mutation: &Mutation) -> bool {
         self.organism.mutate(mutation)
     }
 }
@@ -110,7 +112,7 @@ impl Seed {
         }
 
         for b in o.body.bones.iter() {
-            let (b_ent, pos) = Self::spawn_bone(b, &joint_ents, &joint_positions, commands, h);
+            let (b_ent, pos) = Self::spawn_bone(pos, b, &joint_ents, &joint_positions, commands, h);
 
             bone_ents.push(b_ent);
             bone_positions.push(pos);
@@ -140,6 +142,7 @@ impl Seed {
     pub fn spawn_joint(pos: Vec2, nodes: &Vec<NodeType>, c: &mut Commands, h: &Handles) -> Entity {
         c.spawn((
             LockedAxes::ROTATION_LOCKED,
+            PhysicsLockBundle::new(PHYS_LOCK_DUR, PHYS_LOCK_DAMP),
             JointComp::new(nodes),
             RigidBody::Dynamic,
             Transform::default()
@@ -153,6 +156,7 @@ impl Seed {
     }
 
     fn spawn_bone(
+        pos: Vec2,
         bone: &[usize; 2],
         j_ents: &Vec<Entity>,
         j_pos: &Vec<Vec2>,
@@ -167,7 +171,7 @@ impl Seed {
         let dir = pos_b - pos_a;
         let z_rot = dir.to_angle();
         let length = dir.length();
-        let bone_length = length - JOINT_RADIUS * 2.1;
+        let bone_length = length - (JOINT_RADIUS * 2.1);
 
         let bone_ent = c
             .spawn((
@@ -184,9 +188,9 @@ impl Seed {
             .id();
 
         c.entity(bone_ent)
-            .with_child(RevoluteJoint::new(bone_ent, j_ents[a]).with_anchor(pos_a));
+            .with_child(RevoluteJoint::new(bone_ent, j_ents[a]).with_anchor(pos + pos_a));
         c.entity(bone_ent)
-            .with_child(RevoluteJoint::new(bone_ent, j_ents[b]).with_anchor(pos_b));
+            .with_child(RevoluteJoint::new(bone_ent, j_ents[b]).with_anchor(pos + pos_b));
 
         (bone_ent, mid)
     }
