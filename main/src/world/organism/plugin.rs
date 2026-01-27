@@ -19,6 +19,7 @@ use crate::{
     world::organism::{
         component::{Bone, Joint, Muscle, OrganismEntity},
         message::SpawnSeedMsg,
+        util_trait::OrganismAccessor,
     },
 };
 

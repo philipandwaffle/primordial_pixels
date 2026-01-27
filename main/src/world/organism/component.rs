@@ -1,6 +1,7 @@
 use bevy::{
     ecs::{component::Component, entity::Entity},
     log::error,
+    math::Vec2,
 };
 
 use crate::{
@@ -10,7 +11,9 @@ use crate::{
         brain::Brain,
         node_type::NodeType,
         organism::Organism,
+        seed::Seed,
         stats::{StaticStats, VariableStats},
+        util_trait::OrganismAccessor,
     },
 };
 
@@ -49,31 +52,34 @@ impl OrganismEntity {
         return &self.variable_stats;
     }
 
-    pub fn get_mut_organism<'a>(&'a mut self) -> &'a mut Organism {
+    pub fn as_seed(&self, pos: Vec2) -> Seed {
+        self.organism.clone().as_seed(pos)
+    }
+}
+impl OrganismAccessor for OrganismEntity {
+    fn get_mut_organism<'a>(&'a mut self) -> &'a mut Organism {
         return &mut self.organism;
     }
 
-    pub fn get_mut_body<'a>(&'a mut self) -> &'a mut Body {
-        return &mut self.get_mut_organism().body;
+    fn get_mut_body<'a>(&'a mut self) -> &'a mut Body {
+        return &mut self.organism.body;
     }
 
-    pub fn get_mut_brain<'a>(&'a mut self) -> Option<&'a mut Brain> {
-        return self.get_mut_organism().brain.as_mut();
+    fn get_mut_brain<'a>(&'a mut self) -> Option<&'a mut Brain> {
+        return self.organism.brain.as_mut();
     }
 
-    pub fn get_organism<'a>(&'a self) -> &'a Organism {
+    fn get_organism<'a>(&'a self) -> &'a Organism {
         return &self.organism;
     }
-
-    pub fn get_body<'a>(&'a self) -> &'a Body {
-        return &self.get_organism().body;
+    fn get_body<'a>(&'a self) -> &'a Body {
+        return &self.organism.body;
     }
 
-    pub fn get_brain<'a>(&'a self) -> &'a Option<Brain> {
-        return &self.get_organism().brain;
+    fn get_brain<'a>(&'a self) -> &'a Option<Brain> {
+        return &self.organism.brain;
     }
 }
-
 #[derive(Component)]
 pub struct Joint {
     nodes: Vec<NodeType>,

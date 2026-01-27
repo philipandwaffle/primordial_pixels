@@ -20,18 +20,18 @@ pub const MUSCLE_COMPLIANCE: f32 = 0.0001;
 pub const NUM_BODY_MUTATIONS: usize = 2;
 pub const NUM_BRAIN_MUTATIONS: usize = 2;
 
+pub const MAX_BONE_LEN: f32 = 7.5;
+
 // Brain
-pub const NUM_BASE_STIMULI: usize = 1;
+const MEMORY: usize = 0;
+pub const BASE_INPUT: usize = MEMORY + 1;
+pub const BASE_OUTPUT: usize = MEMORY + 0;
+
 // 3 slots for random stuff,
-pub const NUM_BASE_MEMORY: usize = 0;
-pub const BASE_BRAIN_STRUCTURE: [usize; 6] = [
-    NUM_BASE_STIMULI + NUM_BASE_MEMORY,
-    8,
-    8,
-    8,
-    8,
-    NUM_BASE_MEMORY,
-];
+pub const BASE_BRAIN_STRUCTURE: [usize; 6] = [BASE_INPUT, 8, 8, 8, 8, BASE_OUTPUT];
+
+pub const MUSCLE_INPUTS: usize = 1;
+pub const MUSCLE_OUTPUTS: usize = 1;
 
 // Environment
 pub const N: usize = 100;

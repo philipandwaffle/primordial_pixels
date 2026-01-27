@@ -13,10 +13,13 @@ mod assets;
 mod camera;
 mod config;
 mod consts;
+mod organism_logger;
 mod performance_info;
+mod runner;
 mod sandbox;
 mod util;
 mod world;
+mod extension;
 
 fn main() {
     // return;

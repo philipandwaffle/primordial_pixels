@@ -90,10 +90,10 @@ impl<T> Chromosome<T> {
 }
 impl Chromosome<f32> {
     fn mutate(&mut self, rng: &mut ThreadRng) -> bool {
-        let should_mut = rng.r#gen::<f32>() < self.rate;
+        let should_mut = rng.random::<f32>() < self.rate;
 
         if should_mut {
-            self.val += (1.0 - rng.r#gen::<f32>()) * self.factor;
+            self.val += (1.0 - rng.random::<f32>()) * self.factor;
         }
 
         return should_mut;
@@ -101,7 +101,7 @@ impl Chromosome<f32> {
 }
 impl Chromosome<Vec2> {
     fn mutate(&mut self, rng: &mut ThreadRng) -> bool {
-        let should_mut = rng.r#gen::<f32>() < self.rate;
+        let should_mut = rng.random::<f32>() < self.rate;
 
         if should_mut {
             self.val += rand_normal_vec2(rng) * self.factor;
@@ -112,11 +112,11 @@ impl Chromosome<Vec2> {
 }
 impl<const NUM_TYPES: usize> Chromosome<[f32; NUM_TYPES]> {
     fn mutate(&mut self, rng: &mut ThreadRng) -> bool {
-        let should_mut = rng.r#gen::<f32>() < self.rate;
+        let should_mut = rng.random::<f32>() < self.rate;
 
         if should_mut {
-            let i = rng.r#gen_range(0..NUM_TYPES);
-            self.val[i] += rng.r#gen::<f32>() * self.factor;
+            let i = rng.random_range(0..NUM_TYPES);
+            self.val[i] += rng.random::<f32>() * self.factor;
             self.val.normalise();
         }
 

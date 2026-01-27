@@ -13,27 +13,27 @@ pub enum Mutation {
     Brain(Brain),
 }
 impl Mut for Mutation {
-    fn gen_mutation(rng: &mut ThreadRng, oc: &OrganismConfig, o: &Organism) -> Option<Self>
+    fn rand(rng: &mut ThreadRng, oc: &OrganismConfig, o: &Organism) -> Option<Self>
     where
         Self: Sized,
     {
-        if let Some(body_mutation) = Body::gen_mutation(rng, oc, o) {
+        if let Some(body_mutation) = Body::rand(rng, oc, o) {
             return Some(Mutation::Body(body_mutation));
         }
         None
     }
 
-    fn get_cascading(
-        &self,
-        rng: &mut ThreadRng,
-        oc: &OrganismConfig,
-        o: &Organism,
-    ) -> Option<Vec<Mutation>> {
-        match self {
-            Mutation::Body(body) => body.get_cascading(rng, oc, o),
-            Mutation::Brain(brain) => brain.get_cascading(rng, oc, o),
-        }
-    }
+    // fn get_cascading(
+    //     &self,
+    //     rng: &mut ThreadRng,
+    //     oc: &OrganismConfig,
+    //     o: &Organism,
+    // ) -> Option<Vec<Mutation>> {
+    //     match self {
+    //         Mutation::Body(body) => body.get_cascading(rng, oc, o),
+    //         Mutation::Brain(brain) => brain.get_cascading(rng, oc, o),
+    //     }
+    // }
 }
 
 pub trait Mutable {
@@ -41,18 +41,18 @@ pub trait Mutable {
 }
 
 pub trait Mut {
-    fn gen_mutation(rng: &mut ThreadRng, oc: &OrganismConfig, o: &Organism) -> Option<Self>
+    fn rand(rng: &mut ThreadRng, oc: &OrganismConfig, o: &Organism) -> Option<Self>
     where
         Self: Sized;
 
-    fn get_cascading(
-        &self,
-        rng: &mut ThreadRng,
-        oc: &OrganismConfig,
-        o: &Organism,
-    ) -> Option<Vec<Mutation>> {
-        return None;
-    }
+    // fn get_cascading(
+    //     &self,
+    //     rng: &mut ThreadRng,
+    //     oc: &OrganismConfig,
+    //     o: &Organism,
+    // ) -> Option<Vec<Mutation>> {
+    //     return None;
+    // }
 }
 
 #[derive(Debug)]
@@ -89,16 +89,16 @@ impl Body {
     }
 }
 impl Mut for Body {
-    fn gen_mutation(rng: &mut ThreadRng, oc: &OrganismConfig, o: &Organism) -> Option<Self> {
-        match rng.gen_range(0..=7) {
+    fn rand(rng: &mut ThreadRng, oc: &OrganismConfig, o: &Organism) -> Option<Self> {
+        match rng.random_range(0..=7) {
             // AddNode
             0 => Some(Body::AddNode {
-                joint: rng.gen_range(0..o.body.joints.len()),
-                node_type: NodeType::gen_mutation(rng, oc, o)?,
+                joint: rng.random_range(0..o.body.joints.len()),
+                node_type: NodeType::rand(rng, oc, o)?,
             }),
             // AddJoint
             1 => Some(Body::AddJoint {
-                pos: rand_normal_vec2(rng) * rng.gen_range(0.0..10.0),
+                pos: rand_normal_vec2(rng) * rng.random_range(0.0..10.0),
             }),
             // AddBone
             2 => {
@@ -123,7 +123,7 @@ impl Mut for Body {
                     if !j.nodes.is_empty() {
                         return Some(Body::RemoveNode {
                             joint: i,
-                            node: rng.gen_range(0..j.nodes.len()),
+                            node: rng.random_range(0..j.nodes.len()),
                         });
                     }
                 }
@@ -199,59 +199,11 @@ impl Mut for Body {
             _ => {
                 if !o.body.muscles.is_empty() {
                     return Some(Body::RemoveMuscle {
-                        muscle: rng.gen_range(0..o.body.muscles.len()),
+                        muscle: rng.random_range(0..o.body.muscles.len()),
                     });
                 }
                 None
             }
-        }
-    }
-
-    fn get_cascading(
-        &self,
-        rng: &mut ThreadRng,
-        oc: &OrganismConfig,
-        o: &Organism,
-    ) -> Option<Vec<Mutation>> {
-        match self {
-            Body::AddNode { joint, node_type } => {
-                let mut muts = vec![];
-
-                let input_index_offset = o.get_node_inputs(*joint);
-                for i in 0..node_type.get_in() {
-                    muts.push(Mutation::Brain(Brain::AddInput {
-                        index: input_index_offset + i,
-                    }));
-                }
-
-                let output_index_offset = o.get_node_outputs(*joint);
-                for i in 0..node_type.get_out() {
-                    muts.push(Mutation::Brain(Brain::AddOutput {
-                        index: output_index_offset + i,
-                    }));
-                }
-
-                if muts.is_empty() { None } else { Some(muts) }
-            }
-            Body::AddJoint { pos: _ } => {
-                let num_joints = o.body.joints.len();
-                Some(vec![Mutation::Body(Body::AddBone {
-                    bone: [rng.gen_range(0..num_joints), num_joints],
-                })])
-            }
-            Body::AddBone { bone: _ } => None,
-            Body::AddMuscle { muscle } => Some(vec![
-                Mutation::Brain(Brain::AddInput {
-                    index: o.body.muscles.len(),
-                }),
-                Mutation::Brain(Brain::AddOutput {
-                    index: o.body.muscles.len(),
-                }),
-            ]),
-            Body::RemoveNode { joint, node } => todo!(),
-            Body::RemoveJoint { joint } => todo!(),
-            Body::RemoveBone { bone } => None,
-            Body::RemoveMuscle { muscle } => todo!(),
         }
     }
 }
@@ -265,10 +217,40 @@ pub enum Brain {
     Learn { learn_rate: f32, learn_factor: f32 },
 }
 impl Mut for Brain {
-    fn gen_mutation(_: &mut ThreadRng, oc: &OrganismConfig, o: &Organism) -> Option<Self> {
+    fn rand(_: &mut ThreadRng, oc: &OrganismConfig, o: &Organism) -> Option<Self> {
         Some(Brain::Learn {
             learn_rate: oc.learn_rate,
             learn_factor: oc.learn_factor,
         })
+    }
+}
+impl Brain {
+    pub fn from_in_out(
+        [out_con_offset, in_prod_offset]: [usize; 2],
+        [out_con, in_prod]: [usize; 2],
+        add: bool,
+    ) -> Vec<Mutation> {
+        let mut res: Vec<_> = vec![];
+        for i in 0..out_con {
+            let i = out_con_offset + i;
+
+            if add {
+                res.push(Mutation::Brain(Brain::AddInput { index: i }));
+            } else {
+                res.push(Mutation::Brain(Brain::RemoveInput { index: i }));
+            }
+        }
+
+        // remove output neurones for node
+        for i in 0..in_prod {
+            let i = in_prod_offset + i;
+
+            if add {
+                res.push(Mutation::Brain(Brain::AddOutput { index: i }));
+            } else {
+                res.push(Mutation::Brain(Brain::RemoveOutput { index: i }));
+            }
+        }
+        res
     }
 }

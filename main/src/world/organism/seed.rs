@@ -1,27 +1,92 @@
 use avian2d::prelude::{Collider, DistanceJoint, LockedAxes, RevoluteJoint, RigidBody};
 use bevy::{
     ecs::{entity::Entity, system::Commands},
-    math::{Quat, Vec2, vec3},
+    math::{Quat, Vec2, vec2, vec3},
     transform::components::Transform,
 };
+use my_derive::ConfigTag;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     assets::handles::{Handles, MatKey, MeshKey},
-    consts::{BONE_WIDTH, BONE_Z, JOINT_RADIUS, JOINT_Z, MUSCLE_COMPLIANCE, MUSCLE_WIDTH, MUSCLE_Z},
+    config::config_tag::ConfigTag,
+    consts::{
+        BONE_WIDTH, BONE_Z, JOINT_RADIUS, JOINT_Z, MUSCLE_COMPLIANCE, MUSCLE_WIDTH, MUSCLE_Z,
+    },
     world::organism::{
-        component::{Bone, Joint, Muscle, OrganismEntity as OrganismMarker},
+        body::Body,
+        brain::Brain,
+        component::{Bone, Joint as JointComp, Muscle, OrganismEntity as OrganismMarker},
+        joint::Joint,
+        mutation::{Mutable, Mutation},
         node_type::NodeType,
         organism::Organism,
+        util_trait::OrganismAccessor,
     },
 };
 
+#[derive(Clone, ConfigTag, Serialize, Deserialize)]
 pub struct Seed {
     pos: Vec2,
     organism: Organism,
 }
+impl Default for Seed {
+    fn default() -> Self {
+        Self {
+            pos: Default::default(),
+
+            organism: Organism::new(
+                Some(Brain::new(vec![2, 4, 1])),
+                Body::new(
+                    vec![
+                        Joint::new(vec2(-5.0, 0.0), vec![]),
+                        Joint::new(vec2(0.0, 6.0), vec![]),
+                        Joint::new(vec2(5.0, 0.0), vec![]),
+                    ],
+                    vec![[0, 1], [1, 2]],
+                    vec![[0, 1]],
+                ),
+            ),
+        }
+    }
+}
+impl Mutable for Seed {
+    fn mutate(&mut self, mutation: Mutation) -> bool {
+        self.organism.mutate(mutation)
+    }
+}
+impl OrganismAccessor for Seed {
+    fn get_mut_organism<'a>(&'a mut self) -> &'a mut Organism {
+        return &mut self.organism;
+    }
+
+    fn get_mut_body<'a>(&'a mut self) -> &'a mut Body {
+        return &mut self.organism.body;
+    }
+
+    fn get_mut_brain<'a>(&'a mut self) -> Option<&'a mut Brain> {
+        return self.organism.brain.as_mut();
+    }
+
+    fn get_organism<'a>(&'a self) -> &'a Organism {
+        return &self.organism;
+    }
+
+    fn get_body<'a>(&'a self) -> &'a Body {
+        return &self.organism.body;
+    }
+
+    fn get_brain<'a>(&'a self) -> &'a Option<Brain> {
+        return &self.organism.brain;
+    }
+}
 impl Seed {
     pub fn new(pos: Vec2, organism: Organism) -> Self {
         Self { pos, organism }
+    }
+
+    pub fn set_pos(&mut self, pos: Vec2) {
+        self.pos = pos;
     }
 
     pub fn spawn(&self, commands: &mut Commands, h: &Handles) -> Entity {
@@ -75,7 +140,7 @@ impl Seed {
     pub fn spawn_joint(pos: Vec2, nodes: &Vec<NodeType>, c: &mut Commands, h: &Handles) -> Entity {
         c.spawn((
             LockedAxes::ROTATION_LOCKED,
-            Joint::new(nodes),
+            JointComp::new(nodes),
             RigidBody::Dynamic,
             Transform::default()
                 .with_translation(pos.extend(JOINT_Z))
@@ -147,7 +212,8 @@ impl Seed {
             DistanceJoint::new(b_ents[a], b_ents[b])
                 // .with_local_anchor1(mid - pos_a)
                 // .with_local_anchor2(mid - pos_b)
-                .with_limits(length, length).with_compliance(MUSCLE_COMPLIANCE),
+                .with_limits(length, length)
+                .with_compliance(MUSCLE_COMPLIANCE),
             Transform::default()
                 .with_translation((mid).extend(MUSCLE_Z))
                 .with_rotation(Quat::from_rotation_z(z_rot))

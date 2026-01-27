@@ -13,7 +13,7 @@ impl<const NUM_TYPES: usize> Distribution<NUM_TYPES> for [f32; NUM_TYPES] {
     }
 
     fn get_index(&self, rng: &mut ThreadRng) -> usize {
-        let val = rng.r#gen::<f32>();
+        let val = rng.random::<f32>();
         let bounds = self.get_bounds();
 
         for i in 0..NUM_TYPES {

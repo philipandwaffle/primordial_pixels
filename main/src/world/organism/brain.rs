@@ -7,7 +7,7 @@ use rand::{Rng, rngs::ThreadRng, thread_rng};
 use serde::{Deserialize, Deserializer, Serialize, de::Visitor, ser::SerializeSeq};
 
 use crate::{
-    consts::{BASE_BRAIN_STRUCTURE, NUM_BASE_MEMORY, NUM_BASE_STIMULI},
+    consts::{BASE_BRAIN_STRUCTURE, BASE_INPUT, BASE_OUTPUT},
     world::{
         matrix::MxNMatrix as Matrix,
         organism::mutation::{Brain as BrainMutation, Mutable, Mutation},
@@ -72,9 +72,9 @@ impl Brain {
         return Self {
             weights,
             biases,
-            memory: vec![0.0; NUM_BASE_MEMORY],
-            input: vec![0.0; NUM_BASE_STIMULI],
-            output: vec![0.0; NUM_BASE_MEMORY],
+            memory: vec![0.0; BASE_OUTPUT],
+            input: vec![0.0; BASE_INPUT],
+            output: vec![0.0; BASE_OUTPUT],
         };
     }
 
@@ -169,8 +169,8 @@ impl Brain {
 
     fn mutate_matrix(rng: &mut ThreadRng, m: &mut Matrix, mut_rate: f32, mut_factor: f32) {
         for cell in m.0.iter_mut() {
-            if rng.r#gen::<f32>() <= mut_rate {
-                *cell += (rng.r#gen::<f32>() - 0.5) * mut_factor;
+            if rng.random::<f32>() <= mut_rate {
+                *cell += (rng.random::<f32>() - 0.5) * mut_factor;
             }
         }
     }
@@ -203,7 +203,7 @@ impl Brain {
 //     let mut m = DMatrix::zeros(rows, cols);
 
 //     for cell in m.iter_mut() {
-//         *cell = rng.r#gen_range(-1.0..=1.0);
+//         *cell = rng.random_range(-1.0..=1.0);
 //     }
 
 //     return Matrix(m);

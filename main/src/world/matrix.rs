@@ -9,11 +9,11 @@ pub type Matrix = DMatrix<f32>;
 pub struct MxNMatrix(pub Matrix);
 impl MxNMatrix {
     pub fn rand(rows: usize, cols: usize) -> MxNMatrix {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut m = DMatrix::zeros(rows, cols);
 
         for cell in m.iter_mut() {
-            *cell = rng.r#gen_range(-1.0..=1.0);
+            *cell = rng.random_range(-1.0..=1.0);
         }
 
         return MxNMatrix(m);
