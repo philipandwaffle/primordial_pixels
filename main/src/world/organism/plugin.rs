@@ -6,6 +6,7 @@ use bevy::{
         schedule::IntoScheduleConfigs,
         system::{Commands, Query, Res},
     },
+    log::info,
     math::Quat,
     sprite_render::{ColorMaterial, MeshMaterial2d},
     time::Time,
@@ -16,6 +17,7 @@ use crate::{
     assets::handles::{Handles, MatKey},
     config::config::Organism as OrganismConfig,
     consts::MUSCLE_Z,
+    util::rot_input,
     world::organism::{
         component::{Bone, Joint, Muscle, OrganismEntity},
         message::SpawnSeedMsg,
@@ -62,13 +64,14 @@ impl OrganismPlugin {
                 input.push(beat);
 
                 // joint input todo!()
+                // for j in organism_ent.get_body().joints.iter().flat_map(|j| &j.nodes) {}
 
                 // muscle input
                 for j in organism_ent.get_body().muscles.iter() {
                     if let Ok([trans_a, trans_b]) =
                         bones.get_many([organism_ent.bone_ents[j[0]], organism_ent.bone_ents[j[1]]])
                     {
-                        input.push(trans_a.rotation.angle_between(trans_b.rotation));
+                        input.push(rot_input(trans_a.rotation.angle_between(trans_b.rotation)));
                     }
                 }
 

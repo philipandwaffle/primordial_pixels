@@ -1,16 +1,16 @@
-use bevy::{
-    log::{error, info},
-    math::usize,
-};
+use bevy::{log::info, math::usize};
 use nalgebra::DMatrix;
-use rand::{Rng, rngs::ThreadRng, thread_rng};
-use serde::{Deserialize, Deserializer, Serialize, de::Visitor, ser::SerializeSeq};
+use rand::{Rng, rngs::ThreadRng};
+use serde::{Deserialize, Serialize};
 
 use crate::{
     consts::{BASE_BRAIN_STRUCTURE, BASE_INPUT, BASE_OUTPUT},
     world::{
         matrix::MxNMatrix as Matrix,
-        organism::mutation::{Brain as BrainMutation, Mutable, Mutation},
+        organism::mutation::{
+            brain::Brain as BrainMutation,
+            mutation::{Mutable, Mutation},
+        },
     },
 };
 
@@ -193,35 +193,18 @@ impl Brain {
     }
 }
 
-// fn gen_rand_matrix(rows: usize, cols: usize) -> Matrix {
-//     let mut rng = rand::thread_rng();
-//     let mut m = DMatrix::zeros(rows, cols);
+mod test {
+    use crate::world::organism::brain::Brain;
 
-//     for cell in m.iter_mut() {
-//         *cell = rng.random_range(-1.0..=1.0);
-//     }
+    fn get_brain() -> Brain {
+        Brain::new(vec![4, 4, 4])
+    }
 
-//     return Matrix(m);
-// }
-
-// fn insert_row(m: &mut Matrix, i: usize) {
-//     let temp = m.0.clone();
-//     // let rows = temp.shape().0;
-//     m.0 = temp.insert_row(i, 0.0);
-// }
-// fn remove_row(m: &mut Matrix, i: usize) {
-//     let temp = m.0.clone();
-//     // let rows = temp.shape().0;
-//     m.0 = temp.remove_row(i);
-// }
-
-// fn insert_col(m: &mut Matrix, i: usize) {
-//     let temp = m.0.clone();
-//     // let cols = temp.shape().1;
-//     m.0 = temp.insert_column(i, 0.0);
-// }
-// fn remove_col(m: &mut Matrix, i: usize) {
-//     let temp = m.0.clone();
-//     // let cols = temp.shape().1;
-//     m.0 = temp.remove_column(i);
-// }
+    #[test]
+    fn remove_input() {
+        let mut b = get_brain();
+        println!("{:?}", b.get_structure());
+        b.remove_input(0);
+        println!("{:?}", b.get_structure());
+    }
+}

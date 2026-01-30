@@ -1,14 +1,16 @@
 use bevy::ecs::resource::Resource;
 use serde::{Deserialize, Serialize};
 
-use crate::config::config_tag::ConfigTag;
+use crate::{config::config_tag::ConfigTag, consts::NUM_MUTATIONS, runner::plugin::RunnerPlugin};
 use my_derive::ConfigTag;
 
-#[derive(ConfigTag, Serialize, Deserialize, Clone, Copy, Resource)]
+#[derive(ConfigTag, Serialize, Deserialize, Clone, Resource)]
 pub struct Config {
+    pub performance_debug: bool,
     pub camera: Camera,
     pub organism: Organism,
     pub node: Node,
+    pub runner: Option<RunnerPlugin>,
 }
 
 #[derive(ConfigTag, Serialize, Deserialize, Clone, Copy, Resource)]
@@ -23,6 +25,8 @@ pub struct Camera {
 #[derive(ConfigTag, Serialize, Deserialize, Clone, Copy, Resource)]
 pub struct Organism {
     pub muscle_efficiency: f32,
+    pub mutation_rate: f32,
+    pub mutation_distribution: [f32; NUM_MUTATIONS],
     pub learn_rate: f32,
     pub learn_factor: f32,
 }

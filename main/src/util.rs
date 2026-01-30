@@ -21,3 +21,11 @@ pub fn shuffled_indexes(rng: &mut ThreadRng, len: usize) -> Vec<usize> {
     vec.shuffle(rng);
     vec
 }
+
+pub fn rot_input(input: f32) -> f32 {
+    return input / (2.0 * PI);
+}
+
+pub fn clamp_out(out: f32) -> f32 {
+    return 1.0 + out * 0.5;
+}

@@ -13,32 +13,36 @@ use bevy::{
         system::{Commands, Query, Res, ResMut},
     },
     log::{info, trace},
-    math::{Vec2, VectorSpace, primitives::Rectangle, vec2},
+    math::{Vec2, VectorSpace, primitives::Rectangle, vec2, vec3},
     mesh::{Mesh, Mesh2d},
     sprite_render::MeshMaterial2d,
     time::Time,
     transform::components::Transform,
 };
 
-use rand::rngs::ThreadRng;
+use my_derive::ConfigTag;
+use rand::{Rng, rngs::ThreadRng};
 use rand_distr::{Distribution, Normal};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    assets::handles::{Handles, MatKey},
-    config::config::Organism as OrganismConfig,
+    assets::handles::{Handles, MatKey, MeshKey},
+    config::{config::Organism as OrganismConfig, config_tag::ConfigTag},
     consts::JOINT_RADIUS,
     organism_logger::LogOrganismsEvent,
     world::organism::{
         component::{Joint, OrganismEntity},
-        mutation::{Mut, Mutable, Mutation},
+        mutation::{
+            brain::Brain as BrainMut,
+            mutation::{Mut, Mutable, Mutation},
+        },
         organism::Organism,
         seed::Seed,
         util_trait::OrganismAccessor,
     },
 };
 
-#[derive(Serialize, Deserialize)]
+#[derive(ConfigTag, Serialize, Deserialize, Clone)]
 pub struct RunnerPlugin {
     pub seed: Option<Seed>,
     pub num_organisms: usize,
@@ -67,7 +71,6 @@ impl Plugin for RunnerPlugin {
             self.save_interval,
             self.cur_generation,
         ))
-        .add_message::<LogOrganismsEvent>()
         .add_systems(Startup, Self::init_generation)
         .add_systems(
             Update,
@@ -102,19 +105,18 @@ impl RunnerPlugin {
     ) {
         let mut seeds = Vec::with_capacity(generation.num_organisms);
         for (o_ent, organism_ent) in organisms.iter() {
+            let num_joints = organism_ent.joint_ents.len() as f32;
+
             let mut pos = Vec2::ZERO;
             for j_ent in organism_ent.joint_ents.iter() {
                 match joints.get(*j_ent) {
                     Ok(t) => {
-                        let joint_pos = t.translation.truncate();
-                        if joint_pos.x > pos.x {
-                            pos.x = joint_pos.x
-                        }
+                        pos += t.translation.truncate();
                     }
                     Err(e) => panic!("Cannot get joint {e}"),
                 }
             }
-            let num_joints_f32 = organism_ent.joint_ents.len() as f32;
+            pos /= num_joints;
             let num_muscles = organism_ent.muscle_ents.len() as f32;
             // pos /= num_joints_f32;
 
@@ -124,7 +126,7 @@ impl RunnerPlugin {
             let fitness = if pos.x < 0.0 {
                 0.0
             } else {
-                pos.x.powf(1.4) + num_muscles.powf(1.3)
+                (pos.x.powf(1.4) + num_muscles.powf(1.1)) / (num_joints * 0.5)
             };
             seeds.push((organism_ent.as_seed(Vec2::ZERO), fitness));
             commands.entity(o_ent).despawn();
@@ -176,7 +178,7 @@ impl RunnerPlugin {
                 &organism_config,
             ));
 
-            cur_pos.y += generation.cage_size.y * 0.5;
+            cur_pos.y += generation.cage_size.y;
             id += 1;
         }
         trace!("Picked: {picked:?}");
@@ -193,7 +195,6 @@ impl RunnerPlugin {
 
     fn init_generation(
         mut commands: Commands,
-        mut meshes: ResMut<Assets<Mesh>>,
         handles: Res<Handles>,
         generation: ResMut<Generation>,
         organism_config: Res<OrganismConfig>,
@@ -201,15 +202,15 @@ impl RunnerPlugin {
         let mut organisms = Vec::with_capacity(generation.num_organisms);
         let mut cur_pos = Vec2::ZERO;
 
-        let mesh = meshes.add(Rectangle::new(generation.cage_size.x, 1.0));
         let thickness = 1.0;
         let mut rng = rand::rng();
+
         for id in 0..generation.num_organisms {
             organisms.push(Self::spawn_seed(
                 &mut commands,
                 &mut rng,
                 generation.init_seed.clone(),
-                cur_pos * 0.5,
+                cur_pos,
                 &id.to_string(),
                 generation.initial_num_mutations,
                 &handles,
@@ -219,9 +220,13 @@ impl RunnerPlugin {
             commands.spawn((
                 RigidBody::Static,
                 Collider::rectangle(generation.cage_size.x, thickness),
-                Mesh2d(mesh.clone()),
+                handles.get_mesh2d(&MeshKey::Rectangle),
                 handles.get_mat2d(&MatKey::Red),
-                Transform::from_xyz(0.0, cur_pos.y - (thickness * 0.5), -1.0),
+                Transform::from_xyz(0.0, cur_pos.y - thickness * 0.5, -1.0).with_scale(vec3(
+                    generation.cage_size.x,
+                    thickness,
+                    1.0,
+                )),
             ));
 
             cur_pos.y += generation.cage_size.y;
@@ -238,30 +243,37 @@ impl RunnerPlugin {
         handles: &Handles,
         oc: &OrganismConfig,
     ) -> Entity {
-        let m = vec![
-            Mutation::Body(crate::world::organism::mutation::Body::AddJoint {
-                pos: vec2(0.0, 10.0),
-            }),
-            Mutation::Body(crate::world::organism::mutation::Body::RemoveJoint { joint: 3 }),
-        ];
-        info!("{:?}", s.get_body());
-        for m in m {
-            info!("Attempt mutation {:?}", m);
-            if s.mutate(&m) {
-                info!("Mutated seed {:?}", m);
-            }
-            info!("{:?}", s.get_body());
-        }
-        // for _ in 0..num_muts {
-        //     let o = s.get_organism();
-
-        //     if let Some(m) = Mutation::rand(rng, oc, o) {
-        //         info!("Attempt mutation {:?}", m);
-        //         if s.mutate(&m) {
-        //             info!("Mutated seed {:?}", m);
-        //         }
+        // let m = vec![
+        //     Mutation::Body(crate::world::organism::mutation::Body::AddJoint {
+        //         pos: vec2(0.0, 10.0),
+        //     }),
+        //     Mutation::Body(crate::world::organism::mutation::Body::RemoveJoint { joint: 3 }),
+        //     Mutation::Body(crate::world::organism::mutation::Body::RemoveMuscle { muscle: 0 }),
+        // ];
+        // info!("{:?}", s.get_body());
+        // for m in m {
+        //     info!("Attempt mutation {:?}", m);
+        //     if s.mutate(&m) {
+        //         info!("Mutated seed {:?}", m);
         //     }
+        //     info!("{:?}", s.get_body());
         // }
+
+        for _ in 0..num_muts {
+            if rng.random::<f32>() > oc.mutation_rate {
+                continue;
+            }
+
+            if let Some(m) = Mutation::rand(rng, oc, s.get_organism()) {
+                // info!("Attempt mutation {:?}", m);
+                if s.mutate(&m) {
+                    // info!("Mutated seed {:?}", m);
+                }
+            }
+        }
+        s.mutate(&Mutation::Brain(
+            BrainMut::rand(rng, oc, s.get_organism()).unwrap(),
+        ));
 
         let mut offset = vec2(0.0, 0.0);
         for j in s.get_body().joints.iter() {
@@ -270,11 +282,30 @@ impl RunnerPlugin {
             }
             offset.x += j.pos.x
         }
+        offset.y = -offset.y;
         offset.y += JOINT_RADIUS;
         offset.x /= s.get_body().joints.len() as f32;
-        s.set_pos(spawn_pos + offset);
 
-        info!("Spawning seed {:?}", s.get_body());
+        // info!(
+        //     "joints: {:?}, spawn_pos: {:?}, offset: {:?}",
+        //     s.get_body()
+        //         .joints
+        //         .iter()
+        //         .map(|j| j.pos)
+        //         .collect::<Vec<Vec2>>(),
+        //     spawn_pos,
+        //     offset
+        // );
+        s.set_pos(spawn_pos + offset);
+        // info!(
+        //     "Spawning seed \nbody {:?}\n brain {:?}",
+        //     s.get_body(),
+        //     if let Some(b) = s.get_brain() {
+        //         b.get_structure()
+        //     } else {
+        //         vec![]
+        //     }
+        // );
         s.spawn(commands, handles)
     }
 }

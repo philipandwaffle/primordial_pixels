@@ -27,7 +27,7 @@ impl Plugin for SavePlugin {
             dir: self.save_path.clone(),
         };
 
-        app.add_event::<LogOrganismsEvent>().add_systems(
+        app.add_message::<LogOrganismsEvent>().add_systems(
             Update,
             move |log_ev: MessageReader<LogOrganismsEvent>| {
                 log_organisms(log_ev, &log_properties);

@@ -1,4 +1,4 @@
-use bevy::{core_pipeline::core_2d::graph::input, math::Vec2};
+use bevy::math::Vec2;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -8,7 +8,12 @@ use crate::{
         brain::Brain,
         in_out::OutputConsumedInputProduced,
         joint::Joint,
-        mutation::{Body as BodyMut, Brain as BrainMut, Mutable, Mutation},
+        mutation::{
+            body::Body as BodyMut,
+            brain::Brain as BrainMut,
+            mutation::{Mutable, Mutation},
+        },
+        node::node::Node,
         seed::Seed,
         stats::StaticStats,
         util_trait::OrganismAccessor,
@@ -23,11 +28,10 @@ pub struct Organism {
 }
 impl Mutable for Organism {
     fn mutate(&mut self, mutation: &Mutation) -> bool {
-        let mut o = self.clone();
         match mutation {
             Mutation::Body(body) => match body {
                 BodyMut::AddNode { joint, node_type } => {
-                    let out_in_offset = o.joint_out_in(*joint).into();
+                    let out_in_offset = self.get_organism().joint_out_in(*joint).into();
                     let out_in = [MUSCLE_OUTPUTS, MUSCLE_INPUTS];
 
                     for m in BrainMut::from_in_out(out_in_offset, out_in, true) {
@@ -62,12 +66,16 @@ impl Mutable for Organism {
                     self.body.joints.push(Joint::new(*pos, vec![]));
                     return true;
                 }
+                BodyMut::MoveJoint { joint, pos } => {
+                    self.body.joints[*joint].pos += pos;
+                    return true;
+                }
                 BodyMut::AddBone { bone } => {
                     self.body.bones.push(*bone);
                     return true;
                 }
                 BodyMut::AddMuscle { muscle } => {
-                    let out_in_offset = o.muscle_out_in().into();
+                    let out_in_offset = self.get_organism().muscle_out_in().into();
                     let out_in = [MUSCLE_OUTPUTS, MUSCLE_INPUTS];
 
                     for m in BrainMut::from_in_out(out_in_offset, out_in, true) {
@@ -78,10 +86,8 @@ impl Mutable for Organism {
                     return true;
                 }
                 BodyMut::RemoveNode { joint, node } => {
-                    let out_in_offset = o.joint_node_out_in(*joint, *node).into();
-                    let out_in = self.body.joints[*joint].nodes[*node]
-                        .out_con_in_prod()
-                        .into();
+                    let out_in_offset = self.get_organism().joint_node_out_in(*joint, *node).into();
+                    let out_in = self.body.joints[*joint].nodes[*node].out_in().into();
 
                     for m in BrainMut::from_in_out(out_in_offset, out_in, false) {
                         self.mutate(&m);
@@ -94,29 +100,22 @@ impl Mutable for Organism {
                 BodyMut::RemoveJoint { joint } => {
                     self.body.joints.remove(*joint);
 
-                    self.body.bones = self
-                        .body
-                        .bones
-                        .iter()
-                        .filter(|[a, b]| a != joint && b != joint)
-                        .map(|[a, b]| {
-                            [
-                                if a > joint { a - 1 } else { *a },
-                                if b > joint { b - 1 } else { *b },
-                            ]
-                        })
-                        .collect::<Vec<[usize; 2]>>();
+                    Self::shift_edges(&mut self.body.bones, joint);
                     return true;
                 }
                 BodyMut::RemoveBone { bone } => {
                     self.body.bones.remove(*bone);
+
+                    Self::shift_edges(&mut self.body.muscles, bone);
                     return true;
                 }
                 BodyMut::RemoveMuscle { muscle } => {
-                    let out_in_offset = o.muscle_out_in().into();
+                    let out_in_offset = self.get_organism().muscle_out_in().into();
                     let out_in = [MUSCLE_OUTPUTS, MUSCLE_INPUTS];
 
                     for m in BrainMut::from_in_out(out_in_offset, out_in, false) {
+                        // println!("{:?}", self.brain.as_ref().unwrap().get_structure());
+                        // println!("{:?}", m);
                         self.mutate(&m);
                     }
 
@@ -125,8 +124,10 @@ impl Mutable for Organism {
                 }
             },
             Mutation::Brain(_) => {
-                if let Some(b) = o.brain.as_mut() {
+                if let Some(b) = self.get_mut_organism().brain.as_mut() {
                     return b.mutate(mutation);
+                    // *b = Brain::new(vec![1, 4, 1]);
+                    // return true;
                 }
                 return false;
             }
@@ -138,7 +139,7 @@ impl Organism {
         Self {
             brain,
             body,
-            static_stats: StaticStats::new(1.0),
+            static_stats: StaticStats::new(0.5),
         }
     }
 
@@ -154,11 +155,7 @@ impl Organism {
         // consts are reversed since we're talking about brain not node
         let mut out_in = OutputConsumedInputProduced([BASE_INPUT, BASE_OUTPUT]);
         for i in 0..joint_index {
-            out_in += self.body.joints[i]
-                .nodes
-                .iter()
-                .map(|n| n.out_con_in_prod())
-                .sum()
+            out_in += self.body.joints[i].nodes.iter().map(|n| n.out_in()).sum()
         }
         out_in
     }
@@ -169,10 +166,10 @@ impl Organism {
         node_index: usize,
     ) -> OutputConsumedInputProduced {
         let mut out_in = self.joint_out_in(joint_index);
-        println!("{:?}", out_in);
+        // println!("{:?}", out_in);
         for i in 0..node_index {
-            println!("{i}, {:?}", out_in);
-            out_in += self.body.joints[joint_index].nodes[i].out_con_in_prod();
+            // println!("{i}, {:?}", out_in);
+            out_in += self.body.joints[joint_index].nodes[i].out_in();
         }
         out_in
     }
@@ -183,6 +180,19 @@ impl Organism {
                 self.body.muscles.len() * MUSCLE_OUTPUTS,
                 self.body.muscles.len() * MUSCLE_INPUTS,
             ]);
+    }
+
+    pub fn shift_edges(edges: &mut Vec<[usize; 2]>, index: &usize) {
+        *edges = edges
+            .iter()
+            .filter(|[a, b]| a != index && b != index)
+            .map(|[a, b]| {
+                [
+                    if a > index { a - 1 } else { *a },
+                    if b > index { b - 1 } else { *b },
+                ]
+            })
+            .collect::<Vec<[usize; 2]>>();
     }
 }
 impl OrganismAccessor for Organism {
@@ -220,7 +230,10 @@ mod tests {
             body::Body,
             brain::Brain,
             joint::Joint,
-            node_type::{NodeType, PheromoneRead, PheromoneWrite, Thruster},
+            node::{
+                pheromone_read::PheromoneRead, pheromone_write::PheromoneWrite, thruster::Thruster,
+            },
+            node_type::NodeType,
             organism::Organism,
         },
     };

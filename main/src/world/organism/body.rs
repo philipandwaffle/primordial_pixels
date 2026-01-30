@@ -1,9 +1,6 @@
-use bevy::math::Vec2;
-use rand::rngs::ThreadRng;
 use serde::{Deserialize, Serialize};
 
 use crate::world::organism::joint::Joint;
-use crate::world::organism::mutation::{self, Mutable, Mutation};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Body {

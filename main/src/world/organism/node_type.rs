@@ -1,5 +1,6 @@
 use std::f32::consts::PI;
 
+use bevy::math::Vec2;
 use rand::{Rng, rngs::ThreadRng};
 use serde::{Deserialize, Serialize};
 
@@ -9,8 +10,11 @@ use crate::{
     world::{
         environment::environment::Environment,
         organism::{
-            in_out::OutputConsumedInputProduced,
-            mutation::{Mut, Mutation},
+            mutation::mutation::Mut,
+            node::{
+                energy::Energy, node::Node, pheromone_read::PheromoneRead,
+                pheromone_write::PheromoneWrite, thruster::Thruster,
+            },
             organism::Organism,
         },
     },
@@ -24,7 +28,7 @@ pub enum NodeType {
     Thruster(Thruster),
 }
 impl Mut for NodeType {
-    fn rand(rng: &mut ThreadRng, oc: &OrganismConfig, o: &Organism) -> Option<Self> {
+    fn rand(rng: &mut ThreadRng, _: &OrganismConfig, _: &Organism) -> Option<Self> {
         Some(match rng.random_range(0..=2) {
             0 => Self::Energy(Energy::new()),
             1 => Self::PheromoneRead(PheromoneRead::new(rng.random_range(0..PHEROMONE_LAYERS))),
@@ -33,139 +37,60 @@ impl Mut for NodeType {
         })
     }
 }
-impl NodeType {
-    pub fn out_con_in_prod(&self) -> OutputConsumedInputProduced {
+impl Node<(&mut Environment<N, KN>, Vec2), (&Environment<N, KN>, Vec2)> for NodeType {
+    fn consume_outputs(
+        &mut self,
+        e: &mut f32,
+        out: &mut Vec<f32>,
+        node_config: &NodeConfig,
+        args: (&mut Environment<N, KN>, Vec2),
+    ) {
         match self {
-            NodeType::Energy(energy) => energy.in_out(),
-            NodeType::PheromoneRead(pheromone_read) => pheromone_read.in_out(),
-            NodeType::PheromoneWrite(pheromone_write) => pheromone_write.in_out(),
-            NodeType::Thruster(thruster) => thruster.in_out(),
-        }
+            NodeType::Energy(energy) => energy.consume_outputs(e, out, node_config, args),
+            NodeType::PheromoneRead(pheromone_read) => {
+                pheromone_read.consume_outputs(e, out, node_config, ())
+            }
+            NodeType::PheromoneWrite(pheromone_write) => {
+                pheromone_write.consume_outputs(e, out, node_config, args)
+            }
+            NodeType::Thruster(thruster) => thruster.consume_outputs(e, out, node_config, ()),
+        };
     }
-}
 
-pub trait Node<A> {
-    // Update the state and return the energy cost of doing so
-    fn update_state(&mut self, node_config: NodeConfig, args: A) -> f32;
-
-    // The number of brain outputs consumed by this node
-    fn outputs_consumed(&self) -> usize;
-    // The number of brain inputs produced by this node
-    fn inputs_produced(&self) -> usize;
-
-    fn in_out(&self) -> OutputConsumedInputProduced {
-        return OutputConsumedInputProduced([self.outputs_consumed(), self.inputs_produced()]);
-    }
-}
-
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-pub struct Energy {
-    collected_energy: f32,
-}
-impl Energy {
-    pub fn new() -> Self {
-        Self {
-            collected_energy: 0.0,
-        }
-    }
-}
-impl Node<&mut Environment<N, KN>> for Energy {
-    fn update_state(&mut self, node_config: NodeConfig, args: &mut Environment<N, KN>) -> f32 {
-        todo!()
+    fn produce_inputs(
+        &mut self,
+        e: &mut f32,
+        input: &mut Vec<f32>,
+        node_config: &NodeConfig,
+        args: (&Environment<N, KN>, Vec2),
+    ) {
+        match self {
+            NodeType::Energy(energy) => energy.produce_inputs(e, input, node_config, ()),
+            NodeType::PheromoneRead(pheromone_read) => {
+                pheromone_read.produce_inputs(e, input, node_config, args)
+            }
+            NodeType::PheromoneWrite(pheromone_write) => {
+                pheromone_write.produce_inputs(e, input, node_config, ())
+            }
+            NodeType::Thruster(thruster) => thruster.produce_inputs(e, input, node_config, ()),
+        };
     }
 
     fn outputs_consumed(&self) -> usize {
-        0
-    }
-
-    fn inputs_produced(&self) -> usize {
-        0
-    }
-}
-
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-pub struct PheromoneRead {
-    state: f32,
-    layer_id: usize,
-}
-impl PheromoneRead {
-    pub fn new(layer_id: usize) -> Self {
-        Self {
-            state: 0.0,
-            layer_id,
+        match self {
+            NodeType::Energy(energy) => energy.outputs_consumed(),
+            NodeType::PheromoneRead(pheromone_read) => pheromone_read.outputs_consumed(),
+            NodeType::PheromoneWrite(pheromone_write) => pheromone_write.outputs_consumed(),
+            NodeType::Thruster(thruster) => thruster.outputs_consumed(),
         }
     }
-}
-impl Node<f32> for PheromoneRead {
-    fn update_state(&mut self, node_config: NodeConfig, state: f32) -> f32 {
-        let diff = (self.state - state).abs();
-        self.state = state;
-
-        return diff * node_config.pheromone_read_efficiency;
-    }
-
-    fn outputs_consumed(&self) -> usize {
-        0
-    }
 
     fn inputs_produced(&self) -> usize {
-        1
-    }
-}
-
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-pub struct PheromoneWrite {
-    state: f32,
-    layer_id: usize,
-}
-impl PheromoneWrite {
-    pub fn new(layer_id: usize) -> Self {
-        Self {
-            state: 0.0,
-            layer_id,
+        match self {
+            NodeType::Energy(energy) => energy.inputs_produced(),
+            NodeType::PheromoneRead(pheromone_read) => pheromone_read.inputs_produced(),
+            NodeType::PheromoneWrite(pheromone_write) => pheromone_write.inputs_produced(),
+            NodeType::Thruster(thruster) => thruster.inputs_produced(),
         }
-    }
-}
-impl Node<f32> for PheromoneWrite {
-    fn update_state(&mut self, node_config: NodeConfig, state: f32) -> f32 {
-        let diff = (self.state - state).abs();
-        self.state = state;
-
-        return diff * node_config.pheromone_write_efficiency;
-    }
-
-    fn outputs_consumed(&self) -> usize {
-        1
-    }
-
-    fn inputs_produced(&self) -> usize {
-        0
-    }
-}
-
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-pub struct Thruster {
-    state: f32,
-    z_rot: f32,
-}
-impl Thruster {
-    pub fn new(z_rot: f32) -> Self {
-        Self { state: 0.0, z_rot }
-    }
-}
-impl Node<f32> for Thruster {
-    fn update_state(&mut self, node_config: NodeConfig, state: f32) -> f32 {
-        let diff = (self.state - state).abs();
-        self.state = state;
-
-        return diff * node_config.thruster_efficiency;
-    }
-
-    fn outputs_consumed(&self) -> usize {
-        1
-    }
-
-    fn inputs_produced(&self) -> usize {
-        0
     }
 }

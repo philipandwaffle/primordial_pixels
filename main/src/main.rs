@@ -8,11 +8,15 @@ use crate::{
     assets::plugin::HandlesPlugin,
     camera::PanningCamPlugin,
     config::plugin::ConfigPlugin,
+    organism_logger::SavePlugin,
     performance_info::plugin::PerformanceInfoPlugin,
     physics_lock::PhysicsLockPlugin,
     runner::plugin::RunnerPlugin,
     sandbox::SandboxPlugin,
-    world::{organism::seed::Seed, plugin::WorldPlugin},
+    world::{
+        organism::{body::Body, joint::Joint, organism::Organism, seed::Seed},
+        plugin::WorldPlugin,
+    },
 };
 mod assets;
 mod camera;
@@ -36,18 +40,6 @@ fn main() {
 
     // Sandbox
     // a.add_plugins(SandboxPlugin);
-
-    // Runner
-    a.add_plugins(RunnerPlugin {
-        seed: Some(Seed::default()),
-        num_organisms: 1,
-        initial_num_mutations: 1,
-        num_mutations: 0,
-        generation_duration: 10.0,
-        cage_size: vec2(1000.0, 40.0),
-        save_interval: 100,
-        cur_generation: Some(0),
-    });
 
     a.add_plugins((
         DefaultPlugins.set(WindowPlugin {

@@ -1,3 +1,4 @@
+pub mod accessor_trait;
 pub mod environment;
 pub mod field;
 pub mod layer;

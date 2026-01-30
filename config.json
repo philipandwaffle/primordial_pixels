@@ -1,4 +1,5 @@
 {
+    "performance_debug": true,
     "camera": {
         "move_speed": 100.0,
         "zoom_speed": 0.5,
@@ -7,13 +8,38 @@
     },
     "organism": {
         "muscle_efficiency": 1.0,
-        "learn_rate": 1.0,
-        "learn_factor": 1.0
+        "mutation_rate": 0.4,
+        "mutation_distribution": [
+            0.0,
+            0.15,
+            0.15,
+            0.14,
+            0.15,
+            0.0,
+            0.13,
+            0.13,
+            0.13
+        ],
+        "learn_rate": 0.3,
+        "learn_factor": 0.2
     },
     "node": {
         "energy_collect_rate": 1.0,
         "pheromone_read_efficiency": 1.0,
         "pheromone_write_efficiency": 1.0,
         "thruster_efficiency": 1.0
+    },
+    "runner": {
+        "seed": null,
+        "num_organisms": 250,
+        "initial_num_mutations": 1,
+        "num_mutations": 1,
+        "generation_duration": 20.0,
+        "cage_size": [
+            5000.0,
+            40.0
+        ],
+        "save_interval": 50,
+        "cur_generation": 1
     }
 }

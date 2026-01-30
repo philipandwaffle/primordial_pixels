@@ -20,14 +20,14 @@ use crate::{
         brain::Brain,
         component::{Bone, Joint as JointComp, Muscle, OrganismEntity as OrganismMarker},
         joint::Joint,
-        mutation::{Mutable, Mutation},
+        mutation::mutation::{Mutable, Mutation},
         node_type::NodeType,
         organism::Organism,
         util_trait::OrganismAccessor,
     },
 };
 
-#[derive(Clone, ConfigTag,Debug, Serialize, Deserialize)]
+#[derive(Clone, ConfigTag, Debug, Serialize, Deserialize)]
 pub struct Seed {
     pos: Vec2,
     organism: Organism,
@@ -92,7 +92,7 @@ impl Seed {
     }
 
     pub fn spawn(&self, commands: &mut Commands, h: &Handles) -> Entity {
-        let pos = self.pos;
+        let offset = self.pos;
         let o = &self.organism;
 
         let mut joint_ents = Vec::with_capacity(o.body.joints.len());
@@ -104,7 +104,7 @@ impl Seed {
         let mut muscle_ents = Vec::with_capacity(o.body.muscles.len());
 
         for j in o.body.joints.iter() {
-            let pos = pos + j.pos;
+            let pos = offset + j.pos;
             let j_ent = Self::spawn_joint(pos, &j.nodes, commands, h);
 
             joint_ents.push(j_ent);
@@ -112,7 +112,9 @@ impl Seed {
         }
 
         for b in o.body.bones.iter() {
-            let (b_ent, pos) = Self::spawn_bone(pos, b, &joint_ents, &joint_positions, commands, h);
+            let (b_ent, pos) =
+                // Self::spawn_bone(offset, b, &joint_ents, &joint_positions, commands, h);
+                Self::spawn_bone( b, &joint_ents, &joint_positions, commands, h);
 
             bone_ents.push(b_ent);
             bone_positions.push(pos);
@@ -131,7 +133,7 @@ impl Seed {
                     bone_ents.clone(),
                     muscle_ents.clone(),
                 ),
-                Transform::default().with_translation(pos.extend(0.0)),
+                Transform::default(),
             ))
             .add_children(joint_ents.as_slice())
             .add_children(bone_ents.as_slice())
@@ -156,7 +158,7 @@ impl Seed {
     }
 
     fn spawn_bone(
-        pos: Vec2,
+        // offset: Vec2,
         bone: &[usize; 2],
         j_ents: &Vec<Entity>,
         j_pos: &Vec<Vec2>,
@@ -187,10 +189,14 @@ impl Seed {
             ))
             .id();
 
+        // c.entity(bone_ent)
+        //     .with_child(RevoluteJoint::new(bone_ent, j_ents[a]).with_anchor(offset + pos_a));
+        // c.entity(bone_ent)
+        //     .with_child(RevoluteJoint::new(bone_ent, j_ents[b]).with_anchor(offset + pos_b));
         c.entity(bone_ent)
-            .with_child(RevoluteJoint::new(bone_ent, j_ents[a]).with_anchor(pos + pos_a));
+            .with_child(RevoluteJoint::new(bone_ent, j_ents[a]).with_anchor(pos_a));
         c.entity(bone_ent)
-            .with_child(RevoluteJoint::new(bone_ent, j_ents[b]).with_anchor(pos + pos_b));
+            .with_child(RevoluteJoint::new(bone_ent, j_ents[b]).with_anchor(pos_b));
 
         (bone_ent, mid)
     }

@@ -5,8 +5,8 @@ pub const PHYS_LOCK_DAMP: f32 = 50.0;
 
 // Organism sizes
 pub const JOINT_RADIUS: f32 = 0.5;
-pub const BONE_WIDTH: f32 = 0.25;
-pub const MUSCLE_WIDTH: f32 = 0.25;
+pub const BONE_WIDTH: f32 = 0.5;
+pub const MUSCLE_WIDTH: f32 = 0.4;
 
 // Organism Z offset
 pub const ORGANISM_Z: f32 = 0.0;
@@ -20,6 +20,7 @@ pub const MAX_MUSCLE_LEN: f32 = 1.25;
 pub const MUSCLE_COMPLIANCE: f32 = 0.01;
 
 // Mutation
+pub const NUM_MUTATIONS: usize = 9;
 pub const NUM_BODY_MUTATIONS: usize = 2;
 pub const NUM_BRAIN_MUTATIONS: usize = 2;
 
