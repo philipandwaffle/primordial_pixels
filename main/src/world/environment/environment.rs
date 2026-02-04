@@ -1,25 +1,42 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, ops::Index};
 
 use bevy::{ecs::resource::Resource, math::Vec2};
 
-use crate::world::environment::{
-    accessor_trait::EnvAccessor, field::Field, layer::convolve::Convolve, layer_key::LayerKey,
-    layer_type::LayerType,
+use crate::{
+    consts::{KN, N},
+    world::environment::{
+        accessor_trait::Env,
+        field::Field,
+        layer::{
+            convolve::Convolve, layer_key::LayerKey, layer_type::LayerType, replenish::Replenish,
+        },
+    },
 };
 
 #[derive(Resource)]
 pub struct Environment<const N: usize, const KN: usize> {
-    size: Vec2,
+    pub size: Vec2,
     layers: HashMap<LayerKey, LayerType<N, KN>>,
+}
+impl<const N: usize, const KN: usize> Index<&LayerKey> for Environment<N, KN> {
+    type Output = LayerType<N, KN>;
+
+    fn index(&self, index: &LayerKey) -> &Self::Output {
+        &self.layers[index]
+    }
 }
 impl<const N: usize, const KN: usize> Environment<N, KN> {
     pub fn new(size: Vec2) -> Self {
         let mut layers = HashMap::<LayerKey, LayerType<N, KN>>::new();
         layers.insert(
             LayerKey::Energy,
+            LayerType::Replenish(Replenish::new(0.0, 5.0, 0.25)),
+        );
+        layers.insert(
+            LayerKey::Pheromone(0),
             LayerType::Convolve(Convolve::new(
                 0.0,
-                Field::<KN>::from_array([1.0 / 9.0; KN]),
+                Field::<f32, KN>::from_array([1.0 / 9.0; KN]),
                 5.0,
             )),
         );

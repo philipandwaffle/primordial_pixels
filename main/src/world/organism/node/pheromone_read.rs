@@ -5,7 +5,7 @@ use crate::{
     config::config::Node as NodeConfig,
     consts::{KN, N},
     world::{
-        environment::{environment::Environment, layer_key::LayerKey},
+        environment::{environment::Environment, layer::layer_key::LayerKey},
         organism::node::node::Node,
     },
 };

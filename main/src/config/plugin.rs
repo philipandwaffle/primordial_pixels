@@ -5,6 +5,8 @@ use crate::{
     consts::CONFIG_PATH,
     organism_logger::SavePlugin,
     performance_info::plugin::PerformanceInfoPlugin,
+    util::ticker::Ticker,
+    world::environment::plugin::EnvironmentPlugin,
 };
 
 pub struct ConfigPlugin;
@@ -22,5 +24,11 @@ impl Plugin for ConfigPlugin {
         if config.performance_debug {
             app.add_plugins(PerformanceInfoPlugin);
         }
+
+        app.insert_resource(Ticker::new(config.environment.display_update_interval))
+            .add_plugins(EnvironmentPlugin::new(
+                config.environment.size,
+                config.environment.display_update_interval,
+            ));
     }
 }

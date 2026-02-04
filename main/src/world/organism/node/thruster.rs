@@ -1,7 +1,8 @@
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    config::config::Node as NodeConfig, util::clamp_out, world::organism::node::node::Node,
+    config::config::Node as NodeConfig, util::function::clamp_out,
+    world::organism::node::node::Node,
 };
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]

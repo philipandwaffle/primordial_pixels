@@ -1,6 +1,6 @@
 use std::f32::consts::PI;
 
-use bevy::math::{Vec2, vec2};
+use bevy::math::{EulerRot, Quat, Vec2, vec2};
 use rand::{Rng, rngs::ThreadRng, seq::SliceRandom};
 
 pub fn rand_normal_vec2(rng: &mut ThreadRng) -> Vec2 {
@@ -20,6 +20,11 @@ pub fn shuffled_indexes(rng: &mut ThreadRng, len: usize) -> Vec<usize> {
     let mut vec = (0..len).collect::<Vec<usize>>();
     vec.shuffle(rng);
     vec
+}
+
+// Get z rotation from a quaternion
+pub fn quat_z_rot(q: Quat) -> f32 {
+    return q.to_euler(EulerRot::XYZ).2;
 }
 
 pub fn rot_input(input: f32) -> f32 {

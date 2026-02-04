@@ -5,7 +5,8 @@ use rand::{Rng, rngs::ThreadRng, seq::SliceRandom};
 
 use crate::{
     config::config::Organism as OrganismConfig,
-    util::{rand_normal_vec2, shuffled_indexes},
+    consts::{JOINT_RADIUS, MAX_BONE_LEN, MIN_BONE_LEN},
+    util::function::{rand_normal_vec2, shuffled_indexes},
     world::organism::{
         distribution::Distribution, mutation::mutation::Mut, node_type::NodeType,
         organism::Organism,
@@ -15,7 +16,7 @@ use crate::{
 #[derive(Debug)]
 pub enum Body {
     AddNode { joint: usize, node_type: NodeType },
-    AddJoint { pos: Vec2 },
+    AddJoint { joint: usize, pos: Vec2 },
     MoveJoint { joint: usize, pos: Vec2 },
     AddBone { bone: [usize; 2] },
     AddMuscle { muscle: [usize; 2] },
@@ -56,14 +57,38 @@ impl Mut for Body {
                 node_type: NodeType::rand(rng, oc, o)?,
             }),
             // AddJoint
-            1 => Some(Body::AddJoint {
-                pos: rand_normal_vec2(rng) * rng.random_range(0.0..5.0),
-            }),
+            1 => {
+                let joint = rng.random_range(0..o.body.joints.len());
+                let pos = o.body.joints[joint].pos
+                    + rand_normal_vec2(rng) * rng.random_range(MIN_BONE_LEN..MAX_BONE_LEN);
+
+                if o.body
+                    .joints
+                    .iter()
+                    .any(|j| j.pos.distance(pos) < MIN_BONE_LEN)
+                {
+                    return None;
+                } else {
+                    return Some(Body::AddJoint { joint, pos });
+                }
+            }
             // MoveJoint
-            2 => Some(Body::MoveJoint {
-                joint: rng.random_range(0..o.body.joints.len()),
-                pos: rand_normal_vec2(rng) * rng.random_range(0.0..1.0),
-            }),
+            2 => {
+                let joint = rng.random_range(0..o.body.joints.len());
+                let pos = rand_normal_vec2(rng) * rng.random_range(0.0..1.0);
+
+                if o.body
+                    .bones
+                    .iter()
+                    .filter(|bone| bone.contains(&joint))
+                    .map(|[a, b]| o.body.joints[*a].pos.distance(o.body.joints[*b].pos))
+                    .any(|len| len < MIN_BONE_LEN || len > MAX_BONE_LEN)
+                {
+                    return None;
+                } else {
+                    return Some(Body::MoveJoint { joint, pos });
+                }
+            }
             // AddBone
             3 => {
                 if let Some(bone) = Self::gen_edge(rng, &o.body.bones, o.body.joints.len()) {

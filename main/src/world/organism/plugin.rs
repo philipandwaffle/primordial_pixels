@@ -17,7 +17,7 @@ use crate::{
     assets::handles::{Handles, MatKey},
     config::config::Organism as OrganismConfig,
     consts::MUSCLE_Z,
-    util::rot_input,
+    util::function::{quat_z_rot, rot_input},
     world::organism::{
         component::{Bone, Joint, Muscle, OrganismEntity},
         message::SpawnSeedMsg,
@@ -71,7 +71,9 @@ impl OrganismPlugin {
                     if let Ok([trans_a, trans_b]) =
                         bones.get_many([organism_ent.bone_ents[j[0]], organism_ent.bone_ents[j[1]]])
                     {
-                        input.push(rot_input(trans_a.rotation.angle_between(trans_b.rotation)));
+                        // input.push(rot_input(trans_a.rotation.angle_between(trans_b.rotation)));
+                        input.push(rot_input(quat_z_rot(trans_a.rotation)));
+                        input.push(rot_input(quat_z_rot(trans_b.rotation)));
                     }
                 }
 

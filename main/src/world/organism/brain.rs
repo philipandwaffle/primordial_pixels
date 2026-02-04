@@ -34,7 +34,7 @@ impl Mutable for Brain {
     fn mutate(&mut self, mutation: &Mutation) -> bool {
         match mutation {
             Mutation::Brain(mutation) => {
-                info!("Mutating brain: {mutation:?}");
+                // info!("Mutating brain: {mutation:?}, {:?}", self.get_structure());
                 match mutation {
                     BrainMutation::AddInput { index } => self.add_input(*index),
                     BrainMutation::RemoveInput { index } => self.remove_input(*index),
@@ -47,6 +47,7 @@ impl Mutable for Brain {
                         self.mutate_connections(&mut rand::rng(), *learn_rate, *learn_factor);
                     }
                 }
+                // info!("Mutated brain: {:?}", self.get_structure());
             }
             _ => unreachable!(
                 "Tried to mutate brain using invalid mutation {:?}",

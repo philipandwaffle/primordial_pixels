@@ -1,3 +1,4 @@
+use bevy::log::info;
 use rand::rngs::ThreadRng;
 
 use crate::{
@@ -31,24 +32,36 @@ impl Brain {
         add: bool,
     ) -> Vec<Mutation> {
         let mut res: Vec<_> = vec![];
-        for i in 0..out_con {
-            let i = out_con_offset + i;
 
-            if add {
-                res.push(Mutation::Brain(Brain::AddInput { index: i }));
-            } else {
-                res.push(Mutation::Brain(Brain::RemoveInput { index: i - 1 }));
+        // Alter output neurones
+        let out_range = 0..out_con;
+        if add {
+            for i in out_range {
+                let i = out_con_offset + i;
+                // info!("output {i}");
+                res.push(Mutation::Brain(Brain::AddOutput { index: i }));
+            }
+        } else {
+            for i in out_range.rev() {
+                let i = out_con_offset + i;
+                // info!("output {i}");
+                res.push(Mutation::Brain(Brain::RemoveOutput { index: i }));
             }
         }
 
-        // remove output neurones for node
-        for i in 0..in_prod {
-            let i = in_prod_offset + i;
-
-            if add {
-                res.push(Mutation::Brain(Brain::AddOutput { index: i }));
-            } else {
-                res.push(Mutation::Brain(Brain::RemoveOutput { index: i - 1 }));
+        // Alter input neurones
+        let in_range = 0..in_prod;
+        if add {
+            for i in in_range {
+                let i = in_prod_offset + i;
+                // info!("input {i}");
+                res.push(Mutation::Brain(Brain::AddInput { index: i }));
+            }
+        } else {
+            for i in in_range.rev() {
+                let i = in_prod_offset + i;
+                // info!("input {i}");
+                res.push(Mutation::Brain(Brain::RemoveInput { index: i }));
             }
         }
         res

@@ -1,16 +1,25 @@
+use std::ops::Index;
+
 use bevy::math::{FloatExt, Vec2};
 use rand_distr::num_traits::Signed;
 use serde::{Deserialize, Serialize};
 
-use crate::world::environment::{accessor_trait::EnvAccessor, field::Field};
+use crate::world::environment::{accessor_trait::Env, field::Field};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Replenish<const N: usize> {
-    field: Field<N>,
+    field: Field<f32, N>,
     max: f32,
     rate: f32,
 }
-impl<const N: usize> EnvAccessor for Replenish<N> {
+impl<const N: usize> Index<usize> for Replenish<N> {
+    type Output = f32;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.field.space[index]
+    }
+}
+impl<const N: usize> Env for Replenish<N> {
     fn get(&self, x: isize, y: isize) -> f32 {
         self.field.get(x, y)
     }
@@ -27,16 +36,12 @@ impl<const N: usize> EnvAccessor for Replenish<N> {
             *val = new_val.max(self.max);
         }
     }
-}
-impl<const N: usize> Replenish<N> {
-    pub fn new(val: f32, max: f32, rate: f32) -> Self {
-        Self {
-            field: Field::<N>::from_element(val),
-            max,
-            rate,
-        }
+
+    fn max(&self) -> f32 {
+        self.max
     }
-    pub fn replenish(&mut self, dt: f32) {
+
+    fn update(&mut self, dt: f32) {
         let l = self.field.side_len as isize;
         let r = self.rate * dt;
 
@@ -45,6 +50,15 @@ impl<const N: usize> Replenish<N> {
                 let new_val = self.field.get(x, y).lerp(self.max, r);
                 self.field.set(x, y, new_val);
             }
+        }
+    }
+}
+impl<const N: usize> Replenish<N> {
+    pub fn new(val: f32, max: f32, rate: f32) -> Self {
+        Self {
+            field: Field::<f32, N>::from_element(val),
+            max,
+            rate,
         }
     }
 }

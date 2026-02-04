@@ -2,7 +2,7 @@ use bevy::math::Vec2;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    consts::{BASE_INPUT, BASE_OUTPUT, JOINT_RADIUS, MUSCLE_INPUTS, MUSCLE_OUTPUTS},
+    consts::{BASE_INPUT, BASE_OUTPUT, JOINT_RADIUS, MUSCLE_IN_PRODUCE, MUSCLE_OUT_CONSUME},
     world::organism::{
         body::Body,
         brain::Brain,
@@ -32,7 +32,7 @@ impl Mutable for Organism {
             Mutation::Body(body) => match body {
                 BodyMut::AddNode { joint, node_type } => {
                     let out_in_offset = self.get_organism().joint_out_in(*joint).into();
-                    let out_in = [MUSCLE_OUTPUTS, MUSCLE_INPUTS];
+                    let out_in = [MUSCLE_OUT_CONSUME, MUSCLE_IN_PRODUCE];
 
                     for m in BrainMut::from_in_out(out_in_offset, out_in, true) {
                         self.mutate(&m);
@@ -42,26 +42,12 @@ impl Mutable for Organism {
                     self.body.joints[*joint].nodes.push(*node_type);
                     return true;
                 }
-                BodyMut::AddJoint { pos } => {
-                    // Get distances to node
-                    let mut distances = self
-                        .body
-                        .joints
-                        .iter()
-                        .enumerate()
-                        .map(|(i, j)| (i, pos.distance(j.pos)))
-                        .filter(|(_, x)| *x > JOINT_RADIUS)
-                        .collect::<Vec<(usize, f32)>>();
-                    distances.sort_by(|(_, a), (_, b)| a.total_cmp(b));
-
-                    if distances.is_empty() {
-                        return false;
-                    }
-
+                BodyMut::AddJoint { joint, pos } => {
                     // Add shortest bone
                     self.mutate(&Mutation::Body(BodyMut::AddBone {
-                        bone: [distances[0].0, self.body.joints.len()],
+                        bone: [*joint, self.body.joints.len()],
                     }));
+
                     // Add joint
                     self.body.joints.push(Joint::new(*pos, vec![]));
                     return true;
@@ -76,7 +62,7 @@ impl Mutable for Organism {
                 }
                 BodyMut::AddMuscle { muscle } => {
                     let out_in_offset = self.get_organism().muscle_out_in().into();
-                    let out_in = [MUSCLE_OUTPUTS, MUSCLE_INPUTS];
+                    let out_in = [MUSCLE_OUT_CONSUME, MUSCLE_IN_PRODUCE];
 
                     for m in BrainMut::from_in_out(out_in_offset, out_in, true) {
                         self.mutate(&m);
@@ -111,7 +97,7 @@ impl Mutable for Organism {
                 }
                 BodyMut::RemoveMuscle { muscle } => {
                     let out_in_offset = self.get_organism().muscle_out_in().into();
-                    let out_in = [MUSCLE_OUTPUTS, MUSCLE_INPUTS];
+                    let out_in = [MUSCLE_OUT_CONSUME, MUSCLE_IN_PRODUCE];
 
                     for m in BrainMut::from_in_out(out_in_offset, out_in, false) {
                         // println!("{:?}", self.brain.as_ref().unwrap().get_structure());
@@ -153,7 +139,7 @@ impl Organism {
 
     pub fn joint_out_in(&self, joint_index: usize) -> OutputConsumedInputProduced {
         // consts are reversed since we're talking about brain not node
-        let mut out_in = OutputConsumedInputProduced([BASE_INPUT, BASE_OUTPUT]);
+        let mut out_in = OutputConsumedInputProduced([BASE_OUTPUT, BASE_INPUT]);
         for i in 0..joint_index {
             out_in += self.body.joints[i].nodes.iter().map(|n| n.out_in()).sum()
         }
@@ -175,11 +161,7 @@ impl Organism {
     }
 
     pub fn muscle_out_in(&self) -> OutputConsumedInputProduced {
-        return self.joint_out_in(self.body.joints.len())
-            + OutputConsumedInputProduced([
-                self.body.muscles.len() * MUSCLE_OUTPUTS,
-                self.body.muscles.len() * MUSCLE_INPUTS,
-            ]);
+        return self.joint_out_in(self.body.joints.len());
     }
 
     pub fn shift_edges(edges: &mut Vec<[usize; 2]>, index: &usize) {
@@ -225,7 +207,7 @@ mod tests {
     use bevy::math::vec2;
 
     use crate::{
-        consts::{BASE_INPUT, BASE_OUTPUT, MUSCLE_INPUTS, MUSCLE_OUTPUTS},
+        consts::{BASE_INPUT, BASE_OUTPUT, MUSCLE_IN_PRODUCE, MUSCLE_OUT_CONSUME},
         world::organism::{
             body::Body,
             brain::Brain,
@@ -268,15 +250,15 @@ mod tests {
 
         assert_eq!(
             Into::<[usize; 2]>::into(o.joint_out_in(0)),
-            [BASE_INPUT, BASE_OUTPUT]
+            [BASE_OUTPUT, BASE_INPUT]
         );
         assert_eq!(
             Into::<[usize; 2]>::into(o.joint_out_in(1)),
-            [BASE_INPUT + 1, BASE_OUTPUT + 1]
+            [BASE_OUTPUT + 1, BASE_INPUT + 1]
         );
         assert_eq!(
             Into::<[usize; 2]>::into(o.joint_out_in(2)),
-            [BASE_INPUT + 2, BASE_OUTPUT + 1]
+            [BASE_OUTPUT + 2, BASE_INPUT + 1]
         );
     }
 
@@ -286,19 +268,19 @@ mod tests {
 
         assert_eq!(
             Into::<[usize; 2]>::into(o.joint_node_out_in(0, 0)),
-            [BASE_INPUT, BASE_OUTPUT]
+            [BASE_OUTPUT, BASE_INPUT]
         );
         assert_eq!(
             Into::<[usize; 2]>::into(o.joint_node_out_in(0, 2)),
-            [BASE_INPUT + 1, BASE_OUTPUT + 1]
+            [BASE_OUTPUT + 1, BASE_INPUT + 1]
         );
         assert_eq!(
             Into::<[usize; 2]>::into(o.joint_node_out_in(1, 0)),
-            [BASE_INPUT + 1, BASE_OUTPUT + 1]
+            [BASE_OUTPUT + 1, BASE_INPUT + 1]
         );
         assert_eq!(
             Into::<[usize; 2]>::into(o.joint_node_out_in(2, 0)),
-            [BASE_INPUT + 2, BASE_OUTPUT + 1]
+            [BASE_OUTPUT + 2, BASE_INPUT + 1]
         );
     }
 
@@ -309,8 +291,8 @@ mod tests {
         assert_eq!(
             Into::<[usize; 2]>::into(o.muscle_out_in()),
             [
-                BASE_INPUT + 2 + MUSCLE_OUTPUTS,
-                BASE_OUTPUT + 1 + MUSCLE_INPUTS
+                BASE_OUTPUT + 2 + MUSCLE_OUT_CONSUME,
+                BASE_INPUT + 1 + MUSCLE_IN_PRODUCE
             ]
         );
     }

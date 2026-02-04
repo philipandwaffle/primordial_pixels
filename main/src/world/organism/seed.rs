@@ -38,12 +38,12 @@ impl Default for Seed {
             pos: Default::default(),
 
             organism: Organism::new(
-                Some(Brain::new(vec![2, 4, 1])),
+                Some(Brain::new(vec![3, 8, 8, 8, 1])),
                 Body::new(
                     vec![
-                        Joint::new(vec2(-5.0, 0.0), vec![]),
-                        Joint::new(vec2(0.0, 6.0), vec![]),
-                        Joint::new(vec2(5.0, 0.0), vec![]),
+                        Joint::new(vec2(0.0, 0.0), vec![]),
+                        Joint::new(vec2(0.0, 3.0), vec![]),
+                        Joint::new(vec2(6.0, 0.0), vec![]),
                     ],
                     vec![[0, 1], [1, 2]],
                     vec![[0, 1]],

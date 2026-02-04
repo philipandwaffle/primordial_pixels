@@ -1,4 +1,4 @@
-use bevy::ecs::resource::Resource;
+use bevy::{ecs::resource::Resource, math::Vec2};
 use serde::{Deserialize, Serialize};
 
 use crate::{config::config_tag::ConfigTag, consts::NUM_MUTATIONS, runner::plugin::RunnerPlugin};
@@ -8,6 +8,7 @@ use my_derive::ConfigTag;
 pub struct Config {
     pub performance_debug: bool,
     pub camera: Camera,
+    pub environment: Environment,
     pub organism: Organism,
     pub node: Node,
     pub runner: Option<RunnerPlugin>,
@@ -20,6 +21,12 @@ pub struct Camera {
     pub start_zoom: Option<f32>,
     pub min_zoom: Option<f32>,
     pub max_zoom: Option<f32>,
+}
+
+#[derive(ConfigTag, Serialize, Deserialize, Clone, Copy, Resource)]
+pub struct Environment {
+    pub size: Vec2,
+    pub display_update_interval: f32,
 }
 
 #[derive(ConfigTag, Serialize, Deserialize, Clone, Copy, Resource)]

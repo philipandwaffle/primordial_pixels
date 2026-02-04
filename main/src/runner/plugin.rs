@@ -1,3 +1,4 @@
+use core::f32;
 use std::vec;
 
 use avian2d::prelude::{Collider, RigidBody};
@@ -107,27 +108,28 @@ impl RunnerPlugin {
         for (o_ent, organism_ent) in organisms.iter() {
             let num_joints = organism_ent.joint_ents.len() as f32;
 
-            let mut pos = Vec2::ZERO;
+            let mut dist = f32::MAX;
             for j_ent in organism_ent.joint_ents.iter() {
                 match joints.get(*j_ent) {
                     Ok(t) => {
-                        pos += t.translation.truncate();
+                        if t.translation.x < dist {
+                            dist = t.translation.x;
+                        }
                     }
                     Err(e) => panic!("Cannot get joint {e}"),
                 }
             }
-            pos /= num_joints;
             let num_muscles = organism_ent.muscle_ents.len() as f32;
             // pos /= num_joints_f32;
 
             // let fitness = (centre.x.abs()).powf(2.0) - (num_joints_f32.powf(2.0))
             //     + (o.muscle_ents.len() as f32).powf(2.0);
             // let fitness = centre.x.abs().powf(1.4) - num_joints_f32.powf(2.0);
-            let fitness = if pos.x < 0.0 {
-                0.0
+            let fitness = if dist < 0.0 {
+                dist
             } else {
-                (pos.x.powf(1.4) + num_muscles.powf(1.1)) / (num_joints * 0.5)
-            };
+                dist.powf(1.4) + num_muscles.powf(1.1)
+            } / (num_joints * 0.5);
             seeds.push((organism_ent.as_seed(Vec2::ZERO), fitness));
             commands.entity(o_ent).despawn();
         }
@@ -243,13 +245,9 @@ impl RunnerPlugin {
         handles: &Handles,
         oc: &OrganismConfig,
     ) -> Entity {
-        // let m = vec![
-        //     Mutation::Body(crate::world::organism::mutation::Body::AddJoint {
-        //         pos: vec2(0.0, 10.0),
-        //     }),
-        //     Mutation::Body(crate::world::organism::mutation::Body::RemoveJoint { joint: 3 }),
-        //     Mutation::Body(crate::world::organism::mutation::Body::RemoveMuscle { muscle: 0 }),
-        // ];
+        // let m = vec![Mutation::Body(
+        //     crate::world::organism::mutation::body::Body::RemoveMuscle { muscle: 0 },
+        // )];
         // info!("{:?}", s.get_body());
         // for m in m {
         //     info!("Attempt mutation {:?}", m);

@@ -4,9 +4,9 @@ use serde::{Deserialize, Serialize};
 use crate::{
     config::config::Node as NodeConfig,
     consts::{KN, N},
-    util::clamp_out,
+    util::function::clamp_out,
     world::{
-        environment::{environment::Environment, layer_key::LayerKey},
+        environment::{environment::Environment, layer::layer_key::LayerKey},
         organism::node::node::Node,
     },
 };

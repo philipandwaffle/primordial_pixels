@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     consts::{NUM_BODY_MUTATIONS, NUM_BRAIN_MUTATIONS},
-    util::rand_normal_vec2,
+    util::function::rand_normal_vec2,
 };
 
 use super::distribution::Distribution;
