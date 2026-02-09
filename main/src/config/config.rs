@@ -1,17 +1,20 @@
 use bevy::{ecs::resource::Resource, math::Vec2};
 use serde::{Deserialize, Serialize};
 
-use crate::{config::config_tag::ConfigTag, consts::NUM_MUTATIONS, runner::plugin::RunnerPlugin};
+use crate::{
+    config::config_tag::ConfigTag, consts::NUM_MUTATIONS, petri_dish::plugin::PetriDishPlugin,
+    runner::plugin::RunnerPlugin,
+};
 use my_derive::ConfigTag;
 
 #[derive(ConfigTag, Serialize, Deserialize, Clone, Resource)]
 pub struct Config {
     pub performance_debug: bool,
     pub camera: Camera,
-    pub environment: Environment,
     pub organism: Organism,
     pub transput: Transput,
     pub runner: Option<RunnerPlugin>,
+    pub petri_dish: Option<PetriDishPlugin>,
 }
 
 #[derive(ConfigTag, Serialize, Deserialize, Clone, Copy, Resource)]

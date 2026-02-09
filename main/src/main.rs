@@ -25,6 +25,7 @@ mod consts;
 mod extension;
 mod organism_logger;
 mod performance_info;
+mod petri_dish;
 mod physics_lock;
 mod runner;
 mod sandbox;

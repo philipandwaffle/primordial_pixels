@@ -60,7 +60,7 @@ impl OrganismPlugin {
         mut joints: Query<(&mut Joint, &Transform)>,
         bone_query: Query<&Transform, With<Bone>>,
         mut muscle_query: Query<&mut Muscle>,
-        env: Res<Environment<N, KN>>,
+        env: Option<Res<Environment<N, KN>>>,
         transput_config: Res<TransputConfig>,
     ) {
         for mut organism_ent in organisms.iter_mut() {
@@ -81,11 +81,18 @@ impl OrganismPlugin {
             };
 
             // joint input
-            for joint_ent in organism_ent.joint_ents.iter() {
-                if let Ok((mut j, t)) = joints.get_mut(*joint_ent) {
-                    let pos = t.translation.truncate();
-                    for node in j.nodes.iter_mut() {
-                        node.produce_inputs(&mut energy, &mut input, &transput_config, (&env, pos));
+            if let Some(ref env) = env {
+                for joint_ent in organism_ent.joint_ents.iter() {
+                    if let Ok((mut j, t)) = joints.get_mut(*joint_ent) {
+                        let pos = t.translation.truncate();
+                        for node in j.nodes.iter_mut() {
+                            node.produce_inputs(
+                                &mut energy,
+                                &mut input,
+                                &transput_config,
+                                (env, pos),
+                            );
+                        }
                     }
                 }
             }
@@ -119,7 +126,7 @@ impl OrganismPlugin {
         mut joints: Query<(&mut Joint, &Transform)>,
         mut muscle: Query<&mut Muscle>,
         transput_config: Res<TransputConfig>,
-        mut env: ResMut<Environment<N, KN>>,
+        mut env: Option<ResMut<Environment<N, KN>>>,
     ) {
         for mut organism_ent in organisms.iter_mut() {
             let mut energy = organism_ent.cur_energy;
@@ -130,16 +137,18 @@ impl OrganismPlugin {
             };
 
             // joint output
-            for joint_ent in organism_ent.joint_ents.iter() {
-                if let Ok((mut j, t)) = joints.get_mut(*joint_ent) {
-                    let pos = t.translation.truncate();
-                    for node in j.nodes.iter_mut() {
-                        node.consume_outputs(
-                            &mut energy,
-                            &mut output,
-                            &transput_config,
-                            (&mut env, pos),
-                        );
+            if let Some(mut env) = env.as_mut() {
+                for joint_ent in organism_ent.joint_ents.iter() {
+                    if let Ok((mut j, t)) = joints.get_mut(*joint_ent) {
+                        let pos = t.translation.truncate();
+                        for node in j.nodes.iter_mut() {
+                            node.consume_outputs(
+                                &mut energy,
+                                &mut output,
+                                &transput_config,
+                                (&mut env, pos),
+                            );
+                        }
                     }
                 }
             }

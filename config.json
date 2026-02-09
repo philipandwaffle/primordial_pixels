@@ -6,13 +6,6 @@
         "min_zoom": 0.01,
         "max_zoom": null
     },
-    "environment": {
-        "size": [
-            500.0,
-            500.0
-        ],
-        "display_update_interval": 0.25
-    },
     "organism": {
         "mutation_rate": 0.05,
         "mutation_distribution": [
@@ -48,5 +41,12 @@
         ],
         "save_interval": 200,
         "cur_generation": 1
+    },
+    "petri_dish": {
+        "size": [
+            500.0,
+            500.0
+        ],
+        "display_update_interval": 0.25
     }
 }
