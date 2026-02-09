@@ -10,7 +10,7 @@ pub struct Config {
     pub camera: Camera,
     pub environment: Environment,
     pub organism: Organism,
-    pub node: Node,
+    pub transput: Transput,
     pub runner: Option<RunnerPlugin>,
 }
 
@@ -31,7 +31,6 @@ pub struct Environment {
 
 #[derive(ConfigTag, Serialize, Deserialize, Clone, Copy, Resource)]
 pub struct Organism {
-    pub muscle_efficiency: f32,
     pub mutation_rate: f32,
     pub mutation_distribution: [f32; NUM_MUTATIONS],
     pub learn_rate: f32,
@@ -39,7 +38,8 @@ pub struct Organism {
 }
 
 #[derive(ConfigTag, Serialize, Deserialize, Clone, Copy, Resource)]
-pub struct Node {
+pub struct Transput {
+    pub muscle_efficiency: f32,
     pub energy_collect_rate: f32,
     pub pheromone_read_efficiency: f32,
     pub pheromone_write_efficiency: f32,

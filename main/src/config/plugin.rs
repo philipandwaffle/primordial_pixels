@@ -15,7 +15,7 @@ impl Plugin for ConfigPlugin {
         let config = CFG::load_cfg(CONFIG_PATH);
         app.insert_resource(config.camera)
             .insert_resource(config.organism)
-            .insert_resource(config.node);
+            .insert_resource(config.transput);
 
         if let Some(runner) = config.runner {
             app.add_plugins((SavePlugin::new("./saves"), runner));

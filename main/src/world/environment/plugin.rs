@@ -18,7 +18,7 @@ pub struct EnvironmentPlugin {
 impl Plugin for EnvironmentPlugin {
     fn build(&self, app: &mut bevy::app::App) {
         app.insert_resource(Environment::<N, KN>::new(self.size))
-            .add_plugins((DisplayPlugin::new(self.display_update_interval)))
+            .add_plugins(DisplayPlugin::new(self.display_update_interval))
             .add_systems(Update, Self::update_env);
     }
 }

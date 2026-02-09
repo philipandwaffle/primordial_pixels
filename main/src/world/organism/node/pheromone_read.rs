@@ -1,12 +1,14 @@
+use std::collections::VecDeque;
+
 use bevy::math::Vec2;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    config::config::Node as NodeConfig,
+    config::config::Transput as TransputConfig,
     consts::{KN, N},
     world::{
         environment::{environment::Environment, layer::layer_key::LayerKey},
-        organism::node::node::Node,
+        organism::transput::{Transput, append_input},
     },
 };
 
@@ -23,19 +25,22 @@ impl PheromoneRead {
         }
     }
 }
-impl Node<(), (&Environment<N, KN>, Vec2)> for PheromoneRead {
-    fn consume_outputs(&mut self, _: &mut f32, _: &mut Vec<f32>, _: &NodeConfig, _: ()) {}
+impl Transput<(), (&Environment<N, KN>, Vec2)> for PheromoneRead {
+    fn consume_outputs(&mut self, _: &mut f32, _: &mut VecDeque<f32>, _: &TransputConfig, _: ()) {}
 
     fn produce_inputs(
         &mut self,
         energy: &mut f32,
-        input: &mut Vec<f32>,
-        node_config: &NodeConfig,
+        input: &mut VecDeque<f32>,
+        transput_config: &TransputConfig,
         (env, pos): (&Environment<N, KN>, Vec2),
     ) {
-        input.push(env.get_value(&LayerKey::Pheromone(self.layer_id), pos));
+        append_input(
+            input,
+            env.get_value(&LayerKey::Pheromone(self.layer_id), pos),
+        );
 
-        *energy -= node_config.pheromone_read_efficiency;
+        *energy -= transput_config.pheromone_read_efficiency;
     }
 
     fn outputs_consumed(&self) -> usize {

@@ -1,22 +1,24 @@
+use std::collections::VecDeque;
+
 use crate::{
-    config::config::Node as NodeConfig, world::organism::in_out::OutputConsumedInputProduced,
+    config::config::Transput as TransputConfig, world::organism::out_in::OutputConsumedInputProduced,
 };
 
 pub trait Node<C, P> {
     // Update the state and return the energy cost of doing so
-    // fn update_state(&mut self, node_config: NodeConfig, args: A) -> f32;
+    // fn update_state(&mut self, transput_config: TransputConfig, args: A) -> f32;
     fn consume_outputs(
         &mut self,
         energy: &mut f32,
-        out: &mut Vec<f32>,
-        node_config: &NodeConfig,
+        out: &mut VecDeque<f32>,
+        transput_config: &TransputConfig,
         args: C,
     );
     fn produce_inputs(
         &mut self,
         energy: &mut f32,
-        input: &mut Vec<f32>,
-        node_config: &NodeConfig,
+        input: &mut VecDeque<f32>,
+        transput_config: &TransputConfig,
         args: P,
     );
 

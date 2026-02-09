@@ -1,8 +1,11 @@
+use std::collections::VecDeque;
+
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    config::config::Node as NodeConfig, util::function::clamp_out,
-    world::organism::node::node::Node,
+    config::config::Transput as TransputConfig,
+    util::function::clamp_out,
+    world::organism::transput::{Transput, remove_output},
 };
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
@@ -15,7 +18,7 @@ impl Thruster {
         Self { state: 0.0, z_rot }
     }
 }
-impl Node<(), ()> for Thruster {
+impl Transput<(), ()> for Thruster {
     fn outputs_consumed(&self) -> usize {
         1
     }
@@ -24,13 +27,19 @@ impl Node<(), ()> for Thruster {
         0
     }
 
-    fn consume_outputs(&mut self, energy: &mut f32, out: &mut Vec<f32>, _: &NodeConfig, _: ()) {
+    fn consume_outputs(
+        &mut self,
+        energy: &mut f32,
+        out: &mut VecDeque<f32>,
+        _: &TransputConfig,
+        _: (),
+    ) {
         let state = self.state;
-        let new_state = clamp_out(out.pop().unwrap());
+        let new_state = clamp_out(remove_output(out));
 
         *energy -= (state - self.state).abs();
         self.state = new_state;
     }
 
-    fn produce_inputs(&mut self, _: &mut f32, _: &mut Vec<f32>, _: &NodeConfig, _: ()) {}
+    fn produce_inputs(&mut self, _: &mut f32, _: &mut VecDeque<f32>, _: &TransputConfig, _: ()) {}
 }

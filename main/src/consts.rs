@@ -16,6 +16,9 @@ pub const JOINT_RADIUS: f32 = 0.5;
 pub const BONE_WIDTH: f32 = 0.5;
 pub const MUSCLE_WIDTH: f32 = 0.4;
 
+// Energy
+pub const JOINT_MAX_ENERGY: f32 = 5.0;
+
 // Muscle
 pub const MIN_MUSCLE_LEN: f32 = 0.7;
 pub const MAX_MUSCLE_LEN: f32 = 1.3;
@@ -41,7 +44,7 @@ pub const MUSCLE_IN_PRODUCE: usize = 2;
 pub const MUSCLE_OUT_CONSUME: usize = 1;
 
 // Environment
-pub const ENV_SIDE_LEN: usize = 10;
+pub const ENV_SIDE_LEN: usize = 100;
 pub const N: usize = ENV_SIDE_LEN * ENV_SIDE_LEN;
 pub const KN: usize = 9;
 

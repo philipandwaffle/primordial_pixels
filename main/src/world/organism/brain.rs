@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+
 use bevy::{log::info, math::usize};
 use nalgebra::DMatrix;
 use rand::{Rng, rngs::ThreadRng};
@@ -22,8 +24,8 @@ pub struct Brain {
     weights: Vec<Matrix>,
     biases: Vec<Matrix>,
     memory: Vec<f32>,
-    input: Vec<f32>,
-    output: Vec<f32>,
+    input: VecDeque<f32>,
+    output: VecDeque<f32>,
 }
 impl Default for Brain {
     fn default() -> Self {
@@ -74,18 +76,18 @@ impl Brain {
             weights,
             biases,
             memory: vec![0.0; BASE_OUTPUT],
-            input: vec![0.0; BASE_INPUT],
-            output: vec![0.0; BASE_OUTPUT],
+            input: VecDeque::from(vec![0.0; BASE_INPUT]),
+            output: VecDeque::from(vec![0.0; BASE_OUTPUT]),
         };
     }
 
-    pub fn get_output(&self) -> Vec<f32> {
+    pub fn get_output(&self) -> VecDeque<f32> {
         return self.output.clone();
     }
-    pub fn set_output(&mut self, output: Vec<f32>) {
+    pub fn set_output(&mut self, output: VecDeque<f32>) {
         self.output = output;
     }
-    pub fn set_input(&mut self, input: Vec<f32>) {
+    pub fn set_input(&mut self, input: VecDeque<f32>) {
         self.input = input;
     }
 
@@ -130,8 +132,9 @@ impl Brain {
         self.biases[num_biases - 1].remove_col(i);
     }
 
-    pub fn process(&self) -> Vec<f32> {
-        let input = [&self.memory[..], &self.input[..]].concat();
+    pub fn process(&self) -> VecDeque<f32> {
+        let input = Vec::from((&self).input.clone());
+        let input = [&self.memory[..], &input[..]].concat();
 
         let in_len = input.len();
         let len = self.weights[0].0.shape().0;
@@ -149,7 +152,7 @@ impl Brain {
             }
         }
 
-        return y.iter().map(|x| *x).collect::<Vec<f32>>();
+        return y.iter().map(|x| *x).collect::<VecDeque<f32>>();
     }
 
     // Mutate brain connections based on learning rate and learning factor

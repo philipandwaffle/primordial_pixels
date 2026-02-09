@@ -66,4 +66,16 @@ impl Brain {
         }
         res
     }
+
+    pub fn is_learn(&self) -> bool {
+        if let Brain::Learn {
+            learn_rate: _,
+            learn_factor: _,
+        } = self
+        {
+            true
+        } else {
+            false
+        }
+    }
 }

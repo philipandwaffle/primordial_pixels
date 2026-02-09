@@ -18,7 +18,10 @@ use crate::{
     world::organism::{
         body::Body,
         brain::Brain,
-        component::{Bone, Joint as JointComp, Muscle, OrganismEntity as OrganismMarker},
+        component::{
+            bone::Bone, joint::Joint as JointComp, muscle::Muscle,
+            organism::OrganismEntity as OrganismMarker,
+        },
         joint::Joint,
         mutation::mutation::{Mutable, Mutation},
         node_type::NodeType,
@@ -38,16 +41,8 @@ impl Default for Seed {
             pos: Default::default(),
 
             organism: Organism::new(
-                Some(Brain::new(vec![3, 8, 8, 8, 1])),
-                Body::new(
-                    vec![
-                        Joint::new(vec2(0.0, 0.0), vec![]),
-                        Joint::new(vec2(0.0, 3.0), vec![]),
-                        Joint::new(vec2(6.0, 0.0), vec![]),
-                    ],
-                    vec![[0, 1], [1, 2]],
-                    vec![[0, 1]],
-                ),
+                None,
+                Body::new(vec![Joint::new(vec2(0.0, 0.0), vec![])], vec![], vec![]),
             ),
         }
     }
@@ -85,6 +80,10 @@ impl OrganismAccessor for Seed {
 impl Seed {
     pub fn new(pos: Vec2, organism: Organism) -> Self {
         Self { pos, organism }
+    }
+
+    pub fn centre(&mut self) {
+        self.organism.centre();
     }
 
     pub fn set_pos(&mut self, pos: Vec2) {
@@ -218,7 +217,7 @@ impl Seed {
         let length = dir.length();
 
         c.spawn((
-            Muscle::new(length),
+            Muscle::new([b_ents[a], b_ents[b]], length),
             DistanceJoint::new(b_ents[a], b_ents[b])
                 // .with_local_anchor1(mid - pos_a)
                 // .with_local_anchor2(mid - pos_b)

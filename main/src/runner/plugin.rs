@@ -32,7 +32,7 @@ use crate::{
     consts::JOINT_RADIUS,
     organism_logger::LogOrganismsEvent,
     world::organism::{
-        component::{Joint, OrganismEntity},
+        component::{joint::Joint, organism::OrganismEntity},
         mutation::{
             brain::Brain as BrainMut,
             mutation::{Mut, Mutable, Mutation},
@@ -107,20 +107,21 @@ impl RunnerPlugin {
         let mut seeds = Vec::with_capacity(generation.num_organisms);
         for (o_ent, organism_ent) in organisms.iter() {
             let num_joints = organism_ent.joint_ents.len() as f32;
+            let num_muscles = organism_ent.muscle_ents.len() as f32;
 
-            let mut dist = f32::MAX;
+            let mut dist = 0.0;
             for j_ent in organism_ent.joint_ents.iter() {
                 match joints.get(*j_ent) {
                     Ok(t) => {
                         if t.translation.x < dist {
-                            dist = t.translation.x;
+                            dist += t.translation.x;
                         }
                     }
                     Err(e) => panic!("Cannot get joint {e}"),
                 }
             }
-            let num_muscles = organism_ent.muscle_ents.len() as f32;
-            // pos /= num_joints_f32;
+            dist = dist.abs();
+            dist /= num_joints;
 
             // let fitness = (centre.x.abs()).powf(2.0) - (num_joints_f32.powf(2.0))
             //     + (o.muscle_ents.len() as f32).powf(2.0);
@@ -129,8 +130,10 @@ impl RunnerPlugin {
                 dist
             } else {
                 dist.powf(1.4) + num_muscles.powf(1.1)
-            } / (num_joints * 0.5);
+            } / num_joints.max(3.0).powf(0.3);
             seeds.push((organism_ent.as_seed(Vec2::ZERO), fitness));
+
+            // organism_ent.despawn(&mut commands);
             commands.entity(o_ent).despawn();
         }
         generation.organisms.clear();
@@ -272,17 +275,18 @@ impl RunnerPlugin {
         s.mutate(&Mutation::Brain(
             BrainMut::rand(rng, oc, s.get_organism()).unwrap(),
         ));
+        s.centre();
 
         let mut offset = vec2(0.0, 0.0);
         for j in s.get_body().joints.iter() {
             if j.pos.y < offset.y {
                 offset.y = j.pos.y;
             }
-            offset.x += j.pos.x
+            // offset.x += j.pos.x
         }
         offset.y = -offset.y;
         offset.y += JOINT_RADIUS;
-        offset.x /= s.get_body().joints.len() as f32;
+        // offset.x /= s.get_body().joints.len() as f32;
 
         // info!(
         //     "joints: {:?}, spawn_pos: {:?}, offset: {:?}",

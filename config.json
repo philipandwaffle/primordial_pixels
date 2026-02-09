@@ -14,7 +14,6 @@
         "display_update_interval": 0.25
     },
     "organism": {
-        "muscle_efficiency": 1.0,
         "mutation_rate": 0.05,
         "mutation_distribution": [
             0.0,
@@ -30,7 +29,8 @@
         "learn_rate": 0.5,
         "learn_factor": 0.1
     },
-    "node": {
+    "transput": {
+        "muscle_efficiency": 1.0,
         "energy_collect_rate": 1.0,
         "pheromone_read_efficiency": 1.0,
         "pheromone_write_efficiency": 1.0,

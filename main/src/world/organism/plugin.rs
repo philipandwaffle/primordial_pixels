@@ -1,10 +1,12 @@
+use std::collections::VecDeque;
+
 use avian2d::prelude::{DistanceJoint, DistanceLimit};
 use bevy::{
     app::{Plugin, Update},
     ecs::{
         query::{With, Without},
         schedule::IntoScheduleConfigs,
-        system::{Commands, Query, Res},
+        system::{Commands, Query, Res, ResMut},
     },
     log::info,
     math::Quat,
@@ -15,13 +17,18 @@ use bevy::{
 
 use crate::{
     assets::handles::{Handles, MatKey},
-    config::config::Organism as OrganismConfig,
-    consts::MUSCLE_Z,
+    config::config::{Organism as OrganismConfig, Transput as TransputConfig},
+    consts::{KN, MUSCLE_Z, N},
     util::function::{quat_z_rot, rot_input},
-    world::organism::{
-        component::{Bone, Joint, Muscle, OrganismEntity},
-        message::SpawnSeedMsg,
-        util_trait::OrganismAccessor,
+    world::{
+        environment::environment::Environment,
+        organism::{
+            component::{bone::Bone, joint::Joint, muscle::Muscle, organism::OrganismEntity},
+            message::SpawnSeedMsg,
+            node::node::Node,
+            transput::{Transput, append_input},
+            util_trait::OrganismAccessor,
+        },
     },
 };
 
@@ -50,100 +57,103 @@ impl OrganismPlugin {
 
     fn update_brain_input(
         mut organisms: Query<&mut OrganismEntity>,
-        joints: Query<&Joint>,
-        bones: Query<&Transform, With<Bone>>,
+        mut joints: Query<(&mut Joint, &Transform)>,
+        bone_query: Query<&Transform, With<Bone>>,
+        mut muscle_query: Query<&mut Muscle>,
+        env: Res<Environment<N, KN>>,
+        transput_config: Res<TransputConfig>,
     ) {
         for mut organism_ent in organisms.iter_mut() {
-            if let Some(b) = organism_ent.get_brain() {
-                let mut input = Vec::with_capacity(b.get_num_inputs());
+            let mut energy = organism_ent.cur_energy;
 
-                // base stimuli
-                let mb = organism_ent.get_static_stats().metronome_beat;
-                let beat = (organism_ent.get_variable_stats().time_alive % mb) / mb;
+            let mut input = match organism_ent.get_brain() {
+                Some(b) => {
+                    let mut input = VecDeque::with_capacity(b.get_num_inputs());
 
-                input.push(beat);
+                    // base stimuli
+                    let mb = organism_ent.get_static_stats().metronome_beat;
+                    let beat = (organism_ent.get_variable_stats().time_alive % mb) / mb;
 
-                // joint input todo!()
-                // for j in organism_ent.get_body().joints.iter().flat_map(|j| &j.nodes) {}
+                    append_input(&mut input, beat);
+                    input
+                }
+                None => VecDeque::with_capacity(0),
+            };
 
-                // muscle input
-                for j in organism_ent.get_body().muscles.iter() {
-                    if let Ok([trans_a, trans_b]) =
-                        bones.get_many([organism_ent.bone_ents[j[0]], organism_ent.bone_ents[j[1]]])
-                    {
-                        // input.push(rot_input(trans_a.rotation.angle_between(trans_b.rotation)));
-                        input.push(rot_input(quat_z_rot(trans_a.rotation)));
-                        input.push(rot_input(quat_z_rot(trans_b.rotation)));
+            // joint input
+            for joint_ent in organism_ent.joint_ents.iter() {
+                if let Ok((mut j, t)) = joints.get_mut(*joint_ent) {
+                    let pos = t.translation.truncate();
+                    for node in j.nodes.iter_mut() {
+                        node.produce_inputs(&mut energy, &mut input, &transput_config, (&env, pos));
                     }
                 }
+            }
 
+            // muscle input
+            for muscle_ent in organism_ent.muscle_ents.iter() {
+                if let Ok(mut muscle) = muscle_query.get_mut(*muscle_ent) {
+                    muscle.produce_inputs(&mut energy, &mut input, &transput_config, bone_query);
+                }
+            }
+            // for j in organism_ent.get_body().muscles.iter() {
+            //     if let Ok([trans_a, trans_b]) = bone_query
+            //         .get_many([organism_ent.bone_ents[j[0]], organism_ent.bone_ents[j[1]]])
+            //     {
+            //         // input.push(rot_input(trans_a.rotation.angle_between(trans_b.rotation)));
+            //         input.push(rot_input(quat_z_rot(trans_a.rotation)));
+            //         input.push(rot_input(quat_z_rot(trans_b.rotation)));
+            //     }
+            // }
+
+            if organism_ent.get_brain().is_some() {
                 organism_ent.get_mut_brain().unwrap().set_input(input);
             }
+
+            organism_ent.cur_energy = energy;
         }
     }
+
     fn update_brain_output(
-        commands: Commands,
         mut organisms: Query<&mut OrganismEntity>,
-        mut joints: Query<&mut Joint>,
+        mut joints: Query<(&mut Joint, &Transform)>,
         mut muscle: Query<&mut Muscle>,
-        organism_config: Res<OrganismConfig>,
+        transput_config: Res<TransputConfig>,
+        mut env: ResMut<Environment<N, KN>>,
     ) {
         for mut organism_ent in organisms.iter_mut() {
-            if let Some(b) = organism_ent.get_brain() {
-                // Process brain
-                let mut output = b.process();
-                organism_ent
-                    .get_mut_brain()
-                    .unwrap()
-                    .set_output(output.clone());
+            let mut energy = organism_ent.cur_energy;
 
-                // joint output todo!()
+            let mut output = match organism_ent.get_brain() {
+                Some(b) => b.process(),
+                None => VecDeque::with_capacity(0),
+            };
 
-                // muscle output
-                let mut total_muscle_delta = 0.0;
-                for m in organism_ent.muscle_ents.iter() {
-                    if let Ok(mut muscle) = muscle.get_mut(*m) {
-                        total_muscle_delta += muscle.set_len(output.pop().unwrap());
+            // joint output
+            for joint_ent in organism_ent.joint_ents.iter() {
+                if let Ok((mut j, t)) = joints.get_mut(*joint_ent) {
+                    let pos = t.translation.truncate();
+                    for node in j.nodes.iter_mut() {
+                        node.consume_outputs(
+                            &mut energy,
+                            &mut output,
+                            &transput_config,
+                            (&mut env, pos),
+                        );
                     }
                 }
-                total_muscle_delta *= organism_config.muscle_efficiency;
             }
+
+            // muscle output
+            for m in organism_ent.muscle_ents.iter() {
+                if let Ok(mut muscle) = muscle.get_mut(*m) {
+                    muscle.consume_outputs(&mut energy, &mut output, &transput_config, ());
+                }
+            }
+
+            organism_ent.cur_energy = energy;
         }
     }
-
-    // fn update_muscle_mats(
-    //     handles: Res<Handles>,
-    //     organisms: Query<&OrganismEntity>,
-    //     mut muscles: Query<&mut MeshMaterial2d<ColorMaterial>, With<Muscle>>,
-    // ) {
-    //     for o in organisms.iter() {
-    //         if let Some(b) = o.get_brain() {
-    //             let mut output = b.get_output();
-    //             for m_ent in o.muscle_ents.iter() {
-    //                 if let Ok(mat) = muscles.get_mut(*m_ent).as_mut() {
-    //                     if let Some(out) = output.pop() {
-    //                         // let new_modifier = 1.0 + (out * 0.5);
-
-    //                         m.set_len(out);
-    //                         mat.0 = if out <= 0.2 {
-    //                             handles.get_mat_handle(&MatKey::Red)
-    //                         } else if out <= 0.4 {
-    //                             handles.get_mat_handle(&MatKey::Crimson)
-    //                         } else if out <= 0.6 {
-    //                             handles.get_mat_handle(&MatKey::Magenta)
-    //                         } else if out <= 0.8 {
-    //                             handles.get_mat_handle(&MatKey::Purple)
-    //                         } else {
-    //                             handles.get_mat_handle(&MatKey::Blue)
-    //                         };
-    //                     } else {
-    //                         panic!("");
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
 
     fn update_muscles(
         handles: Res<Handles>,

@@ -2,11 +2,13 @@ use bevy::math::Vec2;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    consts::{BASE_INPUT, BASE_OUTPUT, JOINT_RADIUS, MUSCLE_IN_PRODUCE, MUSCLE_OUT_CONSUME},
+    consts::{
+        BASE_INPUT, BASE_OUTPUT, JOINT_MAX_ENERGY, JOINT_RADIUS, MUSCLE_IN_PRODUCE,
+        MUSCLE_OUT_CONSUME,
+    },
     world::organism::{
         body::Body,
         brain::Brain,
-        in_out::OutputConsumedInputProduced,
         joint::Joint,
         mutation::{
             body::Body as BodyMut,
@@ -14,8 +16,10 @@ use crate::{
             mutation::{Mutable, Mutation},
         },
         node::node::Node,
+        out_in::OutputConsumedInputProduced,
         seed::Seed,
         stats::StaticStats,
+        transput::Transput,
         util_trait::OrganismAccessor,
     },
 };
@@ -109,13 +113,21 @@ impl Mutable for Organism {
                     return true;
                 }
             },
-            Mutation::Brain(_) => {
-                if let Some(b) = self.get_mut_organism().brain.as_mut() {
-                    return b.mutate(mutation);
-                    // *b = Brain::new(vec![1, 4, 1]);
-                    // return true;
+            Mutation::Brain(brain_mut) => {
+                let no_brain = self.brain.is_none();
+                if brain_mut.is_learn() && no_brain {
+                    return false;
                 }
-                return false;
+
+                if no_brain {
+                    self.brain = Some(Brain::default());
+                }
+                return self
+                    .get_mut_organism()
+                    .brain
+                    .as_mut()
+                    .unwrap()
+                    .mutate(mutation);
             }
         }
     }
@@ -126,6 +138,19 @@ impl Organism {
             brain,
             body,
             static_stats: StaticStats::new(0.5),
+        }
+    }
+
+    pub fn max_energy(&self) -> f32 {
+        return self.body.joints.len() as f32 * JOINT_MAX_ENERGY;
+    }
+
+    pub fn centre(&mut self) {
+        let centre =
+            self.body.joints.iter().map(|j| j.pos).sum::<Vec2>() / self.body.joints.len() as f32;
+
+        for j in self.body.joints.iter_mut() {
+            j.pos -= centre * 0.5;
         }
     }
 

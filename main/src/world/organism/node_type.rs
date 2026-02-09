@@ -1,11 +1,11 @@
-use std::f32::consts::PI;
+use std::{collections::VecDeque, f32::consts::PI};
 
 use bevy::math::Vec2;
 use rand::{Rng, rngs::ThreadRng};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    config::config::{Node as NodeConfig, Organism as OrganismConfig},
+    config::config::{Organism as OrganismConfig, Transput as TransputConfig},
     consts::{KN, N, PHEROMONE_LAYERS},
     world::{
         environment::environment::Environment,
@@ -16,6 +16,7 @@ use crate::{
                 pheromone_write::PheromoneWrite, thruster::Thruster,
             },
             organism::Organism,
+            transput::Transput,
         },
     },
 };
@@ -37,42 +38,42 @@ impl Mut for NodeType {
         })
     }
 }
-impl Node<(&mut Environment<N, KN>, Vec2), (&Environment<N, KN>, Vec2)> for NodeType {
+impl Transput<(&mut Environment<N, KN>, Vec2), (&Environment<N, KN>, Vec2)> for NodeType {
     fn consume_outputs(
         &mut self,
         e: &mut f32,
-        out: &mut Vec<f32>,
-        node_config: &NodeConfig,
+        out: &mut VecDeque<f32>,
+        transput_config: &TransputConfig,
         args: (&mut Environment<N, KN>, Vec2),
     ) {
         match self {
-            NodeType::Energy(energy) => energy.consume_outputs(e, out, node_config, args),
+            NodeType::Energy(energy) => energy.consume_outputs(e, out, transput_config, args),
             NodeType::PheromoneRead(pheromone_read) => {
-                pheromone_read.consume_outputs(e, out, node_config, ())
+                pheromone_read.consume_outputs(e, out, transput_config, ())
             }
             NodeType::PheromoneWrite(pheromone_write) => {
-                pheromone_write.consume_outputs(e, out, node_config, args)
+                pheromone_write.consume_outputs(e, out, transput_config, args)
             }
-            NodeType::Thruster(thruster) => thruster.consume_outputs(e, out, node_config, ()),
+            NodeType::Thruster(thruster) => thruster.consume_outputs(e, out, transput_config, ()),
         };
     }
 
     fn produce_inputs(
         &mut self,
         e: &mut f32,
-        input: &mut Vec<f32>,
-        node_config: &NodeConfig,
+        input: &mut VecDeque<f32>,
+        transput_config: &TransputConfig,
         args: (&Environment<N, KN>, Vec2),
     ) {
         match self {
-            NodeType::Energy(energy) => energy.produce_inputs(e, input, node_config, ()),
+            NodeType::Energy(energy) => energy.produce_inputs(e, input, transput_config, ()),
             NodeType::PheromoneRead(pheromone_read) => {
-                pheromone_read.produce_inputs(e, input, node_config, args)
+                pheromone_read.produce_inputs(e, input, transput_config, args)
             }
             NodeType::PheromoneWrite(pheromone_write) => {
-                pheromone_write.produce_inputs(e, input, node_config, ())
+                pheromone_write.produce_inputs(e, input, transput_config, ())
             }
-            NodeType::Thruster(thruster) => thruster.produce_inputs(e, input, node_config, ()),
+            NodeType::Thruster(thruster) => thruster.produce_inputs(e, input, transput_config, ()),
         };
     }
 

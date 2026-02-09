@@ -1,13 +1,11 @@
 use bevy::{
     app::{Plugin, PostStartup, Update},
     asset::Assets,
-    color::{Color, Hue},
     ecs::{
         query::With,
         schedule::IntoScheduleConfigs,
-        system::{Commands, Local, Query, Res, ResMut},
+        system::{Commands, Query, Res, ResMut},
     },
-    log::info,
     sprite_render::{ColorMaterial, MeshMaterial2d},
     time::Time,
 };
@@ -65,7 +63,6 @@ impl DisplayPlugin {
         for y in 0..ENV_SIDE_LEN {
             for x in 0..ENV_SIDE_LEN {
                 let i = y * ENV_SIDE_LEN + x;
-                info!("{}", pos);
                 display.field.space[i] = commands
                     .spawn(DisplayCellBundle::new(
                         pos + cell_size * 0.5,

@@ -1,6 +1,6 @@
 use std::ops::Index;
 
-use bevy::math::{FloatExt, Vec2};
+use bevy::math::FloatExt;
 use rand_distr::num_traits::Signed;
 use serde::{Deserialize, Serialize};
 
