@@ -28,11 +28,11 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     assets::handles::{Handles, MatKey, MeshKey},
-    config::{config::Organism as OrganismConfig, config_tag::ConfigTag},
+    config::{config::Mutation as MutationConfig, config_tag::ConfigTag},
     consts::JOINT_RADIUS,
-    organism_logger::LogOrganismsEvent,
+    save::message::LogOrganismsMsg,
     world::organism::{
-        component::{joint::Joint, organism::OrganismEntity},
+        component::{joint::Joint, organism::OrganismMarker},
         mutation::{
             brain::Brain as BrainMut,
             mutation::{Mut, Mutable, Mutation},
@@ -98,11 +98,11 @@ impl RunnerPlugin {
     fn spawn_next_generation(
         mut commands: Commands,
         mut generation: ResMut<Generation>,
-        organism_config: Res<OrganismConfig>,
+        mutation_config: Res<MutationConfig>,
         handles: Res<Handles>,
-        organisms: Query<(Entity, &OrganismEntity), Without<Joint>>,
+        organisms: Query<(Entity, &OrganismMarker), Without<Joint>>,
         joints: Query<&Transform, With<Joint>>,
-        mut log_msg: MessageWriter<LogOrganismsEvent>,
+        mut log_msg: MessageWriter<LogOrganismsMsg>,
     ) {
         let mut seeds = Vec::with_capacity(generation.num_organisms);
         for (o_ent, organism_ent) in organisms.iter() {
@@ -180,7 +180,7 @@ impl RunnerPlugin {
                 &id.to_string(),
                 num_muts,
                 &handles,
-                &organism_config,
+                &mutation_config,
             ));
 
             cur_pos.y += generation.cage_size.y;
@@ -189,7 +189,7 @@ impl RunnerPlugin {
         trace!("Picked: {picked:?}");
 
         if generation.cur_generation % generation.save_interval == 0 {
-            log_msg.write(LogOrganismsEvent::new(
+            log_msg.write(LogOrganismsMsg::new(
                 seeds.iter().map(|(s, _)| s.clone()).collect(),
                 format!("generation/{}", generation.cur_generation),
             ));
@@ -202,7 +202,7 @@ impl RunnerPlugin {
         mut commands: Commands,
         handles: Res<Handles>,
         generation: ResMut<Generation>,
-        organism_config: Res<OrganismConfig>,
+        mutation_config: Res<MutationConfig>,
     ) {
         let mut organisms = Vec::with_capacity(generation.num_organisms);
         let mut cur_pos = Vec2::ZERO;
@@ -219,7 +219,7 @@ impl RunnerPlugin {
                 &id.to_string(),
                 generation.initial_num_mutations,
                 &handles,
-                &organism_config,
+                &mutation_config,
             ));
 
             commands.spawn((
@@ -246,7 +246,7 @@ impl RunnerPlugin {
         name: &str,
         num_muts: usize,
         handles: &Handles,
-        oc: &OrganismConfig,
+        mutation_config: &MutationConfig,
     ) -> Entity {
         // let m = vec![Mutation::Body(
         //     crate::world::organism::mutation::body::Body::RemoveMuscle { muscle: 0 },
@@ -261,11 +261,11 @@ impl RunnerPlugin {
         // }
 
         for _ in 0..num_muts {
-            if rng.random::<f32>() > oc.mutation_rate {
+            if rng.random::<f32>() > mutation_config.rate {
                 continue;
             }
 
-            if let Some(m) = Mutation::rand(rng, oc, s.get_organism()) {
+            if let Some(m) = Mutation::rand(rng, mutation_config, s.get_organism()) {
                 // info!("Attempt mutation {:?}", m);
                 if s.mutate(&m) {
                     // info!("Mutated seed {:?}", m);
@@ -273,7 +273,7 @@ impl RunnerPlugin {
             }
         }
         s.mutate(&Mutation::Brain(
-            BrainMut::rand(rng, oc, s.get_organism()).unwrap(),
+            BrainMut::rand(rng, mutation_config, s.get_organism()).unwrap(),
         ));
         s.centre();
 

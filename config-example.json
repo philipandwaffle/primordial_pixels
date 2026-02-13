@@ -1,0 +1,52 @@
+{
+    "performance_debug": false,
+    "camera": {
+        "move_speed": 100.0,
+        "zoom_speed": 0.5,
+        "min_zoom": 0.01,
+        "max_zoom": null
+    },
+    "organism": {
+        "mutation_rate": 0.05,
+        "mutation_distribution": [
+            0.0,
+            0.15,
+            0.15,
+            0.14,
+            0.15,
+            0.0,
+            0.13,
+            0.13,
+            0.13
+        ],
+        "learn_rate": 0.5,
+        "learn_factor": 0.1
+    },
+    "transput": {
+        "muscle_efficiency": 1.0,
+        "energy_collect_rate": 1.0,
+        "pheromone_read_efficiency": 1.0,
+        "pheromone_write_efficiency": 1.0,
+        "thruster_efficiency": 1.0
+    },
+    "runner": {
+        "seed": null,
+        "num_organisms": 250,
+        "initial_num_mutations": 3,
+        "num_mutations": 3,
+        "generation_duration": 20.0,
+        "cage_size": [
+            5000.0,
+            40.0
+        ],
+        "save_interval": 200,
+        "cur_generation": 1
+    },
+    "petri_dish": {
+        "size": [
+            500.0,
+            500.0
+        ],
+        "display_update_interval": 0.25
+    }
+}

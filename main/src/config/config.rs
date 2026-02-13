@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     config::config_tag::ConfigTag, consts::NUM_MUTATIONS, petri_dish::plugin::PetriDishPlugin,
-    runner::plugin::RunnerPlugin,
+    runner::plugin::RunnerPlugin, save::plugin::SavePlugin,
 };
 use my_derive::ConfigTag;
 
@@ -12,7 +12,8 @@ pub struct Config {
     pub performance_debug: bool,
     pub camera: Camera,
     pub organism: Organism,
-    pub transput: Transput,
+    pub physics: Physics,
+    pub save: SavePlugin,
     pub runner: Option<RunnerPlugin>,
     pub petri_dish: Option<PetriDishPlugin>,
 }
@@ -26,18 +27,29 @@ pub struct Camera {
     pub max_zoom: Option<f32>,
 }
 
-#[derive(ConfigTag, Serialize, Deserialize, Clone, Copy, Resource)]
-pub struct Environment {
-    pub size: Vec2,
-    pub display_update_interval: f32,
+#[derive(ConfigTag, Serialize, Deserialize, Clone, Copy)]
+pub struct Organism {
+    pub mutation: Mutation,
+    pub metabolism: Metabolism,
+    pub transput: Transput,
 }
 
 #[derive(ConfigTag, Serialize, Deserialize, Clone, Copy, Resource)]
-pub struct Organism {
-    pub mutation_rate: f32,
-    pub mutation_distribution: [f32; NUM_MUTATIONS],
+pub struct Mutation {
+    pub rate: f32,
+    pub distribution: [f32; NUM_MUTATIONS],
     pub learn_rate: f32,
     pub learn_factor: f32,
+}
+
+#[derive(ConfigTag, Default, Serialize, Deserialize, Clone, Copy, Resource)]
+pub struct Metabolism {
+    pub reproduce_threshold: f32,
+    pub reproduce_cost: f32,
+    pub node: f32,
+    pub joint: f32,
+    pub bone: f32,
+    pub muscle: f32,
 }
 
 #[derive(ConfigTag, Serialize, Deserialize, Clone, Copy, Resource)]
@@ -46,5 +58,11 @@ pub struct Transput {
     pub energy_collect_rate: f32,
     pub pheromone_read_efficiency: f32,
     pub pheromone_write_efficiency: f32,
+    pub thruster_strength: f32,
     pub thruster_efficiency: f32,
+}
+
+#[derive(ConfigTag, Serialize, Deserialize, Clone, Copy, Resource)]
+pub struct Physics {
+    pub gravity_scale: Vec2,
 }

@@ -8,14 +8,14 @@ use bevy::{
 };
 
 use crate::{
-    consts::{N, NUM_COLORS},
+    consts::{ENV_CELLS, NUM_COLORS},
     world::environment::{field::Field, layer::layer_key::LayerKey},
 };
 
 #[derive(Resource)]
 pub struct Display {
     pub cur_layer: LayerKey,
-    pub field: Field<Entity, N>,
+    pub field: Field<Entity, ENV_CELLS>,
     pub colors: Vec<Handle<ColorMaterial>>,
 }
 impl Index<usize> for Display {

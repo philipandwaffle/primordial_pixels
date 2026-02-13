@@ -1,4 +1,4 @@
-use std::ops::Index;
+use std::ops::{Index, IndexMut};
 
 use bevy::math::FloatExt;
 use rand_distr::num_traits::Signed;
@@ -20,6 +20,11 @@ impl<const N: usize, const KN: usize> Index<usize> for Convolve<N, KN> {
         &self.field.space[index]
     }
 }
+impl<const N: usize, const KN: usize> IndexMut<usize> for Convolve<N, KN> {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        &mut self.field[index]
+    }
+}
 impl<const N: usize, const KN: usize> Env for Convolve<N, KN> {
     fn get(&self, x: isize, y: isize) -> f32 {
         self.field.get(x, y)
@@ -36,6 +41,7 @@ impl<const N: usize, const KN: usize> Env for Convolve<N, KN> {
             *delta = -new_val;
             self.field.set(x, y, 0.0);
         } else {
+            *delta = 0.0;
             self.field.set(x, y, new_val);
         }
     }
@@ -58,6 +64,7 @@ impl<const N: usize, const KN: usize> Env for Convolve<N, KN> {
                         new_val += f.get(x + kx + k_offset, y + ky + k_offset)
                     }
                 }
+                new_val /= KN as f32;
 
                 new_val = self.field.get(x, y).lerp(new_val, dt);
                 self.field.set(x, y, new_val);

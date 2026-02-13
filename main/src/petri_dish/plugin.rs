@@ -1,20 +1,147 @@
-use bevy::{app::Plugin, math::Vec2};
+use avian2d::prelude::{Forces, RigidBody, RigidBodyForces};
+use bevy::{
+    app::{First, Last, Plugin, Update},
+    ecs::{
+        entity::Entity,
+        message::MessageWriter,
+        query::With,
+        schedule::IntoScheduleConfigs,
+        system::{Commands, Query, Res, ResMut},
+    },
+    log::info,
+    math::{NormedVectorSpace, Vec2, vec2},
+    transform::components::Transform,
+};
 use my_derive::ConfigTag;
+use rand::{Rng, rng};
+use rand_distr::num_traits::CheckedSub;
 use serde::{Deserialize, Serialize};
 
-use crate::{config::config_tag::ConfigTag, world::environment::plugin::EnvironmentPlugin};
+use crate::{
+    config::{
+        config::{Metabolism, Mutation as MutationConfig},
+        config_tag::ConfigTag,
+    },
+    consts::JOINT_RADIUS,
+    petri_dish::resource::PetriDishInfo,
+    util::function::rand_vec2,
+    world::{
+        environment::plugin::EnvironmentPlugin,
+        organism::{
+            component::{joint::Joint, organism::OrganismMarker},
+            message::SpawnSeedMsg,
+            mutation::mutation::{Mut, Mutable, Mutation},
+            seed::{self, Seed},
+            util_trait::OrganismAccessor,
+        },
+    },
+};
 
-#[derive(ConfigTag, Serialize, Deserialize, Clone, Copy)]
+#[derive(ConfigTag, Serialize, Deserialize, Clone)]
 pub struct PetriDishPlugin {
-    pub size: Vec2,
+    pub init_seed: Option<Seed>,
+    pub min_organisms: usize,
+    pub initial_num_mutations: usize,
+    pub num_mutations: usize,
+    pub side_len: f32,
     pub display_update_interval: f32,
 }
 impl Plugin for PetriDishPlugin {
     fn build(&self, app: &mut bevy::app::App) {
-        app.add_plugins(EnvironmentPlugin::new(
-            self.size,
+        app.insert_resource(PetriDishInfo::new(
+            self.init_seed.clone(),
+            self.min_organisms,
+            self.initial_num_mutations,
+            self.num_mutations,
+            self.side_len,
+        ))
+        .add_plugins(EnvironmentPlugin::new(
+            self.side_len,
             self.display_update_interval,
-        ));
+        ))
+        .add_systems(First, Self::replenish_organisms);
+        app.add_systems(Last, (Self::evaluate_organisms, Self::nudge_joints));
     }
 }
-impl PetriDishPlugin {}
+
+impl PetriDishPlugin {
+    fn nudge_joints(
+        mut commands: Commands,
+        info: Res<PetriDishInfo>,
+        mut joint_query: Query<(Forces, &Transform), With<Joint>>,
+    ) {
+        let threshold = info.half_side_len * 0.99;
+        for (mut forces, trans) in joint_query.iter_mut() {
+            let pos = trans.translation.truncate();
+
+            if pos.x.abs() > threshold || pos.y.abs() > threshold {
+                forces.apply_force(-pos.normalize());
+                // commands.entity(ent).insert(ExternalForce);
+            }
+        }
+    }
+
+    fn replenish_organisms(
+        mut seed_spawn_msg: MessageWriter<SpawnSeedMsg>,
+        mut info: ResMut<PetriDishInfo>,
+        mutation_config: Res<MutationConfig>,
+        metabolism: Res<Metabolism>,
+    ) {
+        let to_spawn = info
+            .min_organisms
+            .checked_sub(info.cur_organisms)
+            .unwrap_or(0);
+        if to_spawn == 0 {
+            return;
+        }
+        info!(
+            "Spawning {} organisms {}/{}",
+            to_spawn, info.cur_organisms, info.min_organisms
+        );
+
+        let mut rng = rng();
+        let s = info.init_seed.clone();
+        for _ in 0..to_spawn {
+            let pos = vec2(
+                rng.random_range(-info.half_side_len..=info.half_side_len),
+                rng.random_range(-info.half_side_len..=info.half_side_len),
+            );
+            // let pos = vec2(0.0, 0.0);
+            let mut s = s.clone();
+            s.set_pos(pos);
+            s.multi_mutate(
+                &mut rng,
+                &metabolism,
+                &mutation_config,
+                info.initial_num_mutations,
+            );
+
+            seed_spawn_msg.write(SpawnSeedMsg::new(s));
+        }
+        info.cur_organisms += to_spawn;
+    }
+
+    fn evaluate_organisms(
+        mut commands: Commands,
+        mut info: ResMut<PetriDishInfo>,
+        metabolism: Res<Metabolism>,
+        mutation_config: Res<MutationConfig>,
+        mut seed_spawn_msg: MessageWriter<SpawnSeedMsg>,
+        mut organism_query: Query<(Entity, &mut OrganismMarker)>,
+        joint_query: Query<&Transform, With<Joint>>,
+    ) {
+        let mut rng = rng();
+        for (ent, mut organism) in organism_query.iter_mut() {
+            if organism.is_dead() {
+                commands.entity(ent).despawn();
+                info.cur_organisms -= 1;
+            } else if let Some(mut s) = organism.reproduce(&metabolism, &joint_query) {
+                info.cur_organisms += 1;
+
+                s.multi_mutate(&mut rng, &metabolism, &mutation_config, info.num_mutations);
+
+                seed_spawn_msg.write(SpawnSeedMsg::new(s));
+            }
+        }
+    }
+}

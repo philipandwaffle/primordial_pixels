@@ -3,62 +3,11 @@ use std::{
     path::Path,
 };
 
-use bevy::{
-    app::{Plugin, Update},
-    ecs::message::{Message, MessageReader},
-    log::error,
-};
+use bevy::log::error;
 
 use crate::{config::config_tag::Config, world::organism::seed::Seed};
 
-pub struct SavePlugin {
-    save_path: String,
-}
-impl SavePlugin {
-    pub fn new(save_path: &str) -> Self {
-        return Self {
-            save_path: save_path.to_string(),
-        };
-    }
-}
-impl Plugin for SavePlugin {
-    fn build(&self, app: &mut bevy::app::App) {
-        let log_properties = SaveProperties {
-            dir: self.save_path.clone(),
-        };
-
-        app.add_message::<LogOrganismsEvent>().add_systems(
-            Update,
-            move |log_ev: MessageReader<LogOrganismsEvent>| {
-                log_organisms(log_ev, &log_properties);
-            },
-        );
-    }
-}
-
-struct SaveProperties {
-    dir: String,
-}
-
-#[derive(Message)]
-pub struct LogOrganismsEvent {
-    seeds: Vec<Seed>,
-    path: String,
-}
-impl LogOrganismsEvent {
-    pub fn new(seeds: Vec<Seed>, path: String) -> Self {
-        return Self { seeds, path };
-    }
-}
-
-fn log_organisms(mut log_ev: MessageReader<LogOrganismsEvent>, log_properties: &SaveProperties) {
-    for ev in log_ev.read() {
-        SeedPacket::new((ev.seeds).to_vec())
-            .save_cfg(&format!("{}/{}", log_properties.dir, ev.path));
-    }
-}
-
-struct SeedPacket {
+pub struct SeedPacket {
     seeds: Vec<Seed>,
 }
 impl SeedPacket {

@@ -5,15 +5,15 @@ use rand::{Rng, rngs::ThreadRng};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    config::config::{Organism as OrganismConfig, Transput as TransputConfig},
-    consts::{KN, N, PHEROMONE_LAYERS},
+    config::config::{Mutation as MutationConfig, Transput as TransputConfig},
+    consts::{ENV_CELLS, KERNEL_CELLS, PHEROMONE_LAYERS},
     world::{
         environment::environment::Environment,
         organism::{
             mutation::mutation::Mut,
             node::{
-                energy::Energy, node::Node, pheromone_read::PheromoneRead,
-                pheromone_write::PheromoneWrite, thruster::Thruster,
+                energy::Energy, pheromone_read::PheromoneRead, pheromone_write::PheromoneWrite,
+                thruster::Thruster,
             },
             organism::Organism,
             transput::Transput,
@@ -29,7 +29,7 @@ pub enum NodeType {
     Thruster(Thruster),
 }
 impl Mut for NodeType {
-    fn rand(rng: &mut ThreadRng, _: &OrganismConfig, _: &Organism) -> Option<Self> {
+    fn rand(rng: &mut ThreadRng, _: &MutationConfig, _: &Organism) -> Option<Self> {
         Some(match rng.random_range(0..=2) {
             0 => Self::Energy(Energy::new()),
             1 => Self::PheromoneRead(PheromoneRead::new(rng.random_range(0..PHEROMONE_LAYERS))),
@@ -38,13 +38,18 @@ impl Mut for NodeType {
         })
     }
 }
-impl Transput<(&mut Environment<N, KN>, Vec2), (&Environment<N, KN>, Vec2)> for NodeType {
+impl
+    Transput<
+        (&mut Environment<ENV_CELLS, KERNEL_CELLS>, Vec2, f32),
+        (&Environment<ENV_CELLS, KERNEL_CELLS>, Vec2, f32),
+    > for NodeType
+{
     fn consume_outputs(
         &mut self,
         e: &mut f32,
         out: &mut VecDeque<f32>,
         transput_config: &TransputConfig,
-        args: (&mut Environment<N, KN>, Vec2),
+        args: (&mut Environment<ENV_CELLS, KERNEL_CELLS>, Vec2, f32),
     ) {
         match self {
             NodeType::Energy(energy) => energy.consume_outputs(e, out, transput_config, args),
@@ -54,7 +59,9 @@ impl Transput<(&mut Environment<N, KN>, Vec2), (&Environment<N, KN>, Vec2)> for 
             NodeType::PheromoneWrite(pheromone_write) => {
                 pheromone_write.consume_outputs(e, out, transput_config, args)
             }
-            NodeType::Thruster(thruster) => thruster.consume_outputs(e, out, transput_config, ()),
+            NodeType::Thruster(thruster) => {
+                thruster.consume_outputs(e, out, transput_config, args.2)
+            }
         };
     }
 
@@ -63,7 +70,7 @@ impl Transput<(&mut Environment<N, KN>, Vec2), (&Environment<N, KN>, Vec2)> for 
         e: &mut f32,
         input: &mut VecDeque<f32>,
         transput_config: &TransputConfig,
-        args: (&Environment<N, KN>, Vec2),
+        args: (&Environment<ENV_CELLS, KERNEL_CELLS>, Vec2, f32),
     ) {
         match self {
             NodeType::Energy(energy) => energy.produce_inputs(e, input, transput_config, ()),

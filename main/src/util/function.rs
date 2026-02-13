@@ -1,6 +1,10 @@
 use std::f32::consts::PI;
 
-use bevy::math::{EulerRot, Quat, Vec2, vec2};
+use bevy::math::{
+    EulerRot, Quat, Vec2,
+    ops::{cos, sin},
+    vec2,
+};
 use rand::{Rng, rngs::ThreadRng, seq::SliceRandom};
 
 pub fn rand_normal_vec2(rng: &mut ThreadRng) -> Vec2 {
@@ -27,10 +31,18 @@ pub fn quat_z_rot(q: Quat) -> f32 {
     return q.to_euler(EulerRot::XYZ).2;
 }
 
+pub fn z_rot_to_dir(z_rot: f32) -> Vec2 {
+    vec2(sin(z_rot), cos(z_rot))
+}
+
 pub fn rot_input(input: f32) -> f32 {
     return input / (2.0 * PI);
 }
 
-pub fn clamp_out(out: f32) -> f32 {
+pub fn clamp_out_01(out: f32) -> f32 {
+    return 1.0 + out * 0.5;
+}
+
+pub fn clamp_out_rot(out: f32) -> f32 {
     return 1.0 + out * 0.5;
 }

@@ -5,30 +5,21 @@ use bevy::{
 };
 
 use crate::{
-    assets::plugin::HandlesPlugin,
-    camera::PanningCamPlugin,
-    config::plugin::ConfigPlugin,
-    organism_logger::SavePlugin,
-    performance_info::plugin::PerformanceInfoPlugin,
-    physics_lock::PhysicsLockPlugin,
-    runner::plugin::RunnerPlugin,
-    sandbox::SandboxPlugin,
-    world::{
-        organism::{body::Body, joint::Joint, organism::Organism, seed::Seed},
-        plugin::WorldPlugin,
-    },
+    assets::plugin::HandlesPlugin, camera::PanningCamPlugin, config::plugin::ConfigPlugin,
+    physics_lock::PhysicsLockPlugin, world::plugin::WorldPlugin,
 };
+
 mod assets;
 mod camera;
 mod config;
 mod consts;
 mod extension;
-mod organism_logger;
 mod performance_info;
 mod petri_dish;
 mod physics_lock;
 mod runner;
 mod sandbox;
+mod save;
 mod util;
 mod world;
 

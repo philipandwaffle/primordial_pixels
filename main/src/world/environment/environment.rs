@@ -1,21 +1,27 @@
 use std::{collections::HashMap, ops::Index};
 
-use bevy::{ecs::resource::Resource, math::Vec2};
+use bevy::{
+    ecs::resource::Resource,
+    math::{Vec2, vec2},
+};
 
 use crate::{
-    consts::{KN, N},
+    consts::{ENV_CELLS, ENV_SIDE_CELLS, KERNEL_CELLS},
     world::environment::{
         accessor_trait::Env,
         field::Field,
         layer::{
             convolve::Convolve, layer_key::LayerKey, layer_type::LayerType, replenish::Replenish,
+            replenish_convolve::ReplenishConvolve,
         },
     },
 };
 
 #[derive(Resource)]
 pub struct Environment<const N: usize, const KN: usize> {
-    pub size: Vec2,
+    pub side_len: f32,
+    pub cell_len: f32,
+    offset: Vec2,
     layers: HashMap<LayerKey, LayerType<N, KN>>,
 }
 impl<const N: usize, const KN: usize> Index<&LayerKey> for Environment<N, KN> {
@@ -26,21 +32,29 @@ impl<const N: usize, const KN: usize> Index<&LayerKey> for Environment<N, KN> {
     }
 }
 impl<const N: usize, const KN: usize> Environment<N, KN> {
-    pub fn new(size: Vec2) -> Self {
+    pub fn new(side_len: f32) -> Self {
         let mut layers = HashMap::<LayerKey, LayerType<N, KN>>::new();
         layers.insert(
             LayerKey::Energy,
-            LayerType::Replenish(Replenish::new(0.0, 5.0, 0.25)),
+            LayerType::ReplenishConvolve(ReplenishConvolve::new(
+                Convolve::new(0.0, Field::<f32, KN>::from_array([1.0 / 9.0; KN]), 5.0),
+                0.05,
+            )),
         );
         layers.insert(
             LayerKey::Pheromone(0),
             LayerType::Convolve(Convolve::new(
                 0.0,
-                Field::<f32, KN>::from_array([1.0 / 9.0; KN]),
+                Field::<f32, KN>::from_array([0.9 / 9.0; KN]),
                 5.0,
             )),
         );
-        Self { size, layers }
+        Self {
+            side_len,
+            cell_len: side_len / ENV_SIDE_CELLS as f32,
+            offset: vec2(side_len, side_len) * 0.5 - vec2(0.5, 0.5),
+            layers,
+        }
     }
     // TODO: move this to a trait?
     pub fn update(&mut self, dt: f32) {
@@ -49,9 +63,13 @@ impl<const N: usize, const KN: usize> Environment<N, KN> {
         }
     }
 
-    fn world_to_coord(&self, pos: Vec2) -> [isize; 2] {
-        let x = (pos.x / self.size.x).round() as isize;
-        let y = (pos.y / self.size.y).round() as isize;
+    fn world_to_coord(&self, mut pos: Vec2) -> [isize; 2] {
+        // println!("pos: {}", pos);
+        pos += self.offset;
+        // println!("offset_pos: {}", pos);
+        let x = (pos.x / self.cell_len).round() as isize;
+        let y = (pos.y / self.cell_len).round() as isize;
+        // println!("index: [{},{}]", x, y);
         [x, y]
     }
 

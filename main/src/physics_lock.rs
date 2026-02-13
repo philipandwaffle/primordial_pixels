@@ -8,6 +8,7 @@ use bevy::{
         system::{Commands, Query, Res},
     },
     log::{info, trace},
+    math::FloatExt,
     time::Time,
 };
 
@@ -25,15 +26,13 @@ impl PhysicsLockPlugin {
     ) {
         let dt = time.delta_secs();
         for (ent, mut damping, mut lock) in locks.iter_mut() {
-            let new_mass = lock.tick(dt);
-            if new_mass == 0.0 {
-                commands
-                    .entity(ent)
-                    .remove::<(PhysicsLock, LinearDamping)>();
+            let new_damping = lock.tick(dt);
+            if new_damping == 0.0 {
+                commands.entity(ent).remove::<PhysicsLock>();
                 trace!("De-spawning mass lock");
                 continue;
             }
-            *damping = LinearDamping(new_mass);
+            *damping = LinearDamping(new_damping);
         }
     }
 }
@@ -44,10 +43,10 @@ pub struct PhysicsLockBundle {
     lock: PhysicsLock,
 }
 impl PhysicsLockBundle {
-    pub fn new(total_time: f32, starting_damping: f32) -> Self {
+    pub fn new(total_time: f32, starting_damping: f32, final_damping: f32) -> Self {
         return Self {
             damping: LinearDamping(starting_damping),
-            lock: PhysicsLock::new(total_time, starting_damping),
+            lock: PhysicsLock::new(total_time, starting_damping, final_damping),
         };
     }
     fn spawn(self, commands: &mut Commands) -> Entity {
@@ -60,23 +59,27 @@ pub struct PhysicsLock {
     total_time: f32,
     time_left: f32,
     starting_damping: f32,
+    final_damping: f32,
 }
 impl PhysicsLock {
-    pub fn new(total_time: f32, starting_damping: f32) -> Self {
+    pub fn new(total_time: f32, starting_damping: f32, final_damping: f32) -> Self {
         return Self {
             total_time: total_time,
             time_left: total_time,
             starting_damping,
+            final_damping,
         };
     }
 
     pub fn tick(&mut self, dt: f32) -> f32 {
         self.time_left -= dt;
-
-        if self.time_left > 0.0 {
-            return (self.starting_damping * (self.time_left / self.total_time)).powf(5.0);
+        let progress = (self.time_left / self.total_time);
+        if progress > 0.0 {
+            return self
+                .starting_damping
+                .lerp(self.final_damping, 1.0 - progress);
         } else {
-            return 0.0;
+            return self.final_damping;
         }
     }
 }

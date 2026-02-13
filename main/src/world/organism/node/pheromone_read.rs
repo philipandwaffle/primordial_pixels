@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     config::config::Transput as TransputConfig,
-    consts::{KN, N},
+    consts::{ENV_CELLS, KERNEL_CELLS},
     world::{
         environment::{environment::Environment, layer::layer_key::LayerKey},
         organism::transput::{Transput, append_input},
@@ -25,7 +25,7 @@ impl PheromoneRead {
         }
     }
 }
-impl Transput<(), (&Environment<N, KN>, Vec2)> for PheromoneRead {
+impl Transput<(), (&Environment<ENV_CELLS, KERNEL_CELLS>, Vec2, f32)> for PheromoneRead {
     fn consume_outputs(&mut self, _: &mut f32, _: &mut VecDeque<f32>, _: &TransputConfig, _: ()) {}
 
     fn produce_inputs(
@@ -33,14 +33,14 @@ impl Transput<(), (&Environment<N, KN>, Vec2)> for PheromoneRead {
         energy: &mut f32,
         input: &mut VecDeque<f32>,
         transput_config: &TransputConfig,
-        (env, pos): (&Environment<N, KN>, Vec2),
+        (env, pos, dt): (&Environment<ENV_CELLS, KERNEL_CELLS>, Vec2, f32),
     ) {
         append_input(
             input,
             env.get_value(&LayerKey::Pheromone(self.layer_id), pos),
         );
 
-        *energy -= transput_config.pheromone_read_efficiency;
+        *energy -= transput_config.pheromone_read_efficiency * dt;
     }
 
     fn outputs_consumed(&self) -> usize {

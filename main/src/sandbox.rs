@@ -14,6 +14,7 @@ use bevy::{
 
 use crate::{
     assets::handles::{Handles, MatKey, MeshKey},
+    config::plugin::load_config,
     world::organism::{body::Body, brain::Brain, joint::Joint, organism::Organism, seed::Seed},
 };
 
@@ -64,6 +65,7 @@ impl SandboxPlugin {
 
     fn spawn_balls(mut commands: Commands, keys: Res<ButtonInput<KeyCode>>, h: Res<Handles>) {
         if keys.just_released(KeyCode::Space) {
+            let cfg = load_config();
             let s = Seed::new(
                 vec2(10.0, 0.0),
                 Organism::new(
@@ -77,6 +79,7 @@ impl SandboxPlugin {
                         vec![[0, 1], [1, 2]],
                         vec![[0, 1]],
                     ),
+                    cfg.organism.metabolism,
                 ),
             );
             s.clone().spawn(&mut commands, &h);

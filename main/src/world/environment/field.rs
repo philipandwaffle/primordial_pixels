@@ -1,9 +1,13 @@
 use bevy::prelude::Resource;
 use serde::{Deserialize, Serialize};
 use serde_big_array::BigArray;
-use std::{fmt::Debug, usize};
+use std::{
+    fmt::Debug,
+    ops::{Index, IndexMut},
+    usize,
+};
 
-use crate::consts::ENV_SIDE_LEN;
+use crate::consts::ENV_SIDE_CELLS;
 
 #[derive(Serialize, Deserialize, Resource, Copy, Clone)]
 pub struct Field<T, const N: usize>
@@ -14,6 +18,27 @@ where
     pub space: [T; N],
     pub side_len: usize,
 }
+
+impl<T, const N: usize> Index<usize> for Field<T, N>
+where
+    T: Serialize + for<'a> Deserialize<'a> + Copy,
+{
+    type Output = T;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.space[index]
+    }
+}
+
+impl<T, const N: usize> IndexMut<usize> for Field<T, N>
+where
+    T: Serialize + for<'a> Deserialize<'a> + Copy,
+{
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        &mut self.space[index]
+    }
+}
+
 impl<T, const N: usize> Field<T, N>
 where
     T: Serialize + for<'a> Deserialize<'a> + Copy,
@@ -32,7 +57,7 @@ where
     pub fn from_element(val: T) -> Self {
         return Self {
             space: [val; N],
-            side_len: ENV_SIDE_LEN,
+            side_len: ENV_SIDE_CELLS,
         };
     }
 

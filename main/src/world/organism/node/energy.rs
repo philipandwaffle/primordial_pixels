@@ -1,40 +1,43 @@
 use std::collections::VecDeque;
 
-use bevy::math::Vec2;
+use bevy::{log::info, math::Vec2};
 use serde::{Deserialize, Serialize};
 
 use crate::{
     config::config::Transput as TransputConfig,
-    consts::{KN, N},
+    consts::{ENV_CELLS, KERNEL_CELLS},
     world::{
         environment::{environment::Environment, layer::layer_key::LayerKey},
-        organism::{node::node::Node, transput::Transput},
+        organism::transput::Transput,
     },
 };
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct Energy {
-    collected_energy: f32,
+    // collected_energy: f32,
 }
 impl Energy {
     pub fn new() -> Self {
         Self {
-            collected_energy: 0.0,
+            // collected_energy: 0.0,
         }
     }
 }
-impl Transput<(&mut Environment<N, KN>, Vec2), ()> for Energy {
+impl Transput<(&mut Environment<ENV_CELLS, KERNEL_CELLS>, Vec2, f32), ()> for Energy {
     fn consume_outputs(
         &mut self,
         energy: &mut f32,
         _: &mut VecDeque<f32>,
         transput_config: &TransputConfig,
-        (env, pos): (&mut Environment<N, KN>, Vec2),
+        (env, pos, dt): (&mut Environment<ENV_CELLS, KERNEL_CELLS>, Vec2, f32),
     ) {
-        let mut max_collect = transput_config.energy_collect_rate;
+        let max_collect = transput_config.energy_collect_rate * dt;
+        let mut delta = max_collect;
 
-        env.delta_value(&LayerKey::Energy, pos, &mut max_collect);
-        *energy += transput_config.energy_collect_rate - max_collect;
+        env.delta_value(&LayerKey::Energy, pos, &mut delta);
+        let collected_energy = max_collect - delta;
+        // info!("collected {}", collected_energy);
+        *energy += collected_energy;
     }
 
     fn produce_inputs(&mut self, _: &mut f32, _: &mut VecDeque<f32>, _: &TransputConfig, _: ()) {}

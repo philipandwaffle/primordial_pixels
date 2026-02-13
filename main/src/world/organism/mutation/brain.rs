@@ -2,7 +2,7 @@ use bevy::log::info;
 use rand::rngs::ThreadRng;
 
 use crate::{
-    config::config::Organism as OrganismConfig,
+    config::config::Mutation as MutationConfig,
     world::organism::{
         mutation::mutation::{Mut, Mutation},
         organism::Organism,
@@ -18,10 +18,10 @@ pub enum Brain {
     Learn { learn_rate: f32, learn_factor: f32 },
 }
 impl Mut for Brain {
-    fn rand(_: &mut ThreadRng, oc: &OrganismConfig, _: &Organism) -> Option<Self> {
+    fn rand(_: &mut ThreadRng, mutation_config: &MutationConfig, _: &Organism) -> Option<Self> {
         Some(Brain::Learn {
-            learn_rate: oc.learn_rate,
-            learn_factor: oc.learn_factor,
+            learn_rate: mutation_config.learn_rate,
+            learn_factor: mutation_config.learn_factor,
         })
     }
 }

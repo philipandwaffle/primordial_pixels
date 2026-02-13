@@ -6,13 +6,14 @@ use bevy::{
         schedule::IntoScheduleConfigs,
         system::{Commands, Query, Res, ResMut},
     },
+    math::vec2,
     sprite_render::{ColorMaterial, MeshMaterial2d},
     time::Time,
 };
 
 use crate::{
     assets::handles::Handles,
-    consts::{ENV_SIDE_LEN, KN, N, NUM_COLORS},
+    consts::{ENV_SIDE_CELLS, KERNEL_CELLS, NUM_COLORS, ENV_CELLS},
     util::ticker::Ticker,
     world::environment::{
         accessor_trait::Env,
@@ -35,7 +36,7 @@ impl Plugin for DisplayPlugin {
             Update,
             move |time: Res<Time>,
                   d: Res<Display>,
-                  env: Res<Environment<N, KN>>,
+                  env: Res<Environment<ENV_CELLS, KERNEL_CELLS>>,
                   cells: Query<&mut MeshMaterial2d<ColorMaterial>, With<DisplayCell>>| {
                 Self::update_display_cells(time, d, env, cells, &mut ticker);
             },
@@ -54,15 +55,15 @@ impl DisplayPlugin {
     fn init_display_cells(
         mut commands: Commands,
         mut display: ResMut<Display>,
-        env: Res<Environment<N, KN>>,
+        env: Res<Environment<ENV_CELLS, KERNEL_CELLS>>,
         handles: Res<Handles>,
     ) {
-        let cell_size = env.size / ENV_SIDE_LEN as f32;
-        let mut pos = -env.size * 0.5;
+        let cell_size = env.side_len / ENV_SIDE_CELLS as f32;
+        let mut pos = vec2(-env.side_len * 0.5, -env.side_len * 0.5);
 
-        for y in 0..ENV_SIDE_LEN {
-            for x in 0..ENV_SIDE_LEN {
-                let i = y * ENV_SIDE_LEN + x;
+        for y in 0..ENV_SIDE_CELLS {
+            for x in 0..ENV_SIDE_CELLS {
+                let i = y * ENV_SIDE_CELLS + x;
                 display.field.space[i] = commands
                     .spawn(DisplayCellBundle::new(
                         pos + cell_size * 0.5,
@@ -71,17 +72,17 @@ impl DisplayPlugin {
                         &handles,
                     ))
                     .id();
-                pos.x += cell_size.x
+                pos.x += cell_size
             }
-            pos.y += cell_size.y;
-            pos.x -= cell_size.x * ENV_SIDE_LEN as f32;
+            pos.y += cell_size;
+            pos.x -= cell_size * ENV_SIDE_CELLS as f32;
         }
     }
 
     fn update_display_cells(
         time: Res<Time>,
         d: Res<Display>,
-        env: Res<Environment<N, KN>>,
+        env: Res<Environment<ENV_CELLS, KERNEL_CELLS>>,
         mut cells: Query<&mut MeshMaterial2d<ColorMaterial>, With<DisplayCell>>,
         ticker: &mut Ticker,
     ) {
@@ -90,7 +91,7 @@ impl DisplayPlugin {
         }
 
         let max = env[&d.cur_layer].max();
-        for i in 0..N {
+        for i in 0..ENV_CELLS {
             if let Ok(mut mat) = cells.get_mut(d[i]) {
                 let color_i =
                     ((env[&d.cur_layer][i] / max) * (NUM_COLORS - 1) as f32).round() as usize;

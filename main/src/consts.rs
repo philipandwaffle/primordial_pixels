@@ -9,7 +9,8 @@ pub const DISPLAY_Z: f32 = -1.0;
 
 // Physics lock
 pub const PHYS_LOCK_DUR: f32 = 0.5;
-pub const PHYS_LOCK_DAMP: f32 = 50.0;
+pub const PHYS_LOCK_START_DAMP: f32 = 50.0;
+pub const PHYS_LOCK_FINAL_DAMP: f32 = 0.2;
 
 // Organism sizes
 pub const JOINT_RADIUS: f32 = 0.5;
@@ -44,11 +45,11 @@ pub const MUSCLE_IN_PRODUCE: usize = 2;
 pub const MUSCLE_OUT_CONSUME: usize = 1;
 
 // Environment
-pub const ENV_SIDE_LEN: usize = 100;
-pub const N: usize = ENV_SIDE_LEN * ENV_SIDE_LEN;
-pub const KN: usize = 9;
+pub const ENV_SIDE_CELLS: usize = 151;
+pub const ENV_CELLS: usize = ENV_SIDE_CELLS * ENV_SIDE_CELLS;
+pub const KERNEL_CELLS: usize = 9;
 
-pub const PHEROMONE_LAYERS: usize = 8;
+pub const PHEROMONE_LAYERS: usize = 1;
 
 // Environment display
 pub const NUM_COLORS: usize = 8;

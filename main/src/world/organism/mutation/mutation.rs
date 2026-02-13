@@ -1,7 +1,7 @@
 use rand::rngs::ThreadRng;
 
 use crate::{
-    config::config::Organism as OrganismConfig,
+    config::config::Mutation as MutationConfig,
     world::organism::{
         mutation::{body::Body, brain::Brain},
         organism::Organism,
@@ -14,11 +14,11 @@ pub enum Mutation {
     Brain(Brain),
 }
 impl Mut for Mutation {
-    fn rand(rng: &mut ThreadRng, oc: &OrganismConfig, o: &Organism) -> Option<Self>
+    fn rand(rng: &mut ThreadRng, mutation_config: &MutationConfig, o: &Organism) -> Option<Self>
     where
         Self: Sized,
     {
-        if let Some(body_mutation) = Body::rand(rng, oc, o) {
+        if let Some(body_mutation) = Body::rand(rng, mutation_config, o) {
             return Some(Mutation::Body(body_mutation));
         }
         None
@@ -30,7 +30,7 @@ pub trait Mutable {
 }
 
 pub trait Mut {
-    fn rand(rng: &mut ThreadRng, oc: &OrganismConfig, o: &Organism) -> Option<Self>
+    fn rand(rng: &mut ThreadRng, mutation_config: &MutationConfig, o: &Organism) -> Option<Self>
     where
         Self: Sized;
 }

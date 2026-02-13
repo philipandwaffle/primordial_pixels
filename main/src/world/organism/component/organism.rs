@@ -1,28 +1,39 @@
 use bevy::{
-    ecs::{component::Component, entity::Entity, system::Commands},
+    ecs::{
+        component::Component,
+        entity::Entity,
+        query::With,
+        system::{Commands, Query},
+    },
+    log::info,
     math::Vec2,
+    transform::components::Transform,
 };
 
-use crate::world::organism::{
-    body::Body,
-    brain::Brain,
-    organism::Organism,
-    seed::Seed,
-    stats::{StaticStats, VariableStats},
-    util_trait::OrganismAccessor,
+use crate::{
+    config::config::Metabolism,
+    world::organism::{
+        body::Body,
+        brain::Brain,
+        component::joint::Joint,
+        organism::Organism,
+        seed::Seed,
+        stats::{StaticStats, VariableStats},
+        util_trait::OrganismAccessor,
+    },
 };
 
 #[derive(Component)]
-pub struct OrganismEntity {
+pub struct OrganismMarker {
     pub organism: Organism,
-    pub cur_energy: f32,
-    max_energy: f32,
+    cur_energy: f32,
+    pub max_energy: f32,
     variable_stats: VariableStats,
     pub joint_ents: Vec<Entity>,
     pub bone_ents: Vec<Entity>,
     pub muscle_ents: Vec<Entity>,
 }
-impl OrganismEntity {
+impl OrganismMarker {
     pub fn new(
         organism: Organism,
         joints: Vec<Entity>,
@@ -32,13 +43,47 @@ impl OrganismEntity {
         let max_energy = organism.max_energy();
         Self {
             organism,
-            cur_energy: max_energy * 0.5,
+            cur_energy: max_energy * 0.2,
             max_energy,
             joint_ents: joints,
             bone_ents: bones,
             muscle_ents: muscles,
             variable_stats: VariableStats::new(),
         }
+    }
+
+    pub fn update_energy(&mut self, delta: f32) {
+        // info!(
+        //     "energy at {} -> {}%",
+        //     self.cur_energy,
+        //     self.cur_energy / self.max_energy * 100.0
+        // );
+        self.cur_energy = (self.cur_energy + delta).clamp(0.0, self.max_energy)
+    }
+
+    pub fn is_dead(&self) -> bool {
+        return self.cur_energy <= 0.0;
+    }
+
+    pub fn reproduce(
+        &mut self,
+        metabolism: &Metabolism,
+        joint_query: &Query<&Transform, With<Joint>>,
+    ) -> Option<Seed> {
+        if self.cur_energy <= self.max_energy * metabolism.reproduce_threshold {
+            return None;
+        }
+
+        self.cur_energy -= self.max_energy * metabolism.reproduce_cost;
+        Some(
+            self.as_seed(
+                self.joint_ents
+                    .iter()
+                    .map(|j_ent| joint_query.get(*j_ent).unwrap().translation.truncate())
+                    .sum::<Vec2>()
+                    / (self.joint_ents.len() as f32),
+            ),
+        )
     }
 
     pub fn update_variable_stats(&mut self, dt: f32) {
@@ -68,7 +113,7 @@ impl OrganismEntity {
         }
     }
 }
-impl OrganismAccessor for OrganismEntity {
+impl OrganismAccessor for OrganismMarker {
     fn get_mut_organism<'a>(&'a mut self) -> &'a mut Organism {
         return &mut self.organism;
     }

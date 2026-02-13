@@ -1,9 +1,10 @@
 use std::collections::VecDeque;
 
-use avian2d::prelude::{DistanceJoint, DistanceLimit};
+use avian2d::prelude::{DistanceJoint, DistanceLimit, Forces, RigidBodyForces};
 use bevy::{
-    app::{Plugin, Update},
+    app::{First, Last, Plugin, PostUpdate, PreUpdate, Update},
     ecs::{
+        message::MessageReader,
         query::{With, Without},
         schedule::IntoScheduleConfigs,
         system::{Commands, Query, Res, ResMut},
@@ -17,15 +18,16 @@ use bevy::{
 
 use crate::{
     assets::handles::{Handles, MatKey},
-    config::config::{Organism as OrganismConfig, Transput as TransputConfig},
-    consts::{KN, MUSCLE_Z, N},
+    config::config::{Metabolism, Mutation as MutationConfig, Transput as TransputConfig},
+    consts::{ENV_CELLS, KERNEL_CELLS, MUSCLE_Z},
     util::function::{quat_z_rot, rot_input},
     world::{
         environment::environment::Environment,
         organism::{
-            component::{bone::Bone, joint::Joint, muscle::Muscle, organism::OrganismEntity},
+            component::{bone::Bone, joint::Joint, muscle::Muscle, organism::OrganismMarker},
             message::SpawnSeedMsg,
-            node::node::Node,
+            node::thruster::Thruster,
+            node_type::NodeType,
             transput::{Transput, append_input},
             util_trait::OrganismAccessor,
         },
@@ -35,36 +37,36 @@ use crate::{
 pub struct OrganismPlugin;
 impl Plugin for OrganismPlugin {
     fn build(&self, app: &mut bevy::app::App) {
-        app.add_message::<SpawnSeedMsg>().add_systems(
-            Update,
-            (
-                Self::tick_organism_time,
-                Self::update_brain_input,
-                Self::update_brain_output,
-                Self::update_muscles,
-            )
-                .chain(),
-        );
+        app.add_message::<SpawnSeedMsg>()
+            .add_systems(First, (Self::spawn_seed, Self::tick_organism_time))
+            .add_systems(PreUpdate, Self::update_brain_input)
+            .add_systems(Update, Self::update_brain_output)
+            .add_systems(PostUpdate, (Self::update_muscles, Self::update_thrusters));
+        // .add_systems(Last, systems);
     }
 }
 impl OrganismPlugin {
-    fn tick_organism_time(time: Res<Time>, mut organisms: Query<&mut OrganismEntity>) {
+    fn tick_organism_time(time: Res<Time>, mut organisms: Query<&mut OrganismMarker>) {
         let dt = time.delta_secs();
         for mut o in organisms.iter_mut() {
             o.update_variable_stats(dt);
+            let energy = o.get_organism().metabolic_cost * dt;
+            o.update_energy(energy);
         }
     }
 
     fn update_brain_input(
-        mut organisms: Query<&mut OrganismEntity>,
+        mut organisms: Query<&mut OrganismMarker>,
         mut joints: Query<(&mut Joint, &Transform)>,
         bone_query: Query<&Transform, With<Bone>>,
         mut muscle_query: Query<&mut Muscle>,
-        env: Option<Res<Environment<N, KN>>>,
+        time: Res<Time>,
+        env: Option<Res<Environment<ENV_CELLS, KERNEL_CELLS>>>,
         transput_config: Res<TransputConfig>,
     ) {
+        let dt = time.delta_secs();
         for mut organism_ent in organisms.iter_mut() {
-            let mut energy = organism_ent.cur_energy;
+            let mut energy = 0.0;
 
             let mut input = match organism_ent.get_brain() {
                 Some(b) => {
@@ -90,7 +92,7 @@ impl OrganismPlugin {
                                 &mut energy,
                                 &mut input,
                                 &transput_config,
-                                (env, pos),
+                                (env, pos, dt),
                             );
                         }
                     }
@@ -103,33 +105,26 @@ impl OrganismPlugin {
                     muscle.produce_inputs(&mut energy, &mut input, &transput_config, bone_query);
                 }
             }
-            // for j in organism_ent.get_body().muscles.iter() {
-            //     if let Ok([trans_a, trans_b]) = bone_query
-            //         .get_many([organism_ent.bone_ents[j[0]], organism_ent.bone_ents[j[1]]])
-            //     {
-            //         // input.push(rot_input(trans_a.rotation.angle_between(trans_b.rotation)));
-            //         input.push(rot_input(quat_z_rot(trans_a.rotation)));
-            //         input.push(rot_input(quat_z_rot(trans_b.rotation)));
-            //     }
-            // }
 
             if organism_ent.get_brain().is_some() {
                 organism_ent.get_mut_brain().unwrap().set_input(input);
             }
 
-            organism_ent.cur_energy = energy;
+            organism_ent.update_energy(energy);
         }
     }
 
     fn update_brain_output(
-        mut organisms: Query<&mut OrganismEntity>,
+        mut organisms: Query<&mut OrganismMarker>,
         mut joints: Query<(&mut Joint, &Transform)>,
         mut muscle: Query<&mut Muscle>,
         transput_config: Res<TransputConfig>,
-        mut env: Option<ResMut<Environment<N, KN>>>,
+        time: Res<Time>,
+        mut env: Option<ResMut<Environment<ENV_CELLS, KERNEL_CELLS>>>,
     ) {
+        let dt = time.delta_secs();
         for mut organism_ent in organisms.iter_mut() {
-            let mut energy = organism_ent.cur_energy;
+            let mut energy = 0.0;
 
             let mut output = match organism_ent.get_brain() {
                 Some(b) => b.process(),
@@ -146,7 +141,7 @@ impl OrganismPlugin {
                                 &mut energy,
                                 &mut output,
                                 &transput_config,
-                                (&mut env, pos),
+                                (&mut env, pos, dt),
                             );
                         }
                     }
@@ -160,7 +155,7 @@ impl OrganismPlugin {
                 }
             }
 
-            organism_ent.cur_energy = energy;
+            organism_ent.update_energy(energy);
         }
     }
 
@@ -205,6 +200,27 @@ impl OrganismPlugin {
                 trans.rotation = Quat::from_rotation_z(z_rot);
                 trans.scale.x = muscle_length;
             }
+        }
+    }
+
+    fn update_thrusters(time: Res<Time>, mut joint_query: Query<(Forces, &Joint)>) {
+        let dt = time.delta_secs();
+        for (mut forces, joint) in joint_query.iter_mut() {
+            for node in joint.nodes.iter() {
+                if let NodeType::Thruster(t) = node {
+                    forces.apply_force(t.get_thrust() * dt);
+                }
+            }
+        }
+    }
+
+    fn spawn_seed(
+        mut commands: Commands,
+        mut spawn_seed_msg: MessageReader<SpawnSeedMsg>,
+        handles: Res<Handles>,
+    ) {
+        for s in spawn_seed_msg.read() {
+            s.spawn(&mut commands, &handles);
         }
     }
 }

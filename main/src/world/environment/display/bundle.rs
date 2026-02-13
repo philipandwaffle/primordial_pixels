@@ -1,6 +1,6 @@
 use bevy::{
     ecs::bundle::Bundle,
-    math::Vec2,
+    math::{Vec2, vec3},
     mesh::Mesh2d,
     sprite_render::{ColorMaterial, MeshMaterial2d},
     transform::components::Transform,
@@ -20,13 +20,16 @@ pub struct DisplayCellBundle {
     trans: Transform,
 }
 impl DisplayCellBundle {
-    pub fn new(pos: Vec2, cell_size: Vec2, d: &Display, h: &Handles) -> Self {
+    pub fn new(pos: Vec2, cell_size_len: f32, d: &Display, h: &Handles) -> Self {
         return Self {
             display_cell: DisplayCell,
             mesh: h.get_mesh2d(&MeshKey::Rectangle),
             mat: MeshMaterial2d(d.colors[0].clone()),
-            trans: Transform::from_translation(pos.extend(DISPLAY_Z))
-                .with_scale(cell_size.extend(1.0)),
+            trans: Transform::from_translation(pos.extend(DISPLAY_Z)).with_scale(vec3(
+                cell_size_len,
+                cell_size_len,
+                1.0,
+            )),
         };
     }
 }

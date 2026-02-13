@@ -1,29 +1,39 @@
-use avian2d::prelude::{Collider, DistanceJoint, LockedAxes, RevoluteJoint, RigidBody};
+use avian2d::prelude::{
+    Collider, DistanceJoint, LinearDamping, LockedAxes, RevoluteJoint, RigidBody,
+};
 use bevy::{
     ecs::{entity::Entity, system::Commands},
     math::{Quat, Vec2, vec2, vec3},
     transform::components::Transform,
 };
 use my_derive::ConfigTag;
+use rand::rngs::ThreadRng;
 use serde::{Deserialize, Serialize};
 
 use crate::{
     assets::handles::{Handles, MatKey, MeshKey},
-    config::config_tag::ConfigTag,
+    config::{
+        config::{Metabolism, Mutation as MutationConfig},
+        config_tag::ConfigTag,
+        plugin::load_config,
+    },
     consts::{
         BONE_WIDTH, BONE_Z, JOINT_RADIUS, JOINT_Z, MUSCLE_COMPLIANCE, MUSCLE_WIDTH, MUSCLE_Z,
-        PHYS_LOCK_DAMP, PHYS_LOCK_DUR,
+        PHYS_LOCK_DUR, PHYS_LOCK_FINAL_DAMP, PHYS_LOCK_START_DAMP,
     },
     physics_lock::PhysicsLockBundle,
     world::organism::{
         body::Body,
         brain::Brain,
         component::{
-            bone::Bone, joint::Joint as JointComp, muscle::Muscle,
-            organism::OrganismEntity as OrganismMarker,
+            bone::Bone, joint::Joint as JointComp, muscle::Muscle, organism::OrganismMarker,
         },
         joint::Joint,
-        mutation::mutation::{Mutable, Mutation},
+        mutation::{
+            brain::Brain as BrainMut,
+            mutation::{Mut, Mutable, Mutation as OrgMut},
+        },
+        node::{energy::Energy, thruster::Thruster},
         node_type::NodeType,
         organism::Organism,
         util_trait::OrganismAccessor,
@@ -37,18 +47,30 @@ pub struct Seed {
 }
 impl Default for Seed {
     fn default() -> Self {
+        let cfg = load_config();
         Self {
             pos: Default::default(),
-
             organism: Organism::new(
+                // Some(Brain::new(vec![1, 5, 5, 2])),
                 None,
-                Body::new(vec![Joint::new(vec2(0.0, 0.0), vec![])], vec![], vec![]),
+                Body::new(
+                    vec![Joint::new(
+                        vec2(0.0, 0.0),
+                        vec![
+                            NodeType::Energy(Energy::new()),
+                            // NodeType::Thruster(Thruster::new(0.0)),
+                        ],
+                    )],
+                    vec![],
+                    vec![],
+                ),
+                cfg.organism.metabolism,
             ),
         }
     }
 }
 impl Mutable for Seed {
-    fn mutate(&mut self, mutation: &Mutation) -> bool {
+    fn mutate(&mut self, mutation: &OrgMut) -> bool {
         self.organism.mutate(mutation)
     }
 }
@@ -80,6 +102,28 @@ impl OrganismAccessor for Seed {
 impl Seed {
     pub fn new(pos: Vec2, organism: Organism) -> Self {
         Self { pos, organism }
+    }
+
+    pub fn multi_mutate(
+        &mut self,
+        rng: &mut ThreadRng,
+        metabolism: &Metabolism,
+        mutation_config: &MutationConfig,
+        num_muts: usize,
+    ) {
+        for _ in 0..num_muts {
+            if let Some(m) = OrgMut::rand(rng, &mutation_config, self.get_organism()) {
+                self.mutate(&m);
+            }
+        }
+        self.mutate(&OrgMut::Brain(
+            BrainMut::rand(rng, mutation_config, self.get_organism()).unwrap(),
+        ));
+        self.update_metabolic_cost(&metabolism);
+    }
+
+    pub fn update_metabolic_cost(&mut self, metabolism: &Metabolism) {
+        self.organism.update_metabolic_cost(metabolism)
     }
 
     pub fn centre(&mut self) {
@@ -143,7 +187,7 @@ impl Seed {
     pub fn spawn_joint(pos: Vec2, nodes: &Vec<NodeType>, c: &mut Commands, h: &Handles) -> Entity {
         c.spawn((
             LockedAxes::ROTATION_LOCKED,
-            PhysicsLockBundle::new(PHYS_LOCK_DUR, PHYS_LOCK_DAMP),
+            PhysicsLockBundle::new(PHYS_LOCK_DUR, PHYS_LOCK_START_DAMP, PHYS_LOCK_FINAL_DAMP),
             JointComp::new(nodes),
             RigidBody::Dynamic,
             Transform::default()

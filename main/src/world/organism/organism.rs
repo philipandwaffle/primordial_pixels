@@ -1,7 +1,8 @@
-use bevy::math::Vec2;
+use bevy::{log::info, math::Vec2};
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    config::config::Metabolism,
     consts::{
         BASE_INPUT, BASE_OUTPUT, JOINT_MAX_ENERGY, JOINT_RADIUS, MUSCLE_IN_PRODUCE,
         MUSCLE_OUT_CONSUME,
@@ -15,7 +16,6 @@ use crate::{
             brain::Brain as BrainMut,
             mutation::{Mutable, Mutation},
         },
-        node::node::Node,
         out_in::OutputConsumedInputProduced,
         seed::Seed,
         stats::StaticStats,
@@ -29,6 +29,7 @@ pub struct Organism {
     pub brain: Option<Brain>,
     pub body: Body,
     static_stats: StaticStats,
+    pub metabolic_cost: f32,
 }
 impl Mutable for Organism {
     fn mutate(&mut self, mutation: &Mutation) -> bool {
@@ -36,7 +37,8 @@ impl Mutable for Organism {
             Mutation::Body(body) => match body {
                 BodyMut::AddNode { joint, node_type } => {
                     let out_in_offset = self.get_organism().joint_out_in(*joint).into();
-                    let out_in = [MUSCLE_OUT_CONSUME, MUSCLE_IN_PRODUCE];
+                    let out_in = node_type.out_in().into();
+                    info!("adding node: {:?}", node_type);
 
                     for m in BrainMut::from_in_out(out_in_offset, out_in, true) {
                         self.mutate(&m);
@@ -133,12 +135,36 @@ impl Mutable for Organism {
     }
 }
 impl Organism {
-    pub fn new(brain: Option<Brain>, body: Body) -> Self {
+    pub fn new(brain: Option<Brain>, body: Body, metabolism: Metabolism) -> Self {
+        let metabolic_cost = (body
+            .joints
+            .iter()
+            .map(|j| j.nodes.len() as f32)
+            .sum::<f32>()
+            * metabolism.node)
+            + (body.joints.len() as f32 * metabolism.joint)
+            + (body.bones.len() as f32 * metabolism.bone)
+            + (body.muscles.len() as f32 * metabolism.muscle);
+
         Self {
             brain,
             body,
             static_stats: StaticStats::new(0.5),
+            metabolic_cost,
         }
+    }
+
+    pub fn update_metabolic_cost(&mut self, metabolism: &Metabolism) {
+        self.metabolic_cost = -(self
+            .body
+            .joints
+            .iter()
+            .map(|j| j.nodes.len() as f32)
+            .sum::<f32>()
+            * metabolism.node
+            + (self.body.joints.len() as f32 * metabolism.joint)
+            + (self.body.bones.len() as f32 * metabolism.bone)
+            + (self.body.muscles.len() as f32 * metabolism.muscle));
     }
 
     pub fn max_energy(&self) -> f32 {
@@ -232,6 +258,7 @@ mod tests {
     use bevy::math::vec2;
 
     use crate::{
+        config::config::Metabolism,
         consts::{BASE_INPUT, BASE_OUTPUT, MUSCLE_IN_PRODUCE, MUSCLE_OUT_CONSUME},
         world::organism::{
             body::Body,
@@ -266,6 +293,7 @@ mod tests {
                 vec![[0, 1], [1, 2]],
                 vec![[0, 1]],
             ),
+            Metabolism::default(),
         )
     }
 

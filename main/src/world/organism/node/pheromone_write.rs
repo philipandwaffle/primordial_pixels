@@ -5,14 +5,11 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     config::config::Transput as TransputConfig,
-    consts::{KN, N},
-    util::function::clamp_out,
+    consts::{ENV_CELLS, KERNEL_CELLS},
+    util::function::clamp_out_01,
     world::{
         environment::{environment::Environment, layer::layer_key::LayerKey},
-        organism::{
-            node::node::Node,
-            transput::{Transput, remove_output},
-        },
+        organism::transput::{Transput, remove_output},
     },
 };
 
@@ -29,18 +26,19 @@ impl PheromoneWrite {
         }
     }
 }
-impl Transput<(&mut Environment<N, KN>, Vec2), ()> for PheromoneWrite {
+impl Transput<(&mut Environment<ENV_CELLS, KERNEL_CELLS>, Vec2, f32), ()> for PheromoneWrite {
     fn consume_outputs(
         &mut self,
         energy: &mut f32,
         output: &mut VecDeque<f32>,
         transput_config: &TransputConfig,
-        (env, pos): (&mut Environment<N, KN>, Vec2),
+        (env, pos, dt): (&mut Environment<ENV_CELLS, KERNEL_CELLS>, Vec2, f32),
     ) {
-        let mut delta =
-            clamp_out(remove_output(output)) * transput_config.pheromone_write_efficiency;
+        let max_write =
+            clamp_out_01(remove_output(output)) * transput_config.pheromone_write_efficiency * dt;
+        let mut delta = max_write;
         env.delta_value(&LayerKey::Pheromone(self.layer_id), pos, &mut delta);
-        *energy -= transput_config.pheromone_write_efficiency - delta;
+        *energy -= transput_config.pheromone_write_efficiency * dt * (max_write - delta);
     }
 
     fn produce_inputs(&mut self, _: &mut f32, _: &mut VecDeque<f32>, _: &TransputConfig, _: ()) {}

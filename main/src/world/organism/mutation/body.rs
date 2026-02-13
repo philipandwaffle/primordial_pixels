@@ -4,7 +4,7 @@ use bevy::math::Vec2;
 use rand::{Rng, rngs::ThreadRng, seq::SliceRandom};
 
 use crate::{
-    config::config::Organism as OrganismConfig,
+    config::config::Mutation as MutationConfig,
     consts::{JOINT_RADIUS, MAX_BONE_LEN, MIN_BONE_LEN},
     util::function::{rand_normal_vec2, shuffled_indexes},
     world::organism::{
@@ -48,13 +48,13 @@ impl Body {
     }
 }
 impl Mut for Body {
-    fn rand(rng: &mut ThreadRng, oc: &OrganismConfig, o: &Organism) -> Option<Self> {
-        let i = oc.mutation_distribution.get_index(rng);
+    fn rand(rng: &mut ThreadRng, mutation_config: &MutationConfig, o: &Organism) -> Option<Self> {
+        let i = mutation_config.distribution.get_index(rng);
         match i {
             // AddNode
             0 => Some(Body::AddNode {
                 joint: rng.random_range(0..o.body.joints.len()),
-                node_type: NodeType::rand(rng, oc, o)?,
+                node_type: NodeType::rand(rng, mutation_config, o)?,
             }),
             // AddJoint
             1 => {

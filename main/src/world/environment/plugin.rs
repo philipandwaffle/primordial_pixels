@@ -7,30 +7,30 @@ use bevy::{
 };
 
 use crate::{
-    consts::{KN, N},
+    consts::{KERNEL_CELLS, ENV_CELLS},
     world::environment::{display::plugin::DisplayPlugin, environment::Environment},
 };
 
 pub struct EnvironmentPlugin {
-    size: Vec2,
+    size_len: f32,
     display_update_interval: f32,
 }
 impl Plugin for EnvironmentPlugin {
     fn build(&self, app: &mut bevy::app::App) {
-        app.insert_resource(Environment::<N, KN>::new(self.size))
+        app.insert_resource(Environment::<ENV_CELLS, KERNEL_CELLS>::new(self.size_len))
             .add_plugins(DisplayPlugin::new(self.display_update_interval))
             .add_systems(Update, Self::update_env);
     }
 }
 impl EnvironmentPlugin {
-    pub fn new(size: Vec2, display_update_interval: f32) -> Self {
+    pub fn new(size_len: f32, display_update_interval: f32) -> Self {
         Self {
-            size,
+            size_len,
             display_update_interval,
         }
     }
 
-    fn update_env(time: Res<Time>, mut env: ResMut<Environment<N, KN>>) {
+    fn update_env(time: Res<Time>, mut env: ResMut<Environment<ENV_CELLS, KERNEL_CELLS>>) {
         env.update(time.delta_secs());
     }
 }
