@@ -23,7 +23,7 @@ use crate::{
     assets::handles::Handles,
     config::config_tag::{Config, ConfigTag},
     save::{message::LogOrganismsMsg, resource::SaveInfo, seed_packet::SeedPacket},
-    world::organism::{component::organism::OrganismMarker, seed::Seed},
+    world::organism::{component::organism::OrganismMarker, message::SpawnOrganismMsg, seed::Seed},
 };
 
 #[derive(ConfigTag, Serialize, Deserialize, Clone, Resource)]
@@ -40,12 +40,17 @@ impl Plugin for SavePlugin {
     }
 }
 impl SavePlugin {
-    fn load_world(mut commands: Commands, save_info: Res<SaveInfo>, handles: Res<Handles>) {
+    fn load_world(
+        mut commands: Commands,
+        save_info: Res<SaveInfo>,
+        handles: Res<Handles>,
+        mut spawn_organism_msg: MessageWriter<SpawnOrganismMsg>,
+    ) {
         if let Some(load_dir) = &save_info.load_dir {
             let seed_packet = SeedPacket::load_cfg(Path::new(load_dir));
 
             for seed in seed_packet.seeds {
-                seed.spawn(&mut commands, &handles);
+                spawn_organism_msg.write(Into::<SpawnOrganismMsg>::into(seed));
             }
         }
     }

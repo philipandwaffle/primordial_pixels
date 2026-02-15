@@ -260,15 +260,16 @@ mod tests {
     use crate::{
         config::config::Metabolism,
         consts::{BASE_INPUT, BASE_OUTPUT, MUSCLE_IN_PRODUCE, MUSCLE_OUT_CONSUME},
-        world::organism::{
-            body::Body,
-            brain::Brain,
-            joint::Joint,
-            node::{
-                pheromone_read::PheromoneRead, pheromone_write::PheromoneWrite, thruster::Thruster,
+        world::{
+            environment::layer::layer_key::LayerKey,
+            organism::{
+                body::Body,
+                brain::Brain,
+                joint::Joint,
+                node::{read::Read, thruster::Thruster, write::Write},
+                node_type::NodeType,
+                organism::Organism,
             },
-            node_type::NodeType,
-            organism::Organism,
         },
     };
 
@@ -281,12 +282,12 @@ mod tests {
                         vec2(-5.0, 0.0),
                         vec![
                             NodeType::Thruster(Thruster::new(0.0)),
-                            NodeType::PheromoneRead(PheromoneRead::new(0)),
+                            NodeType::Read(Read::new(LayerKey::Energy)),
                         ],
                     ),
                     Joint::new(
                         vec2(0.0, 6.0),
-                        vec![NodeType::PheromoneWrite(PheromoneWrite::new(0))],
+                        vec![NodeType::Write(Write::new(LayerKey::Energy))],
                     ),
                     Joint::new(vec2(5.0, 0.0), vec![]),
                 ],

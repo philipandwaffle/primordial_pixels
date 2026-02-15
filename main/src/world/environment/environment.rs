@@ -9,7 +9,8 @@ use crate::world::environment::{
     accessor_trait::Env,
     field::Field,
     layer::{
-        convolve::Convolve, layer_key::LayerKey, layer_type::LayerType, replenish::Replenish,
+        convolve::Convolve, layer_key::LayerKey, layer_type::LayerType,
+        periodic_replenish_convolve::PeriodicReplenishConvolve, replenish::Replenish,
         replenish_convolve::ReplenishConvolve,
     },
 };
@@ -33,9 +34,12 @@ impl<const N: usize, const KN: usize> Environment<N, KN> {
         let mut layers = HashMap::<LayerKey, LayerType<N, KN>>::new();
         layers.insert(
             LayerKey::Energy,
-            LayerType::ReplenishConvolve(ReplenishConvolve::new(
-                Convolve::new(0.0, Field::<f32, KN>::from_array([1.0 / 9.0; KN]), 5.0),
-                0.05,
+            LayerType::PeriodicReplenishConvolve(PeriodicReplenishConvolve::new(
+                ReplenishConvolve::new(
+                    Convolve::new(0.0, Field::<f32, KN>::from_array([1.0 / 9.0; KN]), 5.0),
+                    0.1,
+                ),
+                30.0,
             )),
         );
         layers.insert(
@@ -54,9 +58,9 @@ impl<const N: usize, const KN: usize> Environment<N, KN> {
         }
     }
     // TODO: move this to a trait?
-    pub fn update(&mut self, dt: f32) {
-        for l in self.layers.values_mut() {
-            l.update(dt);
+    pub fn update_layers(&mut self, dt: f32, layer_keys: Vec<LayerKey>) {
+        for k in layer_keys.iter() {
+            self.layers.get_mut(k).unwrap().update(dt);
         }
     }
 

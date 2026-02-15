@@ -2,13 +2,17 @@ use std::ops::Index;
 
 use crate::world::environment::{
     accessor_trait::Env,
-    layer::{convolve::Convolve, replenish::Replenish, replenish_convolve::ReplenishConvolve},
+    layer::{
+        convolve::Convolve, periodic_replenish_convolve::PeriodicReplenishConvolve,
+        replenish::Replenish, replenish_convolve::ReplenishConvolve,
+    },
 };
 
 pub enum LayerType<const N: usize, const KN: usize> {
     Replenish(Replenish<N>),
     Convolve(Convolve<N, KN>),
     ReplenishConvolve(ReplenishConvolve<N, KN>),
+    PeriodicReplenishConvolve(PeriodicReplenishConvolve<N, KN>),
 }
 impl<const N: usize, const KN: usize> Index<usize> for LayerType<N, KN> {
     type Output = f32;
@@ -18,6 +22,9 @@ impl<const N: usize, const KN: usize> Index<usize> for LayerType<N, KN> {
             LayerType::Replenish(replenish) => &replenish[index],
             LayerType::Convolve(convolve) => &convolve[index],
             LayerType::ReplenishConvolve(replenish_convolve) => &replenish_convolve[index],
+            LayerType::PeriodicReplenishConvolve(periodic_replenish_convolve) => {
+                &periodic_replenish_convolve[index]
+            }
         }
     }
 }
@@ -27,6 +34,9 @@ impl<const N: usize, const KN: usize> Env for LayerType<N, KN> {
             LayerType::Replenish(replenish_layer) => replenish_layer.get(x, y),
             LayerType::Convolve(convolve_layer) => convolve_layer.get(x, y),
             LayerType::ReplenishConvolve(replenish_convolve) => replenish_convolve.get(x, y),
+            LayerType::PeriodicReplenishConvolve(periodic_replenish_convolve) => {
+                periodic_replenish_convolve.get(x, y)
+            }
         }
     }
 
@@ -44,6 +54,9 @@ impl<const N: usize, const KN: usize> Env for LayerType<N, KN> {
             LayerType::ReplenishConvolve(replenish_convolve) => {
                 replenish_convolve.delta(x, y, delta)
             }
+            LayerType::PeriodicReplenishConvolve(periodic_replenish_convolve) => {
+                periodic_replenish_convolve.delta(x, y, delta)
+            }
         }
     }
 
@@ -52,6 +65,9 @@ impl<const N: usize, const KN: usize> Env for LayerType<N, KN> {
             LayerType::Replenish(replenish) => replenish.max(),
             LayerType::Convolve(convolve) => convolve.max(),
             LayerType::ReplenishConvolve(replenish_convolve) => replenish_convolve.max(),
+            LayerType::PeriodicReplenishConvolve(periodic_replenish_convolve) => {
+                periodic_replenish_convolve.max()
+            }
         }
     }
 
@@ -60,6 +76,9 @@ impl<const N: usize, const KN: usize> Env for LayerType<N, KN> {
             LayerType::Replenish(replenish_layer) => replenish_layer.update(dt),
             LayerType::Convolve(convolve_layer) => convolve_layer.update(dt),
             LayerType::ReplenishConvolve(replenish_convolve) => replenish_convolve.update(dt),
+            LayerType::PeriodicReplenishConvolve(periodic_replenish_convolve) => {
+                periodic_replenish_convolve.update(dt)
+            }
         }
     }
 }

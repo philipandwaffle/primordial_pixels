@@ -33,6 +33,7 @@ use crate::{
     save::message::LogOrganismsMsg,
     world::organism::{
         component::{joint::Joint, organism::OrganismMarker},
+        message::SpawnOrganismMsg,
         mutation::{
             brain::Brain as BrainMut,
             mutation::{Mut, Mutable, Mutation},
@@ -203,15 +204,16 @@ impl RunnerPlugin {
         handles: Res<Handles>,
         generation: ResMut<Generation>,
         mutation_config: Res<MutationConfig>,
+        mut spawn_organism_msg: MessageWriter<SpawnOrganismMsg>,
     ) {
-        let mut organisms = Vec::with_capacity(generation.num_organisms);
+        // let mut organisms = Vec::with_capacity(generation.num_organisms);
         let mut cur_pos = Vec2::ZERO;
 
         let thickness = 1.0;
         let mut rng = rand::rng();
 
         for id in 0..generation.num_organisms {
-            organisms.push(Self::spawn_seed(
+            Self::spawn_seed(
                 &mut commands,
                 &mut rng,
                 generation.init_seed.clone(),
@@ -220,7 +222,8 @@ impl RunnerPlugin {
                 generation.initial_num_mutations,
                 &handles,
                 &mutation_config,
-            ));
+                &mut spawn_organism_msg,
+            );
 
             commands.spawn((
                 RigidBody::Static,
@@ -247,7 +250,8 @@ impl RunnerPlugin {
         num_muts: usize,
         handles: &Handles,
         mutation_config: &MutationConfig,
-    ) -> Entity {
+        spawn_organism_msg: &mut MessageWriter<SpawnOrganismMsg>,
+    ) {
         // let m = vec![Mutation::Body(
         //     crate::world::organism::mutation::body::Body::RemoveMuscle { muscle: 0 },
         // )];
@@ -308,7 +312,7 @@ impl RunnerPlugin {
         //         vec![]
         //     }
         // );
-        s.spawn(commands, handles)
+        spawn_organism_msg.write(Into::<SpawnOrganismMsg>::into(s));
     }
 }
 

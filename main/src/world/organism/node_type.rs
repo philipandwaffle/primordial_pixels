@@ -8,13 +8,10 @@ use crate::{
     config::config::{Mutation as MutationConfig, Transput as TransputConfig},
     consts::{ENV_CELLS, KERNEL_CELLS, PHEROMONE_LAYERS},
     world::{
-        environment::environment::Environment,
+        environment::{environment::Environment, layer::layer_key::LayerKey},
         organism::{
             mutation::mutation::Mut,
-            node::{
-                energy::Energy, pheromone_read::PheromoneRead, pheromone_write::PheromoneWrite,
-                thruster::Thruster,
-            },
+            node::{energy::Energy, read::Read, thruster::Thruster, write::Write},
             organism::Organism,
             transput::Transput,
         },
@@ -24,16 +21,16 @@ use crate::{
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum NodeType {
     Energy(Energy),
-    PheromoneRead(PheromoneRead),
-    PheromoneWrite(PheromoneWrite),
+    Read(Read),
+    Write(Write),
     Thruster(Thruster),
 }
 impl Mut for NodeType {
     fn rand(rng: &mut ThreadRng, _: &MutationConfig, _: &Organism) -> Option<Self> {
-        Some(match rng.random_range(0..=2) {
+        Some(match rng.random_range(0..=3) {
             0 => Self::Energy(Energy::new()),
-            1 => Self::PheromoneRead(PheromoneRead::new(rng.random_range(0..PHEROMONE_LAYERS))),
-            2 => Self::PheromoneWrite(PheromoneWrite::new(rng.random_range(0..PHEROMONE_LAYERS))),
+            1 => Self::Read(Read::new(LayerKey::rand_read_layer(rng))),
+            2 => Self::Write(Write::new(LayerKey::rand_write_layer(rng))),
             _ => Self::Thruster(Thruster::new(rng.random_range(-PI..PI))),
         })
     }
@@ -53,10 +50,10 @@ impl
     ) {
         match self {
             NodeType::Energy(energy) => energy.consume_outputs(e, out, transput_config, args),
-            NodeType::PheromoneRead(pheromone_read) => {
+            NodeType::Read(pheromone_read) => {
                 pheromone_read.consume_outputs(e, out, transput_config, ())
             }
-            NodeType::PheromoneWrite(pheromone_write) => {
+            NodeType::Write(pheromone_write) => {
                 pheromone_write.consume_outputs(e, out, transput_config, args)
             }
             NodeType::Thruster(thruster) => {
@@ -74,10 +71,10 @@ impl
     ) {
         match self {
             NodeType::Energy(energy) => energy.produce_inputs(e, input, transput_config, ()),
-            NodeType::PheromoneRead(pheromone_read) => {
+            NodeType::Read(pheromone_read) => {
                 pheromone_read.produce_inputs(e, input, transput_config, args)
             }
-            NodeType::PheromoneWrite(pheromone_write) => {
+            NodeType::Write(pheromone_write) => {
                 pheromone_write.produce_inputs(e, input, transput_config, ())
             }
             NodeType::Thruster(thruster) => thruster.produce_inputs(e, input, transput_config, ()),
@@ -87,8 +84,8 @@ impl
     fn outputs_consumed(&self) -> usize {
         match self {
             NodeType::Energy(energy) => energy.outputs_consumed(),
-            NodeType::PheromoneRead(pheromone_read) => pheromone_read.outputs_consumed(),
-            NodeType::PheromoneWrite(pheromone_write) => pheromone_write.outputs_consumed(),
+            NodeType::Read(pheromone_read) => pheromone_read.outputs_consumed(),
+            NodeType::Write(pheromone_write) => pheromone_write.outputs_consumed(),
             NodeType::Thruster(thruster) => thruster.outputs_consumed(),
         }
     }
@@ -96,8 +93,8 @@ impl
     fn inputs_produced(&self) -> usize {
         match self {
             NodeType::Energy(energy) => energy.inputs_produced(),
-            NodeType::PheromoneRead(pheromone_read) => pheromone_read.inputs_produced(),
-            NodeType::PheromoneWrite(pheromone_write) => pheromone_write.inputs_produced(),
+            NodeType::Read(pheromone_read) => pheromone_read.inputs_produced(),
+            NodeType::Write(pheromone_write) => pheromone_write.inputs_produced(),
             NodeType::Thruster(thruster) => thruster.inputs_produced(),
         }
     }

@@ -29,7 +29,7 @@ use crate::{
         environment::plugin::EnvironmentPlugin,
         organism::{
             component::{joint::Joint, organism::OrganismMarker},
-            message::SpawnSeedMsg,
+            message::SpawnOrganismMsg,
             mutation::mutation::{Mut, Mutable, Mutation},
             seed::{self, Seed},
             util_trait::OrganismAccessor,
@@ -86,7 +86,7 @@ impl PetriDishPlugin {
     }
 
     fn replenish_organisms(
-        mut seed_spawn_msg: MessageWriter<SpawnSeedMsg>,
+        mut spawn_organism_msg: MessageWriter<SpawnOrganismMsg>,
         mut info: ResMut<PetriDishInfo>,
         mutation_config: Res<MutationConfig>,
         metabolism: Res<Metabolism>,
@@ -120,7 +120,7 @@ impl PetriDishPlugin {
                 info.initial_num_mutations,
             );
 
-            seed_spawn_msg.write(SpawnSeedMsg::new(s));
+            spawn_organism_msg.write(Into::<SpawnOrganismMsg>::into(s));
         }
         info.cur_organisms += to_spawn;
     }
@@ -130,7 +130,7 @@ impl PetriDishPlugin {
         mut info: ResMut<PetriDishInfo>,
         metabolism: Res<Metabolism>,
         mutation_config: Res<MutationConfig>,
-        mut seed_spawn_msg: MessageWriter<SpawnSeedMsg>,
+        mut spawn_organism_msg: MessageWriter<SpawnOrganismMsg>,
         mut organism_query: Query<(Entity, &mut OrganismMarker)>,
         joint_query: Query<&Transform, With<Joint>>,
     ) {
@@ -144,7 +144,7 @@ impl PetriDishPlugin {
 
                 s.multi_mutate(&mut rng, &metabolism, &mutation_config, info.num_mutations);
 
-                seed_spawn_msg.write(SpawnSeedMsg::new(s));
+                spawn_organism_msg.write(Into::<SpawnOrganismMsg>::into(s));
             }
         }
     }

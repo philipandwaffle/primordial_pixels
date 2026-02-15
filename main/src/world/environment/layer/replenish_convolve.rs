@@ -6,7 +6,7 @@ use crate::world::environment::{accessor_trait::Env, layer::convolve::Convolve};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ReplenishConvolve<const N: usize, const KN: usize> {
-    convolve: Convolve<N, KN>,
+    pub(crate) convolve: Convolve<N, KN>,
     rate: f32,
 }
 impl<const N: usize, const KN: usize> Index<usize> for ReplenishConvolve<N, KN> {
@@ -39,9 +39,7 @@ impl<const N: usize, const KN: usize> Env for ReplenishConvolve<N, KN> {
     }
 
     fn update(&mut self, dt: f32) {
-        for i in 0..N {
-            self[i] = (self[i] + self.rate * dt).min(self.max());
-        }
+        self.replenish(dt);
 
         self.convolve.update(dt);
     }
@@ -49,5 +47,11 @@ impl<const N: usize, const KN: usize> Env for ReplenishConvolve<N, KN> {
 impl<const N: usize, const KN: usize> ReplenishConvolve<N, KN> {
     pub fn new(convolve: Convolve<N, KN>, rate: f32) -> Self {
         Self { convolve, rate }
+    }
+
+    pub(crate) fn replenish(&mut self, dt: f32) {
+        for i in 0..N {
+            self[i] = (self[i] + self.rate * dt).min(self.max());
+        }
     }
 }

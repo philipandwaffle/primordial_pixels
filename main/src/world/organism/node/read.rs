@@ -13,19 +13,19 @@ use crate::{
 };
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-pub struct PheromoneRead {
+pub struct Read {
     state: f32,
-    layer_id: usize,
+    layer_key: LayerKey,
 }
-impl PheromoneRead {
-    pub fn new(layer_id: usize) -> Self {
+impl Read {
+    pub fn new(layer_key: LayerKey) -> Self {
         Self {
             state: 0.0,
-            layer_id,
+            layer_key,
         }
     }
 }
-impl Transput<(), (&Environment<ENV_CELLS, KERNEL_CELLS>, Vec2, f32)> for PheromoneRead {
+impl Transput<(), (&Environment<ENV_CELLS, KERNEL_CELLS>, Vec2, f32)> for Read {
     fn consume_outputs(&mut self, _: &mut f32, _: &mut VecDeque<f32>, _: &TransputConfig, _: ()) {}
 
     fn produce_inputs(
@@ -35,10 +35,7 @@ impl Transput<(), (&Environment<ENV_CELLS, KERNEL_CELLS>, Vec2, f32)> for Pherom
         transput_config: &TransputConfig,
         (env, pos, dt): (&Environment<ENV_CELLS, KERNEL_CELLS>, Vec2, f32),
     ) {
-        append_input(
-            input,
-            env.get_value(&LayerKey::Pheromone(self.layer_id), pos),
-        );
+        append_input(input, env.get_value(&self.layer_key, pos));
 
         *energy -= transput_config.pheromone_read_efficiency * dt;
     }

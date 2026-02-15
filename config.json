@@ -53,10 +53,10 @@
     "runner": null,
     "petri_dish": {
         "init_seed": null,
-        "min_organisms": 20,
+        "min_organisms": 50,
         "initial_num_mutations": 1,
         "num_mutations": 1,
-        "side_len": 1000.0,
+        "side_len": 500.0,
         "display_update_interval": 0.25
     }
 }

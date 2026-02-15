@@ -2,8 +2,11 @@ use bevy::{ecs::resource::Resource, math::Vec2};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    config::config_tag::ConfigTag, consts::NUM_MUTATIONS, petri_dish::plugin::PetriDishPlugin,
-    runner::plugin::RunnerPlugin, save::plugin::SavePlugin,
+    config::config_tag::ConfigTag,
+    consts::NUM_MUTATIONS,
+    petri_dish::plugin::PetriDishPlugin,
+    // runner::plugin::RunnerPlugin,
+    save::plugin::SavePlugin,
 };
 use my_derive::ConfigTag;
 
@@ -14,7 +17,7 @@ pub struct Config {
     pub organism: Organism,
     pub physics: Physics,
     pub save: SavePlugin,
-    pub runner: Option<RunnerPlugin>,
+    // pub runner: Option<RunnerPlugin>,
     pub petri_dish: Option<PetriDishPlugin>,
 }
 

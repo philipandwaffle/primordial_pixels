@@ -51,6 +51,25 @@ impl<const N: usize, const KN: usize> Env for Convolve<N, KN> {
     }
 
     fn update(&mut self, dt: f32) {
+        self.convolve(dt);
+    }
+}
+impl<const N: usize, const KN: usize> Convolve<N, KN> {
+    pub fn new(val: f32, kernel: Field<f32, KN>, max: f32) -> Self {
+        Self {
+            field: Field::<f32, N>::from_element(val),
+            kernel,
+            min: 0.0,
+            max,
+        }
+    }
+
+    pub fn with_field(mut self, field: Field<f32, N>) -> Self {
+        self.field = field;
+        self
+    }
+
+    pub(crate) fn convolve(&mut self, dt: f32) {
         let l = self.field.side_len as isize;
         let kl = self.kernel.side_len as isize;
         let k_offset = -(kl / 2);
@@ -70,20 +89,5 @@ impl<const N: usize, const KN: usize> Env for Convolve<N, KN> {
                 self.field.set(x, y, new_val);
             }
         }
-    }
-}
-impl<const N: usize, const KN: usize> Convolve<N, KN> {
-    pub fn new(val: f32, kernel: Field<f32, KN>, max: f32) -> Self {
-        Self {
-            field: Field::<f32, N>::from_element(val),
-            kernel,
-            min: 0.0,
-            max,
-        }
-    }
-
-    pub fn with_field(mut self, field: Field<f32, N>) -> Self {
-        self.field = field;
-        self
     }
 }

@@ -14,19 +14,19 @@ use crate::{
 };
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-pub struct PheromoneWrite {
+pub struct Write {
     state: f32,
-    layer_id: usize,
+    layer_key: LayerKey,
 }
-impl PheromoneWrite {
-    pub fn new(layer_id: usize) -> Self {
+impl Write {
+    pub fn new(layer_key: LayerKey) -> Self {
         Self {
             state: 0.0,
-            layer_id,
+            layer_key,
         }
     }
 }
-impl Transput<(&mut Environment<ENV_CELLS, KERNEL_CELLS>, Vec2, f32), ()> for PheromoneWrite {
+impl Transput<(&mut Environment<ENV_CELLS, KERNEL_CELLS>, Vec2, f32), ()> for Write {
     fn consume_outputs(
         &mut self,
         energy: &mut f32,
@@ -37,7 +37,7 @@ impl Transput<(&mut Environment<ENV_CELLS, KERNEL_CELLS>, Vec2, f32), ()> for Ph
         let max_write =
             clamp_out_01(remove_output(output)) * transput_config.pheromone_write_efficiency * dt;
         let mut delta = max_write;
-        env.delta_value(&LayerKey::Pheromone(self.layer_id), pos, &mut delta);
+        env.delta_value(&self.layer_key, pos, &mut delta);
         *energy -= transput_config.pheromone_write_efficiency * dt * (max_write - delta);
     }
 

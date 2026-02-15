@@ -25,9 +25,10 @@ impl Plugin for ConfigPlugin {
         }
 
         app.add_plugins(config.save);
-        if let Some(runner) = config.runner {
-            app.add_plugins(runner);
-        } else if let Some(petri_dish) = config.petri_dish {
+        // if let Some(runner) = config.runner {
+        //     app.add_plugins(runner);
+        // } else
+        if let Some(petri_dish) = config.petri_dish {
             app.add_plugins(petri_dish);
         }
     }

@@ -25,7 +25,7 @@ use crate::{
         environment::environment::Environment,
         organism::{
             component::{bone::Bone, joint::Joint, muscle::Muscle, organism::OrganismMarker},
-            message::SpawnSeedMsg,
+            message::SpawnOrganismMsg,
             node::thruster::Thruster,
             node_type::NodeType,
             transput::{Transput, append_input},
@@ -37,7 +37,7 @@ use crate::{
 pub struct OrganismPlugin;
 impl Plugin for OrganismPlugin {
     fn build(&self, app: &mut bevy::app::App) {
-        app.add_message::<SpawnSeedMsg>()
+        app.add_message::<SpawnOrganismMsg>()
             .add_systems(First, (Self::spawn_seed, Self::tick_organism_time))
             .add_systems(PreUpdate, Self::update_brain_input)
             .add_systems(Update, Self::update_brain_output)
@@ -216,7 +216,7 @@ impl OrganismPlugin {
 
     fn spawn_seed(
         mut commands: Commands,
-        mut spawn_seed_msg: MessageReader<SpawnSeedMsg>,
+        mut spawn_seed_msg: MessageReader<SpawnOrganismMsg>,
         handles: Res<Handles>,
     ) {
         for s in spawn_seed_msg.read() {
