@@ -57,7 +57,7 @@ where
     pub fn from_element(val: T) -> Self {
         return Self {
             space: [val; N],
-            side_len: ENV_SIDE_CELLS,
+            side_len: (N as f32).sqrt() as usize,
         };
     }
 

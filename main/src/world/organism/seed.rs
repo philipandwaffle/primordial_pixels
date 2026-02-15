@@ -277,3 +277,32 @@ impl Seed {
         .id()
     }
 }
+
+#[cfg(test)]
+mod test {
+    use std::path::Path;
+
+    use bevy::{math::vec2, ui_render::NodeType};
+
+    use crate::{
+        config::{config::Config as CFG, config_tag::Config, plugin::load_config},
+        consts::CONFIG_PATH,
+        world::organism::{body::Body, brain::Brain, joint::Joint, organism::Organism, seed::Seed},
+    };
+
+    #[test]
+    fn seed_save_load() {
+        let config = CFG::load_cfg(Path::new(&format!("../{CONFIG_PATH}")));
+        let seed = Seed::new(
+            vec2(0.0, 0.0),
+            Organism::new(
+                Some(Brain::default()),
+                Body::new(vec![Joint::new(vec2(0.0, 0.0), vec![])], vec![], vec![]),
+                config.organism.metabolism,
+            ),
+        );
+        let path = Path::new("tmp/organism.json");
+        seed.save_cfg(&path);
+        // fs::remove_file(path);
+    }
+}

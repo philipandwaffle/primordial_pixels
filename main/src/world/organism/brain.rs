@@ -1,11 +1,13 @@
 use std::collections::VecDeque;
 
 use bevy::{log::info, math::usize};
+use my_derive::ConfigTag;
 use nalgebra::DMatrix;
 use rand::{Rng, rngs::ThreadRng};
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    config::config_tag::ConfigTag,
     consts::{BASE_BRAIN_STRUCTURE, BASE_INPUT, BASE_OUTPUT},
     world::{
         matrix::MxNMatrix as Matrix,
@@ -19,7 +21,7 @@ use crate::{
 // use super::mutation::{BrainMutateType, Mutable, Mutation};
 
 // Basic neural network
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, ConfigTag, Serialize, Deserialize, PartialEq)]
 pub struct Brain {
     weights: Vec<Matrix>,
     biases: Vec<Matrix>,
@@ -198,7 +200,9 @@ impl Brain {
 }
 
 mod test {
-    use crate::world::organism::brain::Brain;
+    use std::{fs, path::Path};
+
+    use crate::{config::config_tag::Config, world::organism::brain::Brain};
 
     fn get_brain() -> Brain {
         Brain::new(vec![4, 4, 4])
@@ -210,5 +214,14 @@ mod test {
         println!("{:?}", b.get_structure());
         b.remove_input(0);
         println!("{:?}", b.get_structure());
+    }
+
+    #[test]
+    fn brain_save_load() {
+        let brain = Brain::new(vec![2, 2, 2]);
+        let path = Path::new("../tmp/brain.json");
+        brain.save_cfg(&path);
+        assert_eq!(brain, Brain::load_cfg(path));
+        fs::remove_file(path);
     }
 }

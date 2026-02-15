@@ -5,15 +5,12 @@ use bevy::{
     math::{Vec2, vec2},
 };
 
-use crate::{
-    consts::{ENV_CELLS, ENV_SIDE_CELLS, KERNEL_CELLS},
-    world::environment::{
-        accessor_trait::Env,
-        field::Field,
-        layer::{
-            convolve::Convolve, layer_key::LayerKey, layer_type::LayerType, replenish::Replenish,
-            replenish_convolve::ReplenishConvolve,
-        },
+use crate::world::environment::{
+    accessor_trait::Env,
+    field::Field,
+    layer::{
+        convolve::Convolve, layer_key::LayerKey, layer_type::LayerType, replenish::Replenish,
+        replenish_convolve::ReplenishConvolve,
     },
 };
 
@@ -51,7 +48,7 @@ impl<const N: usize, const KN: usize> Environment<N, KN> {
         );
         Self {
             side_len,
-            cell_len: side_len / ENV_SIDE_CELLS as f32,
+            cell_len: side_len / (N as f32).sqrt(),
             offset: vec2(side_len, side_len) * 0.5 - vec2(0.5, 0.5),
             layers,
         }
@@ -63,7 +60,7 @@ impl<const N: usize, const KN: usize> Environment<N, KN> {
         }
     }
 
-    fn world_to_coord(&self, mut pos: Vec2) -> [isize; 2] {
+    pub fn world_to_coord(&self, mut pos: Vec2) -> [isize; 2] {
         // println!("pos: {}", pos);
         pos += self.offset;
         // println!("offset_pos: {}", pos);
@@ -83,5 +80,55 @@ impl<const N: usize, const KN: usize> Environment<N, KN> {
         if let Some(val) = self.layers.get_mut(layer) {
             val.delta(x, y, delta);
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use bevy::math::vec2;
+
+    use crate::world::environment::environment::Environment;
+    pub fn get_env() -> Environment<9, 9> {
+        Environment::new(3.0)
+    }
+
+    #[test]
+    pub fn pos_x_pos_y() {
+        let env = get_env();
+
+        assert_eq!(env.world_to_coord(vec2(1.4, 1.4)), [2, 2]);
+        assert_eq!(env.world_to_coord(vec2(0.6, 0.6)), [2, 2]);
+    }
+
+    #[test]
+    pub fn pos_x_nex_y() {
+        let env = get_env();
+
+        assert_eq!(env.world_to_coord(vec2(1.4, -0.6)), [2, 0]);
+        assert_eq!(env.world_to_coord(vec2(0.6, -1.4)), [2, 0]);
+    }
+
+    #[test]
+    pub fn zero_x_zero_y() {
+        let env = get_env();
+
+        assert_eq!(env.world_to_coord(vec2(0.4, 0.4)), [1, 1]);
+        assert_eq!(env.world_to_coord(vec2(-0.4, -0.4)), [1, 1]);
+    }
+
+    #[test]
+    pub fn neg_x_pos_y() {
+        let env = get_env();
+
+        assert_eq!(env.world_to_coord(vec2(-0.6, 1.4)), [0, 2]);
+        assert_eq!(env.world_to_coord(vec2(-1.4, 0.6)), [0, 2]);
+    }
+
+    #[test]
+    pub fn neg_x_neg_y() {
+        let env = get_env();
+
+        assert_eq!(env.world_to_coord(vec2(-0.6, -0.6)), [0, 0]);
+        assert_eq!(env.world_to_coord(vec2(-1.4, -1.4)), [0, 0]);
     }
 }

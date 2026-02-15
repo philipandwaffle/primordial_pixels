@@ -5,11 +5,11 @@ use std::{
 
 use avian2d::parry::query;
 use bevy::{
-    app::{Plugin, Update},
+    app::{Plugin, Startup, Update},
     ecs::{
         message::{Message, MessageReader, MessageWriter},
         resource::Resource,
-        system::{Query, Res},
+        system::{Commands, Query, Res},
     },
     input::{ButtonInput, keyboard::KeyCode},
     log::error,
@@ -20,25 +20,35 @@ use my_derive::ConfigTag;
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    assets::handles::Handles,
     config::config_tag::{Config, ConfigTag},
     save::{message::LogOrganismsMsg, resource::SaveInfo, seed_packet::SeedPacket},
-    world::organism::{self, component::organism::OrganismMarker, seed::Seed},
+    world::organism::{component::organism::OrganismMarker, seed::Seed},
 };
 
 #[derive(ConfigTag, Serialize, Deserialize, Clone, Resource)]
 pub struct SavePlugin {
     log_dir: String,
+    load_dir: Option<String>,
 }
 impl Plugin for SavePlugin {
     fn build(&self, app: &mut bevy::app::App) {
-        // let log_dir = self.log_dir.clone();
-
         app.add_message::<LogOrganismsMsg>()
-            .insert_resource(SaveInfo::new(self.log_dir.clone()))
+            .insert_resource(SaveInfo::new(self.log_dir.clone(), self.load_dir.clone()))
+            .add_systems(Startup, Self::load_world)
             .add_systems(Update, (Self::log_organisms, Self::save_world));
     }
 }
 impl SavePlugin {
+    fn load_world(mut commands: Commands, save_info: Res<SaveInfo>, handles: Res<Handles>) {
+        if let Some(load_dir) = &save_info.load_dir {
+            let seed_packet = SeedPacket::load_cfg(Path::new(load_dir));
+
+            for seed in seed_packet.seeds {
+                seed.spawn(&mut commands, &handles);
+            }
+        }
+    }
     fn save_world(
         keys: Res<ButtonInput<KeyCode>>,
         organism_query: Query<(&OrganismMarker, &Transform)>,
@@ -64,7 +74,7 @@ impl SavePlugin {
     fn log_organisms(mut log_ev: MessageReader<LogOrganismsMsg>, save_info: Res<SaveInfo>) {
         for ev in log_ev.read() {
             SeedPacket::new((ev.seeds).to_vec())
-                .save_cfg(&format!("{}/{}", save_info.log_dir, ev.path));
+                .save_cfg(&Path::new(&format!("{}/{}", save_info.log_dir, ev.path)));
         }
     }
 }

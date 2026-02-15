@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use avian2d::prelude::Gravity;
 use bevy::app::Plugin;
 
@@ -31,5 +33,5 @@ impl Plugin for ConfigPlugin {
     }
 }
 pub fn load_config() -> CFG {
-    CFG::load_cfg(CONFIG_PATH)
+    CFG::load_cfg(Path::new(CONFIG_PATH))
 }

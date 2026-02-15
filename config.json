@@ -47,13 +47,14 @@
         ]
     },
     "save": {
-        "log_dir": "./saves/generation"
+        "log_dir": "./saves/generation",
+        "load_dir": null
     },
     "runner": null,
     "petri_dish": {
         "init_seed": null,
-        "min_organisms": 10,
-        "initial_num_mutations": 2,
+        "min_organisms": 20,
+        "initial_num_mutations": 1,
         "num_mutations": 1,
         "side_len": 1000.0,
         "display_update_interval": 0.25

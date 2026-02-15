@@ -1,11 +1,14 @@
+use my_derive::ConfigTag;
 use nalgebra::DMatrix;
 use rand::Rng;
 use serde::{Deserialize, Deserializer, Serialize, de::Visitor, ser::SerializeSeq};
 
-pub type Matrix = DMatrix<f32>;
+use crate::config::config_tag::ConfigTag;
+
+type Matrix = DMatrix<f32>;
 
 // Wrapper struct so that the nalgebra crate can be extended
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, ConfigTag, PartialEq)]
 pub struct MxNMatrix(pub Matrix);
 impl MxNMatrix {
     pub fn rand(rows: usize, cols: usize) -> MxNMatrix {
@@ -46,7 +49,7 @@ impl Serialize for MxNMatrix {
     {
         let m = &self.0;
         // Allocate space for sequence
-        let mut m_seq = serializer.serialize_seq(Some(m.iter().len()))?;
+        let mut m_seq = serializer.serialize_seq(Some(1 + m.iter().len()))?;
 
         // Add matrix shape data to sequence
         m_seq.serialize_element(&m.shape().0)?;
@@ -99,5 +102,24 @@ impl<'de> Deserialize<'de> for MxNMatrix {
 
         let m = d.deserialize_seq(MxMMatrixVisitor)?;
         return Ok(m);
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use std::{fs, path::Path};
+
+    use crate::{
+        config::config_tag::Config,
+        world::matrix::{self, MxNMatrix},
+    };
+
+    #[test]
+    fn matrix_save_load() {
+        let matrix = MxNMatrix::rand(0, 0);
+        let path = Path::new("../tmp/matrix.json");
+        matrix.save_cfg(&path);
+        assert_eq!(matrix, MxNMatrix::load_cfg(path));
+        fs::remove_file(path).unwrap();
     }
 }

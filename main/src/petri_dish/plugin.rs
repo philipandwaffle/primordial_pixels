@@ -14,7 +14,7 @@ use bevy::{
 };
 use my_derive::ConfigTag;
 use rand::{Rng, rng};
-use rand_distr::num_traits::CheckedSub;
+use rand_distr::num_traits::{CheckedSub, Pow};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -66,17 +66,21 @@ impl Plugin for PetriDishPlugin {
 
 impl PetriDishPlugin {
     fn nudge_joints(
-        mut commands: Commands,
         info: Res<PetriDishInfo>,
         mut joint_query: Query<(Forces, &Transform), With<Joint>>,
     ) {
-        let threshold = info.half_side_len * 0.99;
         for (mut forces, trans) in joint_query.iter_mut() {
             let pos = trans.translation.truncate();
 
-            if pos.x.abs() > threshold || pos.y.abs() > threshold {
-                forces.apply_force(-pos.normalize());
-                // commands.entity(ent).insert(ExternalForce);
+            let x = pos.x.abs();
+            let y = pos.y.abs();
+
+            // println!("{}", info.threshold);
+            if x > info.threshold || y > info.threshold {
+                // println!("foo");
+                let dist = x.max(y) - info.threshold;
+
+                forces.apply_force(-pos.normalize() * (1.0 + dist.pow(2.0)));
             }
         }
     }
