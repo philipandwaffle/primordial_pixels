@@ -12,7 +12,8 @@ use crate::world::environment::{
 pub struct PeriodicReplenishConvolve<const N: usize, const KN: usize> {
     replenish_convolve: ReplenishConvolve<N, KN>,
     elapsed: f32,
-    interval: f32,
+    on_interval: f32,
+    off_interval: f32,
     replenish: bool,
 }
 impl<const N: usize, const KN: usize> Index<usize> for PeriodicReplenishConvolve<N, KN> {
@@ -47,7 +48,11 @@ impl<const N: usize, const KN: usize> Env for PeriodicReplenishConvolve<N, KN> {
     fn update(&mut self, mut dt: f32) {
         self.elapsed += dt;
 
-        let diff = self.elapsed - self.interval;
+        let diff = match self.replenish {
+            true => self.elapsed - self.on_interval,
+            false => self.elapsed - self.off_interval,
+        };
+
         if diff.is_positive() {
             self.replenish = !self.replenish;
             self.elapsed = 0.0;
@@ -61,11 +66,16 @@ impl<const N: usize, const KN: usize> Env for PeriodicReplenishConvolve<N, KN> {
     }
 }
 impl<const N: usize, const KN: usize> PeriodicReplenishConvolve<N, KN> {
-    pub fn new(replenish_convolve: ReplenishConvolve<N, KN>, interval: f32) -> Self {
+    pub fn new(
+        replenish_convolve: ReplenishConvolve<N, KN>,
+        on_interval: f32,
+        off_interval: f32,
+    ) -> Self {
         Self {
             replenish_convolve,
             elapsed: 0.0,
-            interval,
+            on_interval,
+            off_interval,
             replenish: true,
         }
     }

@@ -61,6 +61,10 @@ impl OrganismMarker {
         self.cur_energy = (self.cur_energy + delta).clamp(0.0, self.max_energy)
     }
 
+    pub fn get_energy_level(&self) -> f32 {
+        self.cur_energy / self.max_energy
+    }
+
     pub fn is_dead(&self) -> bool {
         return self.cur_energy <= 0.0;
     }

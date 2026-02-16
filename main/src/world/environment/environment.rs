@@ -4,18 +4,23 @@ use bevy::{
     ecs::resource::Resource,
     math::{Vec2, vec2},
 };
+use my_derive::ConfigTag;
+use serde::{Deserialize, Serialize};
 
-use crate::world::environment::{
-    accessor_trait::Env,
-    field::Field,
-    layer::{
-        convolve::Convolve, layer_key::LayerKey, layer_type::LayerType,
-        periodic_replenish_convolve::PeriodicReplenishConvolve, replenish::Replenish,
-        replenish_convolve::ReplenishConvolve,
+use crate::{
+    config::config_tag::ConfigTag,
+    world::environment::{
+        accessor_trait::Env,
+        field::Field,
+        layer::{
+            convolve::Convolve, layer_key::LayerKey, layer_type::LayerType,
+            periodic_replenish_convolve::PeriodicReplenishConvolve, replenish::Replenish,
+            replenish_convolve::ReplenishConvolve,
+        },
     },
 };
 
-#[derive(Resource)]
+#[derive(Resource, Serialize, Deserialize)]
 pub struct Environment<const N: usize, const KN: usize> {
     pub side_len: f32,
     pub cell_len: f32,
@@ -36,10 +41,11 @@ impl<const N: usize, const KN: usize> Environment<N, KN> {
             LayerKey::Energy,
             LayerType::PeriodicReplenishConvolve(PeriodicReplenishConvolve::new(
                 ReplenishConvolve::new(
-                    Convolve::new(0.0, Field::<f32, KN>::from_array([1.0 / 9.0; KN]), 5.0),
+                    Convolve::new(0.0, Field::<f32, KN>::from_array([1.0 / 9.0; KN]), 0.1, 5.0),
                     0.1,
                 ),
                 30.0,
+                60.0,
             )),
         );
         layers.insert(
@@ -47,6 +53,7 @@ impl<const N: usize, const KN: usize> Environment<N, KN> {
             LayerType::Convolve(Convolve::new(
                 0.0,
                 Field::<f32, KN>::from_array([0.9 / 9.0; KN]),
+                0.25,
                 5.0,
             )),
         );

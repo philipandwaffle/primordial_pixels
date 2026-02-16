@@ -10,6 +10,7 @@ use crate::world::environment::{accessor_trait::Env, field::Field};
 pub struct Convolve<const N: usize, const KN: usize> {
     field: Field<f32, N>,
     kernel: Field<f32, KN>,
+    permeability: f32,
     min: f32,
     max: f32,
 }
@@ -55,10 +56,11 @@ impl<const N: usize, const KN: usize> Env for Convolve<N, KN> {
     }
 }
 impl<const N: usize, const KN: usize> Convolve<N, KN> {
-    pub fn new(val: f32, kernel: Field<f32, KN>, max: f32) -> Self {
+    pub fn new(val: f32, kernel: Field<f32, KN>, permeability: f32, max: f32) -> Self {
         Self {
             field: Field::<f32, N>::from_element(val),
             kernel,
+            permeability,
             min: 0.0,
             max,
         }
@@ -85,7 +87,7 @@ impl<const N: usize, const KN: usize> Convolve<N, KN> {
                 }
                 new_val /= KN as f32;
 
-                new_val = self.field.get(x, y).lerp(new_val, dt);
+                new_val = self.field.get(x, y).lerp(new_val, dt * self.permeability);
                 self.field.set(x, y, new_val);
             }
         }

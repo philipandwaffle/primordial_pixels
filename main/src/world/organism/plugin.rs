@@ -1,4 +1,4 @@
-use std::collections::VecDeque;
+use std::{collections::VecDeque, f32::consts::PI};
 
 use avian2d::prelude::{DistanceJoint, DistanceLimit, Forces, RigidBodyForces};
 use bevy::{
@@ -10,7 +10,7 @@ use bevy::{
         system::{Commands, Query, Res, ResMut},
     },
     log::info,
-    math::Quat,
+    math::{Quat, vec3},
     sprite_render::{ColorMaterial, MeshMaterial2d},
     time::Time,
     transform::components::Transform,
@@ -19,12 +19,17 @@ use bevy::{
 use crate::{
     assets::handles::{Handles, MatKey},
     config::config::{Metabolism, Mutation as MutationConfig, Transput as TransputConfig},
-    consts::{ENV_CELLS, KERNEL_CELLS, MUSCLE_Z},
-    util::function::{quat_z_rot, rot_input},
+    consts::{ENV_CELLS, KERNEL_CELLS, MUSCLE_Z, THRUSTER_BASE_LENGTH, THRUSTER_WIDTH, THRUSTER_Z},
+    util::function::{quat_z_rot, rot_input, z_rot_to_dir},
     world::{
         environment::environment::Environment,
         organism::{
-            component::{bone::Bone, joint::Joint, muscle::Muscle, organism::OrganismMarker},
+            component::{
+                bone::Bone,
+                joint::{Joint, Thruster as ThrusterComp},
+                muscle::Muscle,
+                organism::OrganismMarker,
+            },
             message::SpawnOrganismMsg,
             node::thruster::Thruster,
             node_type::NodeType,
@@ -75,8 +80,11 @@ impl OrganismPlugin {
                     // base stimuli
                     let mb = organism_ent.get_static_stats().metronome_beat;
                     let beat = (organism_ent.get_variable_stats().time_alive % mb) / mb;
+                    let energy_level = organism_ent.get_energy_level();
 
                     append_input(&mut input, beat);
+                    append_input(&mut input, energy_level);
+
                     input
                 }
                 None => VecDeque::with_capacity(0),
@@ -203,13 +211,35 @@ impl OrganismPlugin {
         }
     }
 
-    fn update_thrusters(time: Res<Time>, mut joint_query: Query<(Forces, &Joint)>) {
+    fn update_thrusters(
+        time: Res<Time>,
+        transput_config: Res<TransputConfig>,
+        mut joint_query: Query<(Forces, &Joint)>,
+        mut thruster_query: Query<&mut Transform, With<ThrusterComp>>,
+    ) {
         let dt = time.delta_secs();
         for (mut forces, joint) in joint_query.iter_mut() {
-            for node in joint.nodes.iter() {
-                if let NodeType::Thruster(t) = node {
-                    forces.apply_force(t.get_thrust() * dt);
+            if let Some(thruster_ent) = joint.thruster {
+                let mut total_thrust = 0.0;
+                let mut total_z_rot = 0.0;
+
+                for node in joint.nodes.iter() {
+                    if let NodeType::Thruster(t) = node {
+                        total_thrust += t.thrust;
+                        total_z_rot += t.z_rot;
+                    }
                 }
+                total_z_rot = total_z_rot % PI;
+
+                if let Ok(mut trans) = thruster_query.get_mut(thruster_ent) {
+                    let thrust_len =
+                        (THRUSTER_BASE_LENGTH * total_thrust) / transput_config.thruster_strength;
+                    trans.translation = vec3(0.0, thrust_len * 0.5, THRUSTER_Z);
+                    trans.scale = vec3(THRUSTER_WIDTH, thrust_len, 1.0);
+                    trans.rotation = Quat::from_rotation_z(total_z_rot);
+                }
+
+                forces.apply_force(z_rot_to_dir(total_z_rot) * total_thrust * dt);
             }
         }
     }

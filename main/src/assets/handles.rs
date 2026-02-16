@@ -14,6 +14,7 @@ pub enum MeshKey {
     Circle,
     Rectangle,
     Hex,
+    Triangle,
 }
 #[derive(Eq, Hash, PartialEq)]
 pub enum MatKey {
@@ -79,9 +80,16 @@ impl Handles {
         self.meshes
             .insert(key, meshes.add(Rectangle::new(w, h)).into());
     }
-    pub fn insert_hex_mesh(&mut self, key: MeshKey, meshes: &mut Assets<Mesh>, r: f32) {
+
+    pub fn insert_poly_mesh(
+        &mut self,
+        key: MeshKey,
+        meshes: &mut Assets<Mesh>,
+        r: f32,
+        sides: u32,
+    ) {
         self.meshes
-            .insert(key, meshes.add(RegularPolygon::new(r, 6)).into());
+            .insert(key, meshes.add(RegularPolygon::new(r, sides)).into());
     }
 
     pub fn insert_mat(&mut self, key: MatKey, mats: &mut Assets<ColorMaterial>, color: Color) {
@@ -91,7 +99,8 @@ impl Handles {
     pub fn setup_meshes(&mut self, meshes: &mut Assets<Mesh>) {
         self.insert_circle_mesh(MeshKey::Circle, meshes, 1.0);
         self.insert_rectangle_mesh(MeshKey::Rectangle, meshes, 1.0, 1.0);
-        self.insert_hex_mesh(MeshKey::Hex, meshes, 1.0);
+        self.insert_poly_mesh(MeshKey::Hex, meshes, 1.0, 6);
+        self.insert_poly_mesh(MeshKey::Triangle, meshes, 1.0, 3);
     }
 
     pub fn setup_mats(&mut self, mats: &mut Assets<ColorMaterial>) {

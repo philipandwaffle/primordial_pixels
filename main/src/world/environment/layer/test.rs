@@ -9,7 +9,7 @@ mod tests {
     #[test]
     fn replenish_convolve() {
         let mut layer = ReplenishConvolve::<9, 9>::new(
-            Convolve::<9, 9>::new(0.0, Field::<f32, 9>::from_array([1.0 / 9.0; 9]), 5.0),
+            Convolve::<9, 9>::new(0.0, Field::<f32, 9>::from_array([1.0 / 9.0; 9]), 1.0, 5.0),
             0.25,
         );
 
@@ -22,7 +22,7 @@ mod tests {
     #[test]
     fn replenish_convolve_delta() {
         let mut layer = ReplenishConvolve::<9, 9>::new(
-            Convolve::<9, 9>::new(0.0, Field::<f32, 9>::from_array([1.0 / 9.0; 9]), 5.0),
+            Convolve::<9, 9>::new(0.0, Field::<f32, 9>::from_array([1.0 / 9.0; 9]), 1.0, 5.0),
             0.25,
         );
 

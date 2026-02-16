@@ -1,5 +1,7 @@
 use std::ops::Index;
 
+use serde::{Deserialize, Serialize};
+
 use crate::world::environment::{
     accessor_trait::Env,
     layer::{
@@ -8,6 +10,7 @@ use crate::world::environment::{
     },
 };
 
+#[derive(Serialize, Deserialize)]
 pub enum LayerType<const N: usize, const KN: usize> {
     Replenish(Replenish<N>),
     Convolve(Convolve<N, KN>),

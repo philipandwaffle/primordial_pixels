@@ -31,7 +31,7 @@ impl Mut for NodeType {
             0 => Self::Energy(Energy::new()),
             1 => Self::Read(Read::new(LayerKey::rand_read_layer(rng))),
             2 => Self::Write(Write::new(LayerKey::rand_write_layer(rng))),
-            _ => Self::Thruster(Thruster::new(rng.random_range(-PI..PI))),
+            _ => Self::Thruster(Thruster::new()),
         })
     }
 }

@@ -5,6 +5,8 @@ pub const JOINT_Z: f32 = ORGANISM_Z - 0.1;
 pub const BONE_Z: f32 = ORGANISM_Z - 0.2;
 pub const MUSCLE_Z: f32 = ORGANISM_Z - 0.3;
 
+pub const THRUSTER_Z: f32 = JOINT_Z - 0.1;
+
 pub const DISPLAY_Z: f32 = -1.0;
 
 // Physics lock
@@ -16,6 +18,8 @@ pub const PHYS_LOCK_FINAL_DAMP: f32 = 0.2;
 pub const JOINT_RADIUS: f32 = 0.5;
 pub const BONE_WIDTH: f32 = 0.5;
 pub const MUSCLE_WIDTH: f32 = 0.4;
+pub const THRUSTER_WIDTH: f32 = 0.5;
+pub const THRUSTER_BASE_LENGTH: f32 = -2.0;
 
 // Energy
 pub const JOINT_MAX_ENERGY: f32 = 5.0;
@@ -35,7 +39,7 @@ pub const MAX_BONE_LEN: f32 = JOINT_RADIUS * 2.0 * 5.0;
 
 // Brain
 const MEMORY: usize = 0;
-pub const BASE_INPUT: usize = MEMORY + 1;
+pub const BASE_INPUT: usize = MEMORY + 2;
 pub const BASE_OUTPUT: usize = MEMORY + 0;
 
 // 3 slots for random stuff,

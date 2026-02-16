@@ -33,7 +33,7 @@
         },
         "transput": {
             "muscle_efficiency": 1.0,
-            "energy_collect_rate": 0.5,
+            "energy_collect_rate": 1.0,
             "pheromone_read_efficiency": 1.0,
             "pheromone_write_efficiency": 1.0,
             "thruster_strength": 7.5,

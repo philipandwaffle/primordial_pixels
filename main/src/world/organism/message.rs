@@ -3,7 +3,8 @@ use avian2d::prelude::{
 };
 use bevy::{
     ecs::{entity::Entity, message::Message, system::Commands},
-    math::{Quat, Vec2, vec2, vec3},
+    math::{Quat, Vec2, VectorSpace, vec2, vec3},
+    post_process::motion_blur::node,
     transform::components::Transform,
 };
 use my_derive::ConfigTag;
@@ -19,14 +20,18 @@ use crate::{
     },
     consts::{
         BONE_WIDTH, BONE_Z, JOINT_RADIUS, JOINT_Z, MUSCLE_COMPLIANCE, MUSCLE_WIDTH, MUSCLE_Z,
-        PHYS_LOCK_DUR, PHYS_LOCK_FINAL_DAMP, PHYS_LOCK_START_DAMP,
+        PHYS_LOCK_DUR, PHYS_LOCK_FINAL_DAMP, PHYS_LOCK_START_DAMP, THRUSTER_BASE_LENGTH,
+        THRUSTER_WIDTH, THRUSTER_Z,
     },
     physics_lock::PhysicsLockBundle,
     world::organism::{
         body::Body,
         brain::Brain,
         component::{
-            bone::Bone, joint::Joint as JointComp, muscle::Muscle, organism::OrganismMarker,
+            bone::Bone,
+            joint::{Joint as JointComp, Thruster as ThrusterComp},
+            muscle::Muscle,
+            organism::OrganismMarker,
         },
         joint::Joint,
         mutation::{
@@ -112,17 +117,48 @@ impl SpawnOrganismMsg {
     }
 
     pub fn spawn_joint(pos: Vec2, nodes: &Vec<NodeType>, c: &mut Commands, h: &Handles) -> Entity {
+        let mut has_thruster = false;
+        for n in nodes {
+            match n {
+                NodeType::Thruster(_) => has_thruster = true,
+                _ => {}
+            }
+        }
+
+        let thruster_ent = match has_thruster {
+            true => Some(Self::spawn_thruster(c, h)),
+            false => None,
+        };
+
+        let joint_ent = c
+            .spawn((
+                LockedAxes::ROTATION_LOCKED,
+                PhysicsLockBundle::new(PHYS_LOCK_DUR, PHYS_LOCK_START_DAMP, PHYS_LOCK_FINAL_DAMP),
+                JointComp::new(nodes, thruster_ent),
+                RigidBody::Dynamic,
+                Transform::default()
+                    .with_translation(pos.extend(JOINT_Z))
+                    .with_scale(vec3(JOINT_RADIUS, JOINT_RADIUS, 1.0)),
+                Collider::circle(1.0),
+                h.get_mesh2d(&MeshKey::Circle),
+                h.get_mat2d(&MatKey::Green),
+            ))
+            .id();
+
+        if let Some(thruster_ent) = thruster_ent {
+            c.entity(joint_ent).add_child(thruster_ent);
+        }
+
+        joint_ent
+    }
+    pub fn spawn_thruster(c: &mut Commands, h: &Handles) -> Entity {
         c.spawn((
-            LockedAxes::ROTATION_LOCKED,
-            PhysicsLockBundle::new(PHYS_LOCK_DUR, PHYS_LOCK_START_DAMP, PHYS_LOCK_FINAL_DAMP),
-            JointComp::new(nodes),
-            RigidBody::Dynamic,
+            ThrusterComp,
             Transform::default()
-                .with_translation(pos.extend(JOINT_Z))
-                .with_scale(vec3(JOINT_RADIUS, JOINT_RADIUS, 1.0)),
-            Collider::circle(1.0),
-            h.get_mesh2d(&MeshKey::Circle),
-            h.get_mat2d(&MatKey::Green),
+                .with_translation((vec2(0.0, THRUSTER_BASE_LENGTH * 0.5)).extend(THRUSTER_Z))
+                .with_scale(vec3(THRUSTER_WIDTH, THRUSTER_BASE_LENGTH, 1.0)),
+            h.get_mesh2d(&MeshKey::Triangle),
+            h.get_mat2d(&MatKey::Orange),
         ))
         .id()
     }

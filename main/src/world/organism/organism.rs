@@ -281,7 +281,7 @@ mod tests {
                     Joint::new(
                         vec2(-5.0, 0.0),
                         vec![
-                            NodeType::Thruster(Thruster::new(0.0)),
+                            NodeType::Thruster(Thruster::new()),
                             NodeType::Read(Read::new(LayerKey::Energy)),
                         ],
                     ),

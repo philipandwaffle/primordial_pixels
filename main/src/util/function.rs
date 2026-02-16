@@ -46,3 +46,9 @@ pub fn clamp_out_01(out: f32) -> f32 {
 pub fn clamp_out_rot(out: f32) -> f32 {
     return 1.0 + out * 0.5;
 }
+
+// fn vec2_to_polar(v: Vec2) -> (f32, f32) {
+//     let len = v.length();
+//     let z_rot = v.y.atan2(v.x);
+//     (len, z_rot)
+// }
