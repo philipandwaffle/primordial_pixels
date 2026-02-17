@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     config::config::Transput as TransputConfig,
-    util::function::{clamp_out_01, z_rot_to_dir},
+    util::function::{rot_output, z_rot_to_dir, zero_one_output},
     world::organism::transput::{Transput, remove_output},
 };
 
@@ -43,8 +43,8 @@ impl Transput<f32, ()> for Thruster {
         transput_config: &TransputConfig,
         dt: f32,
     ) {
-        let new_thrust = clamp_out_01(remove_output(out)) * transput_config.thruster_strength;
-        let new_z_rot = remove_output(out);
+        let new_thrust = zero_one_output(remove_output(out)) * transput_config.thruster_strength;
+        let new_z_rot = rot_output(remove_output(out));
 
         *energy -= (new_thrust - self.thrust).abs() * transput_config.thruster_efficiency * dt;
         *energy -= (new_z_rot - self.z_rot).abs() * transput_config.thruster_efficiency * dt;

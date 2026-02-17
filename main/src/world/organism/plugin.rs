@@ -82,7 +82,7 @@ impl OrganismPlugin {
                     let beat = (organism_ent.get_variable_stats().time_alive % mb) / mb;
                     let energy_level = organism_ent.get_energy_level();
 
-                    append_input(&mut input, beat);
+                    // append_input(&mut input, beat);
                     append_input(&mut input, energy_level);
 
                     input
@@ -231,15 +231,17 @@ impl OrganismPlugin {
                 }
                 total_z_rot = total_z_rot % PI;
 
+                let thrust_vec = z_rot_to_dir(total_z_rot) * total_thrust;
+
                 if let Ok(mut trans) = thruster_query.get_mut(thruster_ent) {
-                    let thrust_len =
-                        (THRUSTER_BASE_LENGTH * total_thrust) / transput_config.thruster_strength;
-                    trans.translation = vec3(0.0, thrust_len * 0.5, THRUSTER_Z);
-                    trans.scale = vec3(THRUSTER_WIDTH, thrust_len, 1.0);
-                    trans.rotation = Quat::from_rotation_z(total_z_rot);
+                    let visual_vec =
+                        thrust_vec * THRUSTER_BASE_LENGTH / transput_config.thruster_strength;
+                    trans.translation = (visual_vec * 0.5).extend(THRUSTER_Z);
+                    trans.scale = vec3(THRUSTER_WIDTH, -visual_vec.length(), 1.0);
+                    trans.rotation = Quat::from_rotation_z(-total_z_rot);
                 }
 
-                forces.apply_force(z_rot_to_dir(total_z_rot) * total_thrust * dt);
+                forces.apply_force(thrust_vec * dt);
             }
         }
     }

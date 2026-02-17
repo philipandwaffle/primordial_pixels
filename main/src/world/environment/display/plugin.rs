@@ -2,10 +2,12 @@ use bevy::{
     app::{Plugin, PostStartup, Update},
     asset::Assets,
     ecs::{
+        message::{MessageReader, MessageWriter},
         query::With,
         schedule::IntoScheduleConfigs,
         system::{Commands, Query, Res, ResMut},
     },
+    input::{ButtonInput, keyboard::KeyCode},
     math::vec2,
     sprite_render::{ColorMaterial, MeshMaterial2d},
     time::Time,
@@ -13,11 +15,14 @@ use bevy::{
 
 use crate::{
     assets::handles::Handles,
-    consts::{ENV_SIDE_CELLS, KERNEL_CELLS, NUM_COLORS, ENV_CELLS},
+    consts::{ENV_CELLS, ENV_SIDE_CELLS, KERNEL_CELLS, NUM_COLORS},
     util::ticker::Ticker,
     world::environment::{
         accessor_trait::Env,
-        display::{bundle::DisplayCellBundle, component::DisplayCell, resource::Display},
+        display::{
+            bundle::DisplayCellBundle, component::DisplayCell, message::UpdateDisplayMsg,
+            resource::Display,
+        },
         environment::Environment,
     },
 };
@@ -28,19 +33,22 @@ pub struct DisplayPlugin {
 impl Plugin for DisplayPlugin {
     fn build(&self, app: &mut bevy::app::App) {
         let mut ticker = Ticker::new(self.update_interval);
-        app.add_systems(
-            PostStartup,
-            (Self::init_display, Self::init_display_cells).chain(),
-        )
-        .add_systems(
-            Update,
-            move |time: Res<Time>,
-                  d: Res<Display>,
-                  env: Res<Environment<ENV_CELLS, KERNEL_CELLS>>,
-                  cells: Query<&mut MeshMaterial2d<ColorMaterial>, With<DisplayCell>>| {
-                Self::update_display_cells(time, d, env, cells, &mut ticker);
-            },
-        );
+        app.add_message::<UpdateDisplayMsg>()
+            .add_systems(
+                PostStartup,
+                (Self::init_display, Self::init_display_cells).chain(),
+            )
+            .add_systems(
+                Update,
+                (
+                    Self::update_display_cells,
+                    move |time: Res<Time>, update_display_msg: MessageWriter<UpdateDisplayMsg>| {
+                        Self::update_ticker(time, update_display_msg, &mut ticker);
+                    },
+                    Self::change_cur_layer,
+                )
+                    .chain(),
+            );
     }
 }
 impl DisplayPlugin {
@@ -79,16 +87,27 @@ impl DisplayPlugin {
         }
     }
 
-    fn update_display_cells(
+    fn update_ticker(
         time: Res<Time>,
-        d: Res<Display>,
-        env: Res<Environment<ENV_CELLS, KERNEL_CELLS>>,
-        mut cells: Query<&mut MeshMaterial2d<ColorMaterial>, With<DisplayCell>>,
+        mut update_display_msg: MessageWriter<UpdateDisplayMsg>,
         ticker: &mut Ticker,
     ) {
         if !ticker.apply_dt(time.delta_secs()) {
             return;
         }
+        update_display_msg.write(UpdateDisplayMsg);
+    }
+
+    fn update_display_cells(
+        d: Res<Display>,
+        env: Res<Environment<ENV_CELLS, KERNEL_CELLS>>,
+        mut cells: Query<&mut MeshMaterial2d<ColorMaterial>, With<DisplayCell>>,
+        mut update_display_msg: MessageReader<UpdateDisplayMsg>,
+    ) {
+        if update_display_msg.is_empty() {
+            return;
+        }
+        update_display_msg.clear();
 
         let max = env[&d.cur_layer].max();
         for i in 0..ENV_CELLS {
@@ -97,6 +116,20 @@ impl DisplayPlugin {
                     ((env[&d.cur_layer][i] / max) * (NUM_COLORS - 1) as f32).round() as usize;
                 mat.0 = d.colors[color_i].clone()
             }
+        }
+    }
+
+    fn change_cur_layer(
+        input: Res<ButtonInput<KeyCode>>,
+        mut display: ResMut<Display>,
+        mut update_display_msg: MessageWriter<UpdateDisplayMsg>,
+    ) {
+        if input.just_released(KeyCode::KeyQ) {
+            display.cur_layer = display.cur_layer.prev();
+            update_display_msg.write(UpdateDisplayMsg);
+        } else if input.just_released(KeyCode::KeyE) {
+            display.cur_layer = display.cur_layer.next();
+            update_display_msg.write(UpdateDisplayMsg);
         }
     }
 }

@@ -1,3 +1,4 @@
+use bevy::ui::AlignSelf;
 use rand::{Rng, rngs::ThreadRng};
 use serde::{Deserialize, Serialize};
 
@@ -19,5 +20,24 @@ impl LayerKey {
     }
     pub fn rand_write_layer(rng: &mut ThreadRng) -> LayerKey {
         return LayerKey::Pheromone(rng.random_range(0..PHEROMONE_LAYERS));
+    }
+
+    pub fn next(&self) -> Self {
+        match self {
+            LayerKey::Energy => LayerKey::Pheromone(0),
+            LayerKey::Pheromone(i) => match *i == PHEROMONE_LAYERS - 1 {
+                true => LayerKey::Energy,
+                false => LayerKey::Pheromone(i + 1),
+            },
+        }
+    }
+    pub fn prev(&self) -> Self {
+        match self {
+            LayerKey::Energy => LayerKey::Pheromone(PHEROMONE_LAYERS - 1),
+            LayerKey::Pheromone(i) => match *i == 0 {
+                true => LayerKey::Energy,
+                false => LayerKey::Pheromone(i - 1),
+            },
+        }
     }
 }

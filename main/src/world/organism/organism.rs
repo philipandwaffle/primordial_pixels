@@ -35,6 +35,14 @@ impl Mutable for Organism {
     fn mutate(&mut self, mutation: &Mutation) -> bool {
         match mutation {
             Mutation::Body(body) => match body {
+                BodyMut::AlterNode {
+                    joint,
+                    node,
+                    node_type,
+                } => {
+                    self.body.joints[*joint].nodes[*node] = *node_type;
+                    return true;
+                }
                 BodyMut::AddNode { joint, node_type } => {
                     let out_in_offset = self.get_organism().joint_out_in(*joint).into();
                     let out_in = node_type.out_in().into();
@@ -274,6 +282,7 @@ mod tests {
     };
 
     fn get_organism() -> Organism {
+        let mut rng = rand::rng();
         Organism::new(
             Some(Brain::new(vec![2, 4, 1])),
             Body::new(
@@ -282,7 +291,7 @@ mod tests {
                         vec2(-5.0, 0.0),
                         vec![
                             NodeType::Thruster(Thruster::new()),
-                            NodeType::Read(Read::new(LayerKey::Energy)),
+                            NodeType::Read(Read::new(LayerKey::Energy, &mut rng)),
                         ],
                     ),
                     Joint::new(

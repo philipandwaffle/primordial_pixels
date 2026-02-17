@@ -39,12 +39,12 @@ pub fn rot_input(input: f32) -> f32 {
     return input / (2.0 * PI);
 }
 
-pub fn clamp_out_01(out: f32) -> f32 {
+pub fn zero_one_output(out: f32) -> f32 {
     return 1.0 + out * 0.5;
 }
 
-pub fn clamp_out_rot(out: f32) -> f32 {
-    return 1.0 + out * 0.5;
+pub fn rot_output(out: f32) -> f32 {
+    return out * PI;
 }
 
 // fn vec2_to_polar(v: Vec2) -> (f32, f32) {

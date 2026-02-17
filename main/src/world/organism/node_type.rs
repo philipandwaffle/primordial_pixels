@@ -25,11 +25,30 @@ pub enum NodeType {
     Write(Write),
     Thruster(Thruster),
 }
+impl NodeType {
+    pub fn can_alter(&self) -> bool {
+        match self {
+            NodeType::Read(_) => true,
+            _ => false,
+        }
+    }
+}
+impl PartialEq for NodeType {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Energy(_), Self::Energy(_)) => true,
+            (Self::Read(a), Self::Read(b)) => a == b,
+            (Self::Write(_), Self::Write(_)) => true,
+            (Self::Thruster(_), Self::Thruster(_)) => true,
+            _ => false,
+        }
+    }
+}
 impl Mut for NodeType {
     fn rand(rng: &mut ThreadRng, _: &MutationConfig, _: &Organism) -> Option<Self> {
         Some(match rng.random_range(0..=3) {
             0 => Self::Energy(Energy::new()),
-            1 => Self::Read(Read::new(LayerKey::rand_read_layer(rng))),
+            1 => Self::Read(Read::new(LayerKey::rand_read_layer(rng), rng)),
             2 => Self::Write(Write::new(LayerKey::rand_write_layer(rng))),
             _ => Self::Thruster(Thruster::new()),
         })

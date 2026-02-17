@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     config::config::Transput as TransputConfig,
     consts::{ENV_CELLS, KERNEL_CELLS},
-    util::function::clamp_out_01,
+    util::function::zero_one_output,
     world::{
         environment::{environment::Environment, layer::layer_key::LayerKey},
         organism::transput::{Transput, remove_output},
@@ -35,7 +35,7 @@ impl Transput<(&mut Environment<ENV_CELLS, KERNEL_CELLS>, Vec2, f32), ()> for Wr
         (env, pos, dt): (&mut Environment<ENV_CELLS, KERNEL_CELLS>, Vec2, f32),
     ) {
         let max_write =
-            clamp_out_01(remove_output(output)) * transput_config.pheromone_write_efficiency * dt;
+            zero_one_output(remove_output(output)) * transput_config.pheromone_write_efficiency * dt;
         let mut delta = max_write;
         env.delta_value(&self.layer_key, pos, &mut delta);
         *energy -= transput_config.pheromone_write_efficiency * dt * (max_write - delta);

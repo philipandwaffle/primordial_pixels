@@ -75,9 +75,7 @@ impl PetriDishPlugin {
             let x = pos.x.abs();
             let y = pos.y.abs();
 
-            // println!("{}", info.threshold);
             if x > info.threshold || y > info.threshold {
-                // println!("foo");
                 let dist = x.max(y) - info.threshold;
 
                 forces.apply_force(-pos.normalize() * (1.0 + dist.pow(2.0)));

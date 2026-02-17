@@ -30,7 +30,7 @@ pub const MAX_MUSCLE_LEN: f32 = 1.3;
 pub const MUSCLE_COMPLIANCE: f32 = 0.001;
 
 // Mutation
-pub const NUM_MUTATIONS: usize = 9;
+pub const NUM_MUTATIONS: usize = 10;
 pub const NUM_BODY_MUTATIONS: usize = 2;
 pub const NUM_BRAIN_MUTATIONS: usize = 2;
 
@@ -39,7 +39,7 @@ pub const MAX_BONE_LEN: f32 = JOINT_RADIUS * 2.0 * 5.0;
 
 // Brain
 const MEMORY: usize = 0;
-pub const BASE_INPUT: usize = MEMORY + 2;
+pub const BASE_INPUT: usize = MEMORY + 1;
 pub const BASE_OUTPUT: usize = MEMORY + 0;
 
 // 3 slots for random stuff,
