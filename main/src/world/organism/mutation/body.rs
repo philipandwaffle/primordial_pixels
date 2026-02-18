@@ -129,7 +129,7 @@ impl Mut for Body {
                 }
                 Some(Body::AddNode {
                     joint: joint,
-                    node_type: NodeType::rand(rng, mutation_config, o)?,
+                    node_type,
                 })
             }
             // AddJoint
