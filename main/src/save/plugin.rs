@@ -64,7 +64,6 @@ impl SavePlugin {
         organism_query: Query<(&OrganismMarker)>,
         joint_query: Query<(&Transform), With<Joint>>,
         mut save_message: MessageWriter<LogOrganismsMsg>,
-        save_info: Res<SaveInfo>,
     ) {
         if !keys.just_released(KeyCode::Enter) {
             return;
