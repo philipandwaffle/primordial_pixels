@@ -2,8 +2,8 @@ use bevy::ecs::resource::Resource;
 
 #[derive(Resource)]
 pub struct Ticker {
-    elapsed: f32,
-    interval: f32,
+    pub elapsed: f32,
+    pub interval: f32,
 }
 impl Ticker {
     pub fn new(interval: f32) -> Self {

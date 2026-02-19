@@ -118,3 +118,29 @@ impl
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use bevy::math::vec2;
+
+    use crate::world::{
+        environment::layer::layer_key::LayerKey,
+        organism::{node::read::Read, node_type::NodeType},
+    };
+
+    #[test]
+    fn foo() {
+        let mut rng = rand::rng();
+
+        let mut a = Read::new(LayerKey::Energy, &mut rng);
+        a.read_offset = vec2(0.0, 0.0);
+        let a = NodeType::Read(a);
+
+        let mut b = Read::new(LayerKey::Energy, &mut rng);
+        b.read_offset = vec2(0.0, 0.0);
+        let b = NodeType::Read(b);
+
+        let nodes = vec![a];
+        println!("{:?} {:?} {:?}", a, b, nodes.contains(&b));
+    }
+}

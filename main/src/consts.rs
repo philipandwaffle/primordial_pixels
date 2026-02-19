@@ -1,6 +1,7 @@
 pub const CONFIG_PATH: &'static str = "config.json";
 // Z offsets
-pub const ORGANISM_Z: f32 = 0.0;
+pub const EGG_Z: f32 = 0.0;
+pub const ORGANISM_Z: f32 = EGG_Z - 1.0;
 pub const JOINT_Z: f32 = ORGANISM_Z - 0.1;
 pub const BONE_Z: f32 = ORGANISM_Z - 0.2;
 pub const MUSCLE_Z: f32 = ORGANISM_Z - 0.3;
@@ -15,6 +16,7 @@ pub const PHYS_LOCK_START_DAMP: f32 = 50.0;
 pub const PHYS_LOCK_FINAL_DAMP: f32 = 0.2;
 
 // Organism sizes
+pub const MIN_EGG_RADIUS: f32 = 0.01;
 pub const JOINT_RADIUS: f32 = 0.5;
 pub const BONE_WIDTH: f32 = 0.5;
 pub const MUSCLE_WIDTH: f32 = 0.4;

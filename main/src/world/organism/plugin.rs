@@ -4,7 +4,8 @@ use avian2d::prelude::{DistanceJoint, DistanceLimit, Forces, RigidBodyForces};
 use bevy::{
     app::{First, Last, Plugin, PostUpdate, PreUpdate, Update},
     ecs::{
-        message::MessageReader,
+        entity::Entity,
+        message::{MessageReader, MessageWriter},
         query::{With, Without},
         schedule::IntoScheduleConfigs,
         system::{Commands, Query, Res, ResMut},
@@ -26,11 +27,12 @@ use crate::{
         organism::{
             component::{
                 bone::Bone,
+                egg::Egg,
                 joint::{Joint, Thruster as ThrusterComp},
                 muscle::Muscle,
                 organism::OrganismMarker,
             },
-            message::SpawnOrganismMsg,
+            message::{SpawnEggMsg, SpawnOrganismMsg},
             node::thruster::Thruster,
             node_type::NodeType,
             transput::{Transput, append_input},
@@ -42,8 +44,17 @@ use crate::{
 pub struct OrganismPlugin;
 impl Plugin for OrganismPlugin {
     fn build(&self, app: &mut bevy::app::App) {
-        app.add_message::<SpawnOrganismMsg>()
-            .add_systems(First, (Self::spawn_seed, Self::tick_organism_time))
+        app.add_message::<SpawnEggMsg>()
+            .add_message::<SpawnOrganismMsg>()
+            .add_systems(
+                First,
+                (
+                    Self::spawn_organism,
+                    Self::spawn_egg,
+                    Self::tick_organism_time,
+                    Self::update_eggs,
+                ),
+            )
             .add_systems(PreUpdate, Self::update_brain_input)
             .add_systems(Update, Self::update_brain_output)
             .add_systems(PostUpdate, (Self::update_muscles, Self::update_thrusters));
@@ -55,7 +66,7 @@ impl OrganismPlugin {
         let dt = time.delta_secs();
         for mut o in organisms.iter_mut() {
             o.update_variable_stats(dt);
-            let energy = o.get_organism().metabolic_cost * dt;
+            let energy = o.get_organism().meta.metabolic_cost * dt;
             o.update_energy(energy);
         }
     }
@@ -246,13 +257,38 @@ impl OrganismPlugin {
         }
     }
 
-    fn spawn_seed(
+    fn spawn_egg(
         mut commands: Commands,
-        mut spawn_seed_msg: MessageReader<SpawnOrganismMsg>,
+        mut spawn_egg_msg: MessageReader<SpawnEggMsg>,
         handles: Res<Handles>,
     ) {
-        for s in spawn_seed_msg.read() {
-            s.spawn(&mut commands, &handles);
+        for msg in spawn_egg_msg.read() {
+            println!("spawning egg");
+            msg.spawn(&mut commands, &handles);
+        }
+    }
+
+    fn update_eggs(
+        mut commands: Commands,
+        time: Res<Time>,
+        mut egg_query: Query<(Entity, &mut Egg, &mut Transform)>,
+        mut spawn_organism_msg: MessageWriter<SpawnOrganismMsg>,
+    ) {
+        let dt = time.delta_secs();
+        for (ent, mut egg, mut trans) in egg_query.iter_mut() {
+            if egg.tick(dt, &mut trans, &mut spawn_organism_msg) {
+                commands.entity(ent).despawn();
+            }
+        }
+    }
+
+    fn spawn_organism(
+        mut commands: Commands,
+        mut spawn_organism_msg: MessageReader<SpawnOrganismMsg>,
+        handles: Res<Handles>,
+    ) {
+        for msg in spawn_organism_msg.read() {
+            msg.spawn(&mut commands, &handles);
         }
     }
 }

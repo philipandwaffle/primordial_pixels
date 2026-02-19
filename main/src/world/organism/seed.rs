@@ -29,7 +29,7 @@ use crate::{
             bone::Bone, joint::Joint as JointComp, muscle::Muscle, organism::OrganismMarker,
         },
         joint::Joint,
-        message::SpawnOrganismMsg,
+        message::{SpawnEggMsg, SpawnOrganismMsg},
         mutation::{
             brain::Brain as BrainMut,
             mutation::{Mut, Mutable, Mutation as OrgMut},
@@ -124,7 +124,7 @@ impl Seed {
     }
 
     pub fn update_metabolic_cost(&mut self, metabolism: &Metabolism) {
-        self.organism.update_metabolic_cost(metabolism)
+        self.organism.update_meta(metabolism)
     }
 
     pub fn centre(&mut self) {
@@ -138,6 +138,15 @@ impl Seed {
 impl Into<SpawnOrganismMsg> for Seed {
     fn into(self) -> SpawnOrganismMsg {
         SpawnOrganismMsg::new(self.pos, self.organism)
+    }
+}
+impl Into<SpawnEggMsg> for Seed {
+    fn into(self) -> SpawnEggMsg {
+        SpawnEggMsg::new(
+            self.pos,
+            self.organism.get_static_stats().incubation_period,
+            self.organism,
+        )
     }
 }
 

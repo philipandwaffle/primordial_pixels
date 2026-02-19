@@ -157,7 +157,13 @@ impl Mut for Body {
                     .bones
                     .iter()
                     .filter(|bone| bone.contains(&joint))
-                    .map(|[a, b]| o.body.joints[*a].pos.distance(o.body.joints[*b].pos))
+                    .map(|[a, b]| {
+                        if *a == joint {
+                            o.body.joints[*b].pos.distance(o.body.joints[*a].pos + pos)
+                        } else {
+                            o.body.joints[*a].pos.distance(o.body.joints[*b].pos + pos)
+                        }
+                    })
                     .any(|len| len < MIN_BONE_LEN || len > MAX_BONE_LEN)
                 {
                     return None;

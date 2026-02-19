@@ -4,7 +4,7 @@ use bevy::{
     ecs::{
         entity::Entity,
         message::MessageWriter,
-        query::With,
+        query::{Or, With},
         schedule::IntoScheduleConfigs,
         system::{Commands, Query, Res, ResMut},
     },
@@ -28,8 +28,8 @@ use crate::{
     world::{
         environment::plugin::EnvironmentPlugin,
         organism::{
-            component::{joint::Joint, organism::OrganismMarker},
-            message::SpawnOrganismMsg,
+            component::{egg::Egg, joint::Joint, organism::OrganismMarker},
+            message::{SpawnEggMsg, SpawnOrganismMsg},
             mutation::mutation::{Mut, Mutable, Mutation},
             seed::{self, Seed},
             util_trait::OrganismAccessor,
@@ -60,14 +60,14 @@ impl Plugin for PetriDishPlugin {
             self.display_update_interval,
         ))
         .add_systems(First, Self::replenish_organisms);
-        app.add_systems(Last, (Self::evaluate_organisms, Self::nudge_joints));
+        app.add_systems(Last, (Self::evaluate_organisms, Self::nudge));
     }
 }
 
 impl PetriDishPlugin {
-    fn nudge_joints(
+    fn nudge(
         info: Res<PetriDishInfo>,
-        mut joint_query: Query<(Forces, &Transform), With<Joint>>,
+        mut joint_query: Query<(Forces, &Transform), Or<(With<Joint>, With<Egg>)>>,
     ) {
         for (mut forces, trans) in joint_query.iter_mut() {
             let pos = trans.translation.truncate();
@@ -128,7 +128,7 @@ impl PetriDishPlugin {
         mut info: ResMut<PetriDishInfo>,
         metabolism: Res<Metabolism>,
         mutation_config: Res<MutationConfig>,
-        mut spawn_organism_msg: MessageWriter<SpawnOrganismMsg>,
+        mut spawn_egg_msg: MessageWriter<SpawnEggMsg>,
         mut organism_query: Query<(Entity, &mut OrganismMarker)>,
         joint_query: Query<&Transform, With<Joint>>,
     ) {
@@ -142,7 +142,7 @@ impl PetriDishPlugin {
 
                 s.multi_mutate(&mut rng, &metabolism, &mutation_config, info.num_mutations);
 
-                spawn_organism_msg.write(Into::<SpawnOrganismMsg>::into(s));
+                spawn_egg_msg.write(Into::<SpawnEggMsg>::into(s));
             }
         }
     }

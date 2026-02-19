@@ -42,7 +42,7 @@ impl<const N: usize, const KN: usize> Environment<N, KN> {
             LayerType::PeriodicReplenishConvolve(PeriodicReplenishConvolve::new(
                 ReplenishConvolve::new(
                     Convolve::new(0.0, Field::<f32, KN>::from_array([1.0 / 9.0; KN]), 0.1, 5.0),
-                    0.1,
+                    0.25,
                 ),
                 30.0,
                 60.0,

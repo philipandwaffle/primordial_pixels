@@ -3,10 +3,14 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct StaticStats {
     pub metronome_beat: f32,
+    pub incubation_period: f32,
 }
 impl StaticStats {
-    pub fn new(metronome_beat: f32) -> Self {
-        return Self { metronome_beat };
+    pub fn new(metronome_beat: f32, incubation_period: f32) -> Self {
+        return Self {
+            metronome_beat,
+            incubation_period,
+        };
     }
 }
 

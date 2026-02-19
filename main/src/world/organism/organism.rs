@@ -11,6 +11,7 @@ use crate::{
         body::Body,
         brain::Brain,
         joint::Joint,
+        meta::Meta,
         mutation::{
             body::Body as BodyMut,
             brain::Brain as BrainMut,
@@ -29,7 +30,7 @@ pub struct Organism {
     pub brain: Option<Brain>,
     pub body: Body,
     static_stats: StaticStats,
-    pub metabolic_cost: f32,
+    pub meta: Meta,
 }
 impl Mutable for Organism {
     fn mutate(&mut self, mutation: &Mutation) -> bool {
@@ -144,35 +145,18 @@ impl Mutable for Organism {
 }
 impl Organism {
     pub fn new(brain: Option<Brain>, body: Body, metabolism: Metabolism) -> Self {
-        let metabolic_cost = (body
-            .joints
-            .iter()
-            .map(|j| j.nodes.len() as f32)
-            .sum::<f32>()
-            * metabolism.node)
-            + (body.joints.len() as f32 * metabolism.joint)
-            + (body.bones.len() as f32 * metabolism.bone)
-            + (body.muscles.len() as f32 * metabolism.muscle);
-
-        Self {
+        let mut me = Self {
             brain,
             body,
-            static_stats: StaticStats::new(0.5),
-            metabolic_cost,
-        }
+            static_stats: StaticStats::new(0.5, 5.0),
+            meta: Meta::default(),
+        };
+        me.update_meta(&metabolism);
+        me
     }
 
-    pub fn update_metabolic_cost(&mut self, metabolism: &Metabolism) {
-        self.metabolic_cost = -(self
-            .body
-            .joints
-            .iter()
-            .map(|j| j.nodes.len() as f32)
-            .sum::<f32>()
-            * metabolism.node
-            + (self.body.joints.len() as f32 * metabolism.joint)
-            + (self.body.bones.len() as f32 * metabolism.bone)
-            + (self.body.muscles.len() as f32 * metabolism.muscle));
+    pub fn update_meta(&mut self, metabolism: &Metabolism) {
+        self.meta = self.meta.update(&self, metabolism);
     }
 
     pub fn max_energy(&self) -> f32 {

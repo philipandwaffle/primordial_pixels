@@ -1,9 +1,9 @@
 use avian2d::prelude::{
-    Collider, DistanceJoint, LinearDamping, LockedAxes, RevoluteJoint, RigidBody,
+    Collider, DistanceJoint, LinearDamping, LockedAxes, Mass, RevoluteJoint, RigidBody,
 };
 use bevy::{
     ecs::{entity::Entity, message::Message, system::Commands},
-    math::{Quat, Vec2, VectorSpace, vec2, vec3},
+    math::{Quat, Vec2, Vec3, VectorSpace, vec2, vec3},
     post_process::motion_blur::node,
     transform::components::Transform,
 };
@@ -19,9 +19,7 @@ use crate::{
         plugin::load_config,
     },
     consts::{
-        BONE_WIDTH, BONE_Z, JOINT_RADIUS, JOINT_Z, MUSCLE_COMPLIANCE, MUSCLE_WIDTH, MUSCLE_Z,
-        PHYS_LOCK_DUR, PHYS_LOCK_FINAL_DAMP, PHYS_LOCK_START_DAMP, THRUSTER_BASE_LENGTH,
-        THRUSTER_WIDTH, THRUSTER_Z,
+        BONE_WIDTH, BONE_Z, EGG_Z, JOINT_RADIUS, JOINT_Z, MIN_EGG_RADIUS, MUSCLE_COMPLIANCE, MUSCLE_WIDTH, MUSCLE_Z, PHYS_LOCK_DUR, PHYS_LOCK_FINAL_DAMP, PHYS_LOCK_START_DAMP, THRUSTER_BASE_LENGTH, THRUSTER_WIDTH, THRUSTER_Z
     },
     physics_lock::PhysicsLockBundle,
     world::organism::{
@@ -29,6 +27,7 @@ use crate::{
         brain::Brain,
         component::{
             bone::Bone,
+            egg::Egg,
             joint::{Joint as JointComp, Thruster as ThrusterComp},
             muscle::Muscle,
             organism::OrganismMarker,
@@ -49,7 +48,33 @@ use crate::{
 #[derive(Message)]
 pub struct SpawnEggMsg {
     pos: Vec2,
+    incubation_period: f32,
     organism: Organism,
+}
+impl SpawnEggMsg {
+    pub fn new(pos: Vec2, incubation_period: f32, organism: Organism) -> Self {
+        Self {
+            pos,
+            incubation_period,
+            organism,
+        }
+    }
+
+    pub fn spawn(&self, commands: &mut Commands, h: &Handles) -> Entity {
+        commands
+            .spawn((
+                Egg::new(self.incubation_period, self.organism.clone()),
+                Transform::default()
+                    .with_translation(self.pos.extend(EGG_Z))
+                    .with_scale(vec3(MIN_EGG_RADIUS, MIN_EGG_RADIUS, MIN_EGG_RADIUS)),
+                RigidBody::Dynamic,
+                Collider::circle(1.0),
+                // Mass(1.0),
+                h.get_mesh2d(&MeshKey::Circle),
+                h.get_mat2d(&MatKey::White),
+            ))
+            .id()
+    }
 }
 
 #[derive(Message)]
@@ -61,10 +86,6 @@ impl SpawnOrganismMsg {
     pub fn new(pos: Vec2, organism: Organism) -> Self {
         Self { pos, organism }
     }
-
-    // pub fn spawn(&self, commands: &mut Commands, h: &Handles) -> Entity {
-    //     self.seed.spawn(commands, h)
-    // }
 
     pub fn spawn(&self, commands: &mut Commands, h: &Handles) -> Entity {
         let offset = self.pos;
