@@ -7,8 +7,6 @@ use std::{
     usize,
 };
 
-use crate::consts::ENV_SIDE_CELLS;
-
 #[derive(Serialize, Deserialize, Resource, Copy, Clone)]
 pub struct Field<T, const N: usize>
 where
@@ -43,6 +41,13 @@ impl<T, const N: usize> Field<T, N>
 where
     T: Serialize + for<'a> Deserialize<'a> + Copy,
 {
+    pub fn from_element(val: T) -> Self {
+        return Self {
+            space: [val; N],
+            side_len: (N as f32).sqrt() as usize,
+        };
+    }
+
     pub fn get(&self, x: isize, y: isize) -> T {
         return self.space[self.get_i(x, y)];
     }
@@ -52,13 +57,6 @@ where
 
     pub fn set(&mut self, x: isize, y: isize, value: T) {
         self.space[self.get_i(x, y)] = value;
-    }
-
-    pub fn from_element(val: T) -> Self {
-        return Self {
-            space: [val; N],
-            side_len: (N as f32).sqrt() as usize,
-        };
     }
 
     pub fn from_array(array: [T; N]) -> Self {
@@ -84,7 +82,7 @@ where
 //         return &mut self.space[self.get_i(x, y)];
 //     }
 
-//     pub fn set(&mut self, x: isize, y: isize, value: f32) {
+//     pub fn set(&mut self, x: isize, y: isize, value: f032) {
 //         self.space[self.get_i(x, y)] = value;
 //     }
 

@@ -40,10 +40,10 @@ impl<const N: usize, const KN: usize> Environment<N, KN> {
         layers.insert(
             LayerKey::Energy,
             LayerType::PeriodicReplenishConvolve(PeriodicReplenishConvolve::new(
-                ReplenishConvolve::new(
-                    Convolve::new(0.0, Field::<f32, KN>::from_array([1.0 / 9.0; KN]), 0.1, 5.0),
-                    0.25,
-                ),
+                Field::<f32, KN>::from_element(1.0 / 9.0),
+                0.1,
+                5.0,
+                0.25,
                 30.0,
                 60.0,
             )),
@@ -55,6 +55,15 @@ impl<const N: usize, const KN: usize> Environment<N, KN> {
                 Field::<f32, KN>::from_array([0.9 / 9.0; KN]),
                 0.25,
                 5.0,
+            )),
+        );
+        layers.insert(
+            LayerKey::Decay,
+            LayerType::Convolve(Convolve::new(
+                0.0,
+                Field::<f32, KN>::from_array([0.9 / 9.0; KN]),
+                0.1,
+                50.0,
             )),
         );
         Self {

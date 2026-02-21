@@ -3,6 +3,7 @@ use bevy::{
     math::{Vec2, vec2},
     transform::components::Transform,
 };
+use rand_distr::num_traits::Pow;
 
 use crate::{
     consts::MIN_EGG_RADIUS,
@@ -29,8 +30,9 @@ impl Egg {
         trans: &mut Transform,
         spawn_seed_msg: &mut MessageWriter<SpawnOrganismMsg>,
     ) -> bool {
-        let radius = (self.organism.meta.radius * (self.ticker.elapsed / self.ticker.interval))
-            .max(MIN_EGG_RADIUS);
+        let radius = (self.organism.meta.radius
+            * (self.ticker.elapsed / self.ticker.interval).pow(4.0))
+        .max(MIN_EGG_RADIUS);
         trans.scale = vec2(radius, radius).extend(1.0);
 
         if self.ticker.apply_dt(dt) {

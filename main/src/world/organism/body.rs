@@ -1,3 +1,4 @@
+use bevy::math::Vec2;
 use serde::{Deserialize, Serialize};
 
 use crate::world::organism::joint::Joint;
@@ -26,5 +27,10 @@ impl Body {
             bones,
             muscles,
         }
+    }
+
+    pub fn centre_joints(&mut self) {
+        let centre = self.joints.iter().map(|j| j.pos).sum::<Vec2>() / self.joints.len() as f32;
+        self.joints.iter_mut().for_each(|j| j.pos -= centre);
     }
 }

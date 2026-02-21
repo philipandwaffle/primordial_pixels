@@ -135,6 +135,7 @@ impl PetriDishPlugin {
         let mut rng = rng();
         for (ent, mut organism) in organism_query.iter_mut() {
             if organism.is_dead() {
+                organism.despawn(&mut commands);
                 commands.entity(ent).despawn();
                 info.cur_organisms -= 1;
             } else if let Some(mut s) = organism.reproduce(&metabolism, &joint_query) {

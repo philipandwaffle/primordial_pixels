@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use avian2d::prelude::Gravity;
+use avian2d::prelude::{Gravity, PhysicsDebugPlugin};
 use bevy::app::Plugin;
 
 use crate::{
@@ -20,7 +20,10 @@ impl Plugin for ConfigPlugin {
             .insert_resource(config.organism.metabolism)
             .insert_resource(config.organism.transput);
 
-        if config.performance_debug {
+        if config.debug.physics {
+            app.add_plugins(PhysicsDebugPlugin);
+        }
+        if config.debug.performance {
             app.add_plugins(PerformanceInfoPlugin);
         }
 

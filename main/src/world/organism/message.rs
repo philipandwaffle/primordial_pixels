@@ -19,9 +19,12 @@ use crate::{
         plugin::load_config,
     },
     consts::{
-        BONE_WIDTH, BONE_Z, EGG_Z, JOINT_RADIUS, JOINT_Z, MIN_EGG_RADIUS, MUSCLE_COMPLIANCE, MUSCLE_WIDTH, MUSCLE_Z, PHYS_LOCK_DUR, PHYS_LOCK_FINAL_DAMP, PHYS_LOCK_START_DAMP, THRUSTER_BASE_LENGTH, THRUSTER_WIDTH, THRUSTER_Z
+        BONE_WIDTH, BONE_Z, EGG_Z, JOINT_RADIUS, JOINT_Z, LINEAR_DAMPING, MIN_EGG_RADIUS,
+        MUSCLE_COMPLIANCE, MUSCLE_WIDTH, MUSCLE_Z, PHYS_LOCK_DUR, PHYS_LOCK_FINAL_DAMP,
+        PHYS_LOCK_START_DAMP, THRUSTER_BASE_LENGTH, THRUSTER_WIDTH, THRUSTER_Z,
     },
     physics_lock::PhysicsLockBundle,
+    util::function::rand_vec2,
     world::organism::{
         body::Body,
         brain::Brain,
@@ -60,12 +63,14 @@ impl SpawnEggMsg {
         }
     }
 
-    pub fn spawn(&self, commands: &mut Commands, h: &Handles) -> Entity {
+    pub fn spawn(&self, commands: &mut Commands, h: &Handles, rng: &mut ThreadRng) -> Entity {
         commands
             .spawn((
+                LockedAxes::ROTATION_LOCKED,
+                LinearDamping(LINEAR_DAMPING),
                 Egg::new(self.incubation_period, self.organism.clone()),
                 Transform::default()
-                    .with_translation(self.pos.extend(EGG_Z))
+                    .with_translation((self.pos + rand_vec2(rng, JOINT_RADIUS * 0.5)).extend(EGG_Z))
                     .with_scale(vec3(MIN_EGG_RADIUS, MIN_EGG_RADIUS, MIN_EGG_RADIUS)),
                 RigidBody::Dynamic,
                 Collider::circle(1.0),
@@ -154,7 +159,8 @@ impl SpawnOrganismMsg {
         let joint_ent = c
             .spawn((
                 LockedAxes::ROTATION_LOCKED,
-                PhysicsLockBundle::new(PHYS_LOCK_DUR, PHYS_LOCK_START_DAMP, PHYS_LOCK_FINAL_DAMP),
+                LinearDamping(LINEAR_DAMPING),
+                // PhysicsLockBundle::new(PHYS_LOCK_DUR, PHYS_LOCK_START_DAMP, PHYS_LOCK_FINAL_DAMP),
                 JointComp::new(nodes, thruster_ent),
                 RigidBody::Dynamic,
                 Transform::default()

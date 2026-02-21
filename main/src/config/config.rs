@@ -12,13 +12,19 @@ use my_derive::ConfigTag;
 
 #[derive(ConfigTag, Serialize, Deserialize, Clone, Resource)]
 pub struct Config {
-    pub performance_debug: bool,
+    pub debug: Debug,
     pub camera: Camera,
     pub organism: Organism,
     pub physics: Physics,
     pub save: SavePlugin,
     // pub runner: Option<RunnerPlugin>,
     pub petri_dish: Option<PetriDishPlugin>,
+}
+
+#[derive(ConfigTag, Serialize, Deserialize, Clone, Copy, Resource)]
+pub struct Debug {
+    pub physics: bool,
+    pub performance: bool,
 }
 
 #[derive(ConfigTag, Serialize, Deserialize, Clone, Copy, Resource)]

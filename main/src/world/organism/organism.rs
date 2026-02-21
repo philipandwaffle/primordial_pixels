@@ -16,10 +16,11 @@ use crate::{
             body::Body as BodyMut,
             brain::Brain as BrainMut,
             mutation::{Mutable, Mutation},
+            stats::Stats as StatsMut,
         },
         out_in::OutputConsumedInputProduced,
         seed::Seed,
-        stats::StaticStats,
+        stats::Stats,
         transput::Transput,
         util_trait::OrganismAccessor,
     },
@@ -29,7 +30,7 @@ use crate::{
 pub struct Organism {
     pub brain: Option<Brain>,
     pub body: Body,
-    static_stats: StaticStats,
+    stats: Stats,
     pub meta: Meta,
 }
 impl Mutable for Organism {
@@ -140,6 +141,20 @@ impl Mutable for Organism {
                     .unwrap()
                     .mutate(mutation);
             }
+            Mutation::Stats(stat_mut) => {
+                match stat_mut {
+                    StatsMut::MetronomeBeat { delta } => {
+                        self.stats.metronome_beat =
+                            (self.stats.metronome_beat + delta).clamp(0.1, 10.0)
+                    }
+                    StatsMut::IncubationPeriod { delta } => {
+                        self.stats.incubation_period =
+                            (self.stats.incubation_period + delta).clamp(0.1, 60.0)
+                    }
+                };
+
+                true
+            }
         }
     }
 }
@@ -148,7 +163,7 @@ impl Organism {
         let mut me = Self {
             brain,
             body,
-            static_stats: StaticStats::new(0.5, 5.0),
+            stats: Stats::new(0.5, 5.0),
             meta: Meta::default(),
         };
         me.update_meta(&metabolism);
@@ -163,17 +178,8 @@ impl Organism {
         return self.body.joints.len() as f32 * JOINT_MAX_ENERGY;
     }
 
-    pub fn centre(&mut self) {
-        let centre =
-            self.body.joints.iter().map(|j| j.pos).sum::<Vec2>() / self.body.joints.len() as f32;
-
-        for j in self.body.joints.iter_mut() {
-            j.pos -= centre * 0.5;
-        }
-    }
-
-    pub fn get_static_stats<'a>(&'a self) -> &'a StaticStats {
-        return &self.static_stats;
+    pub fn get_static_stats<'a>(&'a self) -> &'a Stats {
+        return &self.stats;
     }
 
     pub fn as_seed(self, pos: Vec2) -> Seed {

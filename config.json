@@ -1,5 +1,8 @@
 {
-    "performance_debug": false,
+    "debug": {
+        "physics": false,
+        "performance": false
+    },
     "camera": {
         "move_speed": 100.0,
         "zoom_speed": 0.5,

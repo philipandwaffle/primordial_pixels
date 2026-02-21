@@ -22,16 +22,32 @@ impl<const N: usize, const KN: usize> Index<usize> for LayerType<N, KN> {
 
     fn index(&self, index: usize) -> &Self::Output {
         match self {
-            LayerType::Replenish(replenish) => &replenish[index],
-            LayerType::Convolve(convolve) => &convolve[index],
-            LayerType::ReplenishConvolve(replenish_convolve) => &replenish_convolve[index],
-            LayerType::PeriodicReplenishConvolve(periodic_replenish_convolve) => {
-                &periodic_replenish_convolve[index]
-            }
+            LayerType::Replenish(l) => &l[index],
+            LayerType::Convolve(l) => &l[index],
+            LayerType::ReplenishConvolve(l) => &l[index],
+            LayerType::PeriodicReplenishConvolve(l) => &l[index],
         }
     }
 }
-impl<const N: usize, const KN: usize> Env for LayerType<N, KN> {
+impl<const N: usize, const KN: usize> Env<N> for LayerType<N, KN> {
+    fn field(&self) -> &crate::world::environment::field::Field<f32, N> {
+        match self {
+            LayerType::Replenish(l) => l.field(),
+            LayerType::Convolve(l) => l.field(),
+            LayerType::ReplenishConvolve(l) => l.field(),
+            LayerType::PeriodicReplenishConvolve(l) => l.field(),
+        }
+    }
+
+    fn field_mut(&mut self) -> &mut crate::world::environment::field::Field<f32, N> {
+        match self {
+            LayerType::Replenish(l) => l.field_mut(),
+            LayerType::Convolve(l) => l.field_mut(),
+            LayerType::ReplenishConvolve(l) => l.field_mut(),
+            LayerType::PeriodicReplenishConvolve(l) => l.field_mut(),
+        }
+    }
+
     fn get(&self, x: isize, y: isize) -> f32 {
         match self {
             LayerType::Replenish(replenish_layer) => replenish_layer.get(x, y),
@@ -39,26 +55,6 @@ impl<const N: usize, const KN: usize> Env for LayerType<N, KN> {
             LayerType::ReplenishConvolve(replenish_convolve) => replenish_convolve.get(x, y),
             LayerType::PeriodicReplenishConvolve(periodic_replenish_convolve) => {
                 periodic_replenish_convolve.get(x, y)
-            }
-        }
-    }
-
-    // fn set(&mut self, x: isize, y: isize, value: f32) {
-    //     match self {
-    //         LayerType::Replenish(replenish_layer) => replenish_layer.set(x, y, value),
-    //         LayerType::Convolve(convolve_layer) => convolve_layer.set(x, y, value),
-    //     }
-    // }
-
-    fn delta(&mut self, x: isize, y: isize, delta: &mut f32) {
-        match self {
-            LayerType::Replenish(replenish_layer) => replenish_layer.delta(x, y, delta),
-            LayerType::Convolve(convolve_layer) => convolve_layer.delta(x, y, delta),
-            LayerType::ReplenishConvolve(replenish_convolve) => {
-                replenish_convolve.delta(x, y, delta)
-            }
-            LayerType::PeriodicReplenishConvolve(periodic_replenish_convolve) => {
-                periodic_replenish_convolve.delta(x, y, delta)
             }
         }
     }

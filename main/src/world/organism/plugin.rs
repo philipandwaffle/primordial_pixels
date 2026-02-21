@@ -1,6 +1,6 @@
 use std::{collections::VecDeque, f32::consts::PI};
 
-use avian2d::prelude::{DistanceJoint, DistanceLimit, Forces, RigidBodyForces};
+use avian2d::prelude::{DistanceJoint, DistanceLimit, Forces, RigidBody, RigidBodyForces};
 use bevy::{
     app::{First, Last, Plugin, PostUpdate, PreUpdate, Update},
     ecs::{
@@ -91,9 +91,9 @@ impl OrganismPlugin {
                     // base stimuli
                     let mb = organism_ent.get_static_stats().metronome_beat;
                     let beat = (organism_ent.get_variable_stats().time_alive % mb) / mb;
-                    let energy_level = organism_ent.get_energy_level();
+                    let energy_level = (2.0 * organism_ent.get_energy_level()) - 1.0;
 
-                    // append_input(&mut input, beat);
+                    append_input(&mut input, beat);
                     append_input(&mut input, energy_level);
 
                     input
@@ -262,9 +262,13 @@ impl OrganismPlugin {
         mut spawn_egg_msg: MessageReader<SpawnEggMsg>,
         handles: Res<Handles>,
     ) {
+        if spawn_egg_msg.is_empty() {
+            return;
+        }
+
+        let mut rng = rand::rng();
         for msg in spawn_egg_msg.read() {
-            println!("spawning egg");
-            msg.spawn(&mut commands, &handles);
+            msg.spawn(&mut commands, &handles, &mut rng);
         }
     }
 
@@ -277,7 +281,7 @@ impl OrganismPlugin {
         let dt = time.delta_secs();
         for (ent, mut egg, mut trans) in egg_query.iter_mut() {
             if egg.tick(dt, &mut trans, &mut spawn_organism_msg) {
-                commands.entity(ent).despawn();
+                commands.entity(ent).remove::<RigidBody>().despawn();
             }
         }
     }

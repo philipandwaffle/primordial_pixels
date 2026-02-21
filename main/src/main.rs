@@ -52,7 +52,6 @@ fn main() {
         HandlesPlugin,
         PanningCamPlugin,
         PhysicsPlugins::default(),
-        // PhysicsDebugPlugin,
         PhysicsLockPlugin,
         WorldPlugin,
     ));

@@ -1,3 +1,4 @@
+use avian2d::prelude::{Collider, RigidBody};
 use bevy::{
     ecs::{
         component::Component,
@@ -18,7 +19,7 @@ use crate::{
         component::joint::Joint,
         organism::Organism,
         seed::Seed,
-        stats::{StaticStats, VariableStats},
+        stats::{Stats, VariableStats},
         util_trait::OrganismAccessor,
     },
 };
@@ -94,7 +95,7 @@ impl OrganismMarker {
         self.variable_stats.time_alive += dt;
     }
 
-    pub fn get_static_stats<'a>(&'a self) -> &'a StaticStats {
+    pub fn get_static_stats<'a>(&'a self) -> &'a Stats {
         return self.organism.get_static_stats();
     }
     pub fn get_variable_stats<'a>(&'a self) -> &'a VariableStats {
@@ -113,7 +114,10 @@ impl OrganismMarker {
 
     fn despawn_ent_vec(commands: &mut Commands, ents: &mut Vec<Entity>) {
         while !ents.is_empty() {
-            commands.entity(ents.pop().unwrap()).despawn();
+            commands
+                .entity(ents.pop().unwrap())
+                .remove::<RigidBody>()
+                .despawn();
         }
     }
 }

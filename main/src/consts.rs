@@ -15,6 +15,8 @@ pub const PHYS_LOCK_DUR: f32 = 0.5;
 pub const PHYS_LOCK_START_DAMP: f32 = 50.0;
 pub const PHYS_LOCK_FINAL_DAMP: f32 = 0.2;
 
+pub const LINEAR_DAMPING: f32 = 0.2;
+
 // Organism sizes
 pub const MIN_EGG_RADIUS: f32 = 0.01;
 pub const JOINT_RADIUS: f32 = 0.5;
@@ -41,7 +43,7 @@ pub const MAX_BONE_LEN: f32 = JOINT_RADIUS * 2.0 * 5.0;
 
 // Brain
 const MEMORY: usize = 0;
-pub const BASE_INPUT: usize = MEMORY + 1;
+pub const BASE_INPUT: usize = MEMORY + 2;
 pub const BASE_OUTPUT: usize = MEMORY + 0;
 
 // 3 slots for random stuff,

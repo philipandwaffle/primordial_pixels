@@ -120,15 +120,12 @@ impl Seed {
         self.mutate(&OrgMut::Brain(
             BrainMut::rand(rng, mutation_config, self.get_organism()).unwrap(),
         ));
-        self.update_metabolic_cost(&metabolism);
+        self.update_meta(&metabolism);
     }
 
-    pub fn update_metabolic_cost(&mut self, metabolism: &Metabolism) {
+    pub fn update_meta(&mut self, metabolism: &Metabolism) {
+        self.organism.get_mut_body().centre_joints();
         self.organism.update_meta(metabolism)
-    }
-
-    pub fn centre(&mut self) {
-        self.organism.centre();
     }
 
     pub fn set_pos(&mut self, pos: Vec2) {
