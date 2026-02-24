@@ -1,16 +1,20 @@
-use std::ops::Index;
+use std::{ops::Index, path::Path};
 
+use my_derive::ConfigTag;
 use serde::{Deserialize, Serialize};
 
-use crate::world::environment::{
-    accessor_trait::Env,
-    layer::{
-        convolve::Convolve, periodic_replenish_convolve::PeriodicReplenishConvolve,
-        replenish::Replenish, replenish_convolve::ReplenishConvolve,
+use crate::{
+    config::config_tag::{Config, ConfigTag},
+    world::environment::{
+        accessor_trait::Env,
+        layer::{
+            convolve::Convolve, periodic_replenish_convolve::PeriodicReplenishConvolve,
+            replenish::Replenish, replenish_convolve::ReplenishConvolve,
+        },
     },
 };
 
-#[derive(Serialize, Deserialize)]
+#[derive(ConfigTag, Clone, Copy, Serialize, Deserialize)]
 pub enum LayerType<const N: usize, const KN: usize> {
     Replenish(Replenish<N>),
     Convolve(Convolve<N, KN>),
@@ -81,3 +85,12 @@ impl<const N: usize, const KN: usize> Env<N> for LayerType<N, KN> {
         }
     }
 }
+// impl<const N: usize, const KN: usize> Config for LayerType<N, KN> {
+//     fn load_cfg(path: &Path) -> Self {
+//         todo!()
+//     }
+
+//     fn save_cfg(&self, path: &Path) {
+//         todo!()
+//     }
+// }

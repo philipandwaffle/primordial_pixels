@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::world::environment::{accessor_trait::Env, field::Field};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Convolve<const N: usize, const KN: usize> {
     field: Field<f32, N>,
     kernel: Field<f32, KN>,

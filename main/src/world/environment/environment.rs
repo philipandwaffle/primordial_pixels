@@ -1,14 +1,15 @@
-use std::{collections::HashMap, ops::Index};
+use std::{collections::HashMap, ops::Index, path::Path};
 
 use bevy::{
     ecs::resource::Resource,
+    log::tracing_subscriber::fmt::format,
     math::{Vec2, vec2},
 };
 use my_derive::ConfigTag;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    config::config_tag::ConfigTag,
+    config::config_tag::{Config, ConfigTag},
     world::environment::{
         accessor_trait::Env,
         field::Field,
@@ -19,8 +20,15 @@ use crate::{
         },
     },
 };
-
-#[derive(Resource, Serialize, Deserialize)]
+// #[derive(ConfigTag, Clone, Resource, Serialize, Deserialize)]
+// pub struct Map(HashMap<LayerKey, f32>);
+// #[derive(Clone, Copy, Debug, Serialize, Deserialize, Hash, PartialEq, Eq)]
+// pub enum LayerKey {
+//     Energy,
+//     Pheromone(usize),
+//     Decay,
+// }
+#[derive(ConfigTag, Clone, Resource, Serialize, Deserialize)]
 pub struct Environment<const N: usize, const KN: usize> {
     pub side_len: f32,
     pub cell_len: f32,
@@ -102,6 +110,21 @@ impl<const N: usize, const KN: usize> Environment<N, KN> {
         }
     }
 }
+
+// impl<const N: usize, const KN: usize> Config for Environment<N, KN> {
+// fn load_cfg(path: &Path) -> Self {
+//     todo!()
+// }
+
+// fn save_cfg(&self, path: &Path) {
+//     let path_buf = path.to_path_buf();
+
+//     value.save_cfg(path_buf.join(&format!("environment/.json", key)).as_path());
+//     for (key, value) in self.layers.iter() {
+//         value.save_cfg(path_buf.join(&format!("layers/{:?}.json", key)).as_path());
+//     }
+// }
+// }
 
 #[cfg(test)]
 mod test {

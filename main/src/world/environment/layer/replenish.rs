@@ -1,11 +1,13 @@
+use my_derive::ConfigTag;
+use serde::{Deserialize, Serialize};
 use std::ops::Index;
 
-use bevy::math::FloatExt;
-use serde::{Deserialize, Serialize};
+use crate::{
+    config::config_tag::ConfigTag,
+    world::environment::{accessor_trait::Env, field::Field},
+};
 
-use crate::world::environment::{accessor_trait::Env, field::Field};
-
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(ConfigTag, Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct Replenish<const N: usize> {
     field: Field<f32, N>,
     max: f32,

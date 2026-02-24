@@ -3,9 +3,12 @@ use serde::{Deserialize, Serialize};
 
 use crate::consts::PHEROMONE_LAYERS;
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize, Hash, PartialEq, Eq)]
+// #[derive(Clone, Copy, Debug, Serialize, Deserialize, Hash, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
+// #[serde(rename_all = "snake_case")]
 pub enum LayerKey {
     Energy,
+    // #[serde(rename = "pheromone_{n}")]
     Pheromone(usize),
     Decay,
 }
@@ -40,6 +43,39 @@ impl LayerKey {
                 false => LayerKey::Pheromone(i - 1),
             },
             LayerKey::Decay => LayerKey::Pheromone(PHEROMONE_LAYERS - 1),
+        }
+    }
+}
+
+impl Serialize for LayerKey {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match self {
+            LayerKey::Energy => "Energy".serialize(serializer),
+            LayerKey::Decay => "Decay".serialize(serializer),
+            LayerKey::Pheromone(n) => format!("Pheromone_{}", n).serialize(serializer),
+        }
+    }
+}
+impl<'de> Deserialize<'de> for LayerKey {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        match s.as_str() {
+            "Energy" => Ok(LayerKey::Energy),
+            "Decay" => Ok(LayerKey::Decay),
+            s if s.starts_with("Pheromone_") => {
+                let n_str = s.strip_prefix("Pheromone_").unwrap();
+                n_str
+                    .parse::<usize>()
+                    .map(LayerKey::Pheromone)
+                    .map_err(serde::de::Error::custom)
+            }
+            _ => Err(serde::de::Error::unknown_variant(&s, &["Energy", "Decay"])),
         }
     }
 }

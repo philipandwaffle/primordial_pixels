@@ -8,7 +8,7 @@ use crate::world::environment::{
     layer::{convolve::ConvolveTrait, replenish::ReplenishTrait},
 };
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct ReplenishConvolve<const N: usize, const KN: usize> {
     field: Field<f32, N>,
     kernel: Field<f32, KN>,

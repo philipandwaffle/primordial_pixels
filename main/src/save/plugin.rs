@@ -10,7 +10,7 @@ use bevy::{
         message::{Message, MessageReader, MessageWriter},
         query::With,
         resource::Resource,
-        system::{Commands, Query, Res},
+        system::{Commands, Query, Res, ResMut},
     },
     input::{ButtonInput, keyboard::KeyCode},
     log::error,
@@ -24,11 +24,19 @@ use serde::{Deserialize, Serialize};
 use crate::{
     assets::handles::Handles,
     config::config_tag::{Config, ConfigTag},
-    save::{message::LogOrganismsMsg, resource::SaveInfo, seed_packet::SeedPacket},
-    world::organism::{
-        component::{joint::Joint, organism::OrganismMarker},
-        message::SpawnOrganismMsg,
-        seed::Seed,
+    consts::{ENV_CELLS, KERNEL_CELLS},
+    save::{
+        message::{LoadMsg, SaveMsg},
+        resource::SaveInfo,
+        seed_packet::SeedPacket,
+    },
+    world::{
+        environment::environment::Environment,
+        organism::{
+            component::{joint::Joint, organism::OrganismMarker},
+            message::SpawnOrganismMsg,
+            seed::Seed,
+        },
     },
 };
 
@@ -39,31 +47,45 @@ pub struct SavePlugin {
 }
 impl Plugin for SavePlugin {
     fn build(&self, app: &mut bevy::app::App) {
-        app.add_message::<LogOrganismsMsg>()
+        app.add_message::<LoadMsg<ENV_CELLS, KERNEL_CELLS>>()
+            .add_message::<SaveMsg<ENV_CELLS, KERNEL_CELLS>>()
             .insert_resource(SaveInfo::new(self.log_dir.clone(), self.load_dir.clone()))
             .add_systems(PostStartup, Self::load_world)
-            .add_systems(Update, (Self::log_organisms, Self::save_world));
+            .add_systems(Update, (Self::save, Self::load, Self::save_world));
     }
 }
 impl SavePlugin {
     fn load_world(
         save_info: Res<SaveInfo>,
-        mut spawn_organism_msg: MessageWriter<SpawnOrganismMsg>,
+        mut load_message: MessageWriter<LoadMsg<ENV_CELLS, KERNEL_CELLS>>,
     ) {
         if let Some(load_dir) = &save_info.load_dir {
             let path = Path::new(&save_info.log_dir).join(load_dir);
-            let seed_packet = SeedPacket::load_cfg(&path);
+            let load_msg = LoadMsg::<ENV_CELLS, KERNEL_CELLS>::load_cfg(&path);
 
-            for seed in seed_packet.seeds {
-                spawn_organism_msg.write(Into::<SpawnOrganismMsg>::into(seed));
-            }
+            load_message.write(load_msg);
         }
     }
+
+    fn load(
+        mut env: ResMut<Environment<ENV_CELLS, KERNEL_CELLS>>,
+        mut load_message: MessageReader<LoadMsg<ENV_CELLS, KERNEL_CELLS>>,
+        mut spawn_organism_msg: MessageWriter<SpawnOrganismMsg>,
+    ) {
+        for msg in load_message.read() {
+            for seed in msg.seeds.iter() {
+                spawn_organism_msg.write(Into::<SpawnOrganismMsg>::into(seed.clone()));
+            }
+            *env = msg.env.clone();
+        }
+    }
+
     fn save_world(
         keys: Res<ButtonInput<KeyCode>>,
+        env: Res<Environment<ENV_CELLS, KERNEL_CELLS>>,
         organism_query: Query<(&OrganismMarker)>,
         joint_query: Query<(&Transform), With<Joint>>,
-        mut save_message: MessageWriter<LogOrganismsMsg>,
+        mut save_message: MessageWriter<SaveMsg<ENV_CELLS, KERNEL_CELLS>>,
     ) {
         if !keys.just_released(KeyCode::Enter) {
             return;
@@ -83,16 +105,25 @@ impl SavePlugin {
             .collect::<Vec<Seed>>();
 
         // let id = fs::read_dir(save_info.log_dir.clone()).iter().len();
-        save_message.write(LogOrganismsMsg::new(
+        save_message.write(SaveMsg::<ENV_CELLS, KERNEL_CELLS>::new(
             seeds,
+            env.clone(),
             format!("{}", Local::now().format("%d-%m-%Y_%H-%M-%S-%3f")),
         ));
     }
 
-    fn log_organisms(mut log_ev: MessageReader<LogOrganismsMsg>, save_info: Res<SaveInfo>) {
-        for ev in log_ev.read() {
-            SeedPacket::new((ev.seeds).to_vec())
-                .save_cfg(&Path::new(&format!("{}/{}", save_info.log_dir, ev.path)));
+    fn save(
+        mut save_msg: MessageReader<SaveMsg<ENV_CELLS, KERNEL_CELLS>>,
+        save_info: Res<SaveInfo>,
+    ) {
+        for msg in save_msg.read() {
+            msg.save_cfg(&Path::new(&format!("{}/{}", save_info.log_dir, msg.path)));
+            // SeedPacket::new((ev.seeds).to_vec())
+            //     .save_cfg(&Path::new(&format!("{}/{}", save_info.log_dir, ev.path)));
+            // ev.env.save_cfg(&Path::new(&format!(
+            //     "{}/{}/env",
+            //     save_info.log_dir, ev.path
+            // )));
         }
     }
 }
