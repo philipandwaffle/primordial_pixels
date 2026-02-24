@@ -1,6 +1,6 @@
 use avian2d::prelude::{Forces, RigidBody, RigidBodyForces};
 use bevy::{
-    app::{First, Last, Plugin, Update},
+    app::{First, Last, Plugin, PostUpdate, Update},
     ecs::{
         entity::Entity,
         message::MessageWriter,
@@ -29,7 +29,7 @@ use crate::{
         environment::plugin::EnvironmentPlugin,
         organism::{
             component::{egg::Egg, joint::Joint, organism::OrganismMarker},
-            message::{SpawnEggMsg, SpawnOrganismMsg},
+            message::{DespawnOrganismMsg, SpawnEggMsg, SpawnOrganismMsg},
             mutation::mutation::{Mut, Mutable, Mutation},
             seed::{self, Seed},
             util_trait::OrganismAccessor,
@@ -60,7 +60,7 @@ impl Plugin for PetriDishPlugin {
             self.display_update_interval,
         ))
         .add_systems(First, Self::replenish_organisms);
-        app.add_systems(Last, (Self::evaluate_organisms, Self::nudge));
+        app.add_systems(PostUpdate, (Self::evaluate_organisms, Self::nudge));
     }
 }
 
@@ -124,19 +124,18 @@ impl PetriDishPlugin {
     }
 
     fn evaluate_organisms(
-        mut commands: Commands,
         mut info: ResMut<PetriDishInfo>,
         metabolism: Res<Metabolism>,
         mutation_config: Res<MutationConfig>,
         mut spawn_egg_msg: MessageWriter<SpawnEggMsg>,
+        mut despawn_organism_msg: MessageWriter<DespawnOrganismMsg>,
         mut organism_query: Query<(Entity, &mut OrganismMarker)>,
         joint_query: Query<&Transform, With<Joint>>,
     ) {
         let mut rng = rng();
         for (ent, mut organism) in organism_query.iter_mut() {
             if organism.is_dead() {
-                organism.despawn(&mut commands);
-                commands.entity(ent).despawn();
+                despawn_organism_msg.write(DespawnOrganismMsg::new(ent));
                 info.cur_organisms -= 1;
             } else if let Some(mut s) = organism.reproduce(&metabolism, &joint_query) {
                 info.cur_organisms += 1;

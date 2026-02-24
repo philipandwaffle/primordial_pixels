@@ -80,15 +80,22 @@ impl OrganismMarker {
         }
 
         self.cur_energy -= self.max_energy * metabolism.reproduce_cost;
-        Some(
-            self.as_seed(
-                self.joint_ents
-                    .iter()
-                    .map(|j_ent| joint_query.get(*j_ent).unwrap().translation.truncate())
-                    .sum::<Vec2>()
-                    / (self.joint_ents.len() as f32),
-            ),
-        )
+        Some(self.as_seed(self.get_pos(joint_query)))
+    }
+
+    pub fn get_pos(&self, joint_query: &Query<&Transform, With<Joint>>) -> Vec2 {
+        // let test = self
+        //     .joint_ents
+        //     .iter()
+        //     .map(|j_ent| joint_query.get(*j_ent).unwrap().translation.truncate())
+        //     .collect::<Vec<Vec2>>();
+        // println!("{:?}", test);
+
+        self.joint_ents
+            .iter()
+            .map(|j_ent| joint_query.get(*j_ent).unwrap().translation.truncate())
+            .sum::<Vec2>()
+            / (self.joint_ents.len() as f32)
     }
 
     pub fn update_variable_stats(&mut self, dt: f32) {

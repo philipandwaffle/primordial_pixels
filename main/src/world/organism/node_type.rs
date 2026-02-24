@@ -11,7 +11,10 @@ use crate::{
         environment::{environment::Environment, layer::layer_key::LayerKey},
         organism::{
             mutation::mutation::Mut,
-            node::{energy::Energy, read::Read, thruster::Thruster, write::Write},
+            node::{
+                decomposer::Decomposer, energy::Energy, read::Read, thruster::Thruster,
+                write::Write,
+            },
             organism::Organism,
             transput::Transput,
         },
@@ -21,6 +24,7 @@ use crate::{
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum NodeType {
     Energy(Energy),
+    Decomposer(Decomposer),
     Read(Read),
     Write(Write),
     Thruster(Thruster),
@@ -37,6 +41,7 @@ impl PartialEq for NodeType {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (Self::Energy(_), Self::Energy(_)) => true,
+            (Self::Decomposer(_), Self::Decomposer(_)) => true,
             (Self::Read(a), Self::Read(b)) => a == b,
             (Self::Write(_), Self::Write(_)) => true,
             (Self::Thruster(_), Self::Thruster(_)) => true,
@@ -46,10 +51,11 @@ impl PartialEq for NodeType {
 }
 impl Mut for NodeType {
     fn rand(rng: &mut ThreadRng, _: &MutationConfig, _: &Organism) -> Option<Self> {
-        Some(match rng.random_range(0..=3) {
+        Some(match rng.random_range(0..=4) {
             0 => Self::Energy(Energy::new()),
-            1 => Self::Read(Read::new(LayerKey::rand_read_layer(rng), rng)),
-            2 => Self::Write(Write::new(LayerKey::rand_write_layer(rng))),
+            1 => Self::Decomposer(Decomposer::new()),
+            2 => Self::Read(Read::new(LayerKey::rand_read_layer(rng), rng)),
+            3 => Self::Write(Write::new(LayerKey::rand_write_layer(rng))),
             _ => Self::Thruster(Thruster::new()),
         })
     }
@@ -69,6 +75,9 @@ impl
     ) {
         match self {
             NodeType::Energy(energy) => energy.consume_outputs(e, out, transput_config, args),
+            NodeType::Decomposer(decomposer) => {
+                decomposer.consume_outputs(e, out, transput_config, args)
+            }
             NodeType::Read(pheromone_read) => {
                 pheromone_read.consume_outputs(e, out, transput_config, ())
             }
@@ -90,6 +99,9 @@ impl
     ) {
         match self {
             NodeType::Energy(energy) => energy.produce_inputs(e, input, transput_config, ()),
+            NodeType::Decomposer(decomposer) => {
+                decomposer.produce_inputs(e, input, transput_config, ())
+            }
             NodeType::Read(pheromone_read) => {
                 pheromone_read.produce_inputs(e, input, transput_config, args)
             }
@@ -103,6 +115,7 @@ impl
     fn outputs_consumed(&self) -> usize {
         match self {
             NodeType::Energy(energy) => energy.outputs_consumed(),
+            NodeType::Decomposer(decomposer) => decomposer.outputs_consumed(),
             NodeType::Read(pheromone_read) => pheromone_read.outputs_consumed(),
             NodeType::Write(pheromone_write) => pheromone_write.outputs_consumed(),
             NodeType::Thruster(thruster) => thruster.outputs_consumed(),
@@ -112,6 +125,7 @@ impl
     fn inputs_produced(&self) -> usize {
         match self {
             NodeType::Energy(energy) => energy.inputs_produced(),
+            NodeType::Decomposer(decomposer) => decomposer.inputs_produced(),
             NodeType::Read(pheromone_read) => pheromone_read.inputs_produced(),
             NodeType::Write(pheromone_write) => pheromone_write.inputs_produced(),
             NodeType::Thruster(thruster) => thruster.inputs_produced(),

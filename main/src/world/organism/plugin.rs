@@ -7,10 +7,8 @@ use bevy::{
         entity::Entity,
         message::{MessageReader, MessageWriter},
         query::{With, Without},
-        schedule::IntoScheduleConfigs,
         system::{Commands, Query, Res, ResMut},
     },
-    log::info,
     math::{Quat, vec3},
     sprite_render::{ColorMaterial, MeshMaterial2d},
     time::Time,
@@ -19,11 +17,11 @@ use bevy::{
 
 use crate::{
     assets::handles::{Handles, MatKey},
-    config::config::{Metabolism, Mutation as MutationConfig, Transput as TransputConfig},
+    config::config::{Metabolism, Transput as TransputConfig},
     consts::{ENV_CELLS, KERNEL_CELLS, MUSCLE_Z, THRUSTER_BASE_LENGTH, THRUSTER_WIDTH, THRUSTER_Z},
-    util::function::{quat_z_rot, rot_input, z_rot_to_dir},
+    util::function::z_rot_to_dir,
     world::{
-        environment::environment::Environment,
+        environment::{environment::Environment, layer::layer_key::LayerKey},
         organism::{
             component::{
                 bone::Bone,
@@ -32,8 +30,7 @@ use crate::{
                 muscle::Muscle,
                 organism::OrganismMarker,
             },
-            message::{SpawnEggMsg, SpawnOrganismMsg},
-            node::thruster::Thruster,
+            message::{DespawnOrganismMsg, SpawnEggMsg, SpawnOrganismMsg},
             node_type::NodeType,
             transput::{Transput, append_input},
             util_trait::OrganismAccessor,
@@ -44,7 +41,8 @@ use crate::{
 pub struct OrganismPlugin;
 impl Plugin for OrganismPlugin {
     fn build(&self, app: &mut bevy::app::App) {
-        app.add_message::<SpawnEggMsg>()
+        app.add_message::<DespawnOrganismMsg>()
+            .add_message::<SpawnEggMsg>()
             .add_message::<SpawnOrganismMsg>()
             .add_systems(
                 First,
@@ -57,8 +55,8 @@ impl Plugin for OrganismPlugin {
             )
             .add_systems(PreUpdate, Self::update_brain_input)
             .add_systems(Update, Self::update_brain_output)
-            .add_systems(PostUpdate, (Self::update_muscles, Self::update_thrusters));
-        // .add_systems(Last, systems);
+            .add_systems(PostUpdate, (Self::update_muscles, Self::update_thrusters))
+            .add_systems(Last, Self::despawn_organisms);
     }
 }
 impl OrganismPlugin {
@@ -253,6 +251,27 @@ impl OrganismPlugin {
                 }
 
                 forces.apply_force(thrust_vec * dt);
+            }
+        }
+    }
+
+    fn despawn_organisms(
+        mut commands: Commands,
+        mut despawn_organism_msg: MessageReader<DespawnOrganismMsg>,
+        mut organism_query: Query<&mut OrganismMarker>,
+        joint_query: Query<&Transform, With<Joint>>,
+        mut env: ResMut<Environment<ENV_CELLS, KERNEL_CELLS>>,
+        metabolism: Res<Metabolism>,
+    ) {
+        for msg in despawn_organism_msg.read() {
+            let organism_ent = msg.entity;
+            if let Ok(mut organism_marker) = organism_query.get_mut(organism_ent) {
+                let pos = organism_marker.get_pos(&joint_query);
+                organism_marker.despawn(&mut commands);
+                commands.entity(organism_ent).despawn();                
+                let mut delta =
+                    organism_marker.organism.meta.metabolic_cost * metabolism.decay_multiplier;
+                env.delta_value(&LayerKey::Decompose, pos, &mut delta);
             }
         }
     }

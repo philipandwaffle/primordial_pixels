@@ -3,22 +3,21 @@ use serde::{Deserialize, Serialize};
 
 use crate::consts::PHEROMONE_LAYERS;
 
-// #[derive(Clone, Copy, Debug, Serialize, Deserialize, Hash, PartialEq, Eq)]
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
-// #[serde(rename_all = "snake_case")]
 pub enum LayerKey {
     Energy,
-    // #[serde(rename = "pheromone_{n}")]
+    Decompose,
     Pheromone(usize),
-    Decay,
 }
 impl LayerKey {
     pub fn rand_read_layer(rng: &mut ThreadRng) -> LayerKey {
-        let id = rng.random_range(0..PHEROMONE_LAYERS + 1);
-        if id == PHEROMONE_LAYERS {
-            return LayerKey::Energy;
-        } else {
+        let id = rng.random_range(0..PHEROMONE_LAYERS + 2);
+        if id < PHEROMONE_LAYERS {
             return LayerKey::Pheromone(id);
+        } else if id == PHEROMONE_LAYERS {
+            return LayerKey::Decompose;
+        } else {
+            return LayerKey::Energy;
         }
     }
     pub fn rand_write_layer(rng: &mut ThreadRng) -> LayerKey {
@@ -27,22 +26,22 @@ impl LayerKey {
 
     pub fn next(&self) -> Self {
         match self {
-            LayerKey::Energy => LayerKey::Pheromone(0),
+            LayerKey::Energy => LayerKey::Decompose,
+            LayerKey::Decompose => LayerKey::Pheromone(0),
             LayerKey::Pheromone(i) => match *i == PHEROMONE_LAYERS - 1 {
-                true => LayerKey::Decay,
                 false => LayerKey::Pheromone(i + 1),
+                true => LayerKey::Energy,
             },
-            LayerKey::Decay => LayerKey::Energy,
         }
     }
     pub fn prev(&self) -> Self {
         match self {
-            LayerKey::Energy => LayerKey::Decay,
+            LayerKey::Energy => LayerKey::Pheromone(PHEROMONE_LAYERS - 1),
+            LayerKey::Decompose => LayerKey::Energy,
             LayerKey::Pheromone(i) => match *i == 0 {
-                true => LayerKey::Energy,
+                true => LayerKey::Decompose,
                 false => LayerKey::Pheromone(i - 1),
             },
-            LayerKey::Decay => LayerKey::Pheromone(PHEROMONE_LAYERS - 1),
         }
     }
 }
@@ -54,7 +53,7 @@ impl Serialize for LayerKey {
     {
         match self {
             LayerKey::Energy => "Energy".serialize(serializer),
-            LayerKey::Decay => "Decay".serialize(serializer),
+            LayerKey::Decompose => "Decompose".serialize(serializer),
             LayerKey::Pheromone(n) => format!("Pheromone_{}", n).serialize(serializer),
         }
     }
@@ -67,7 +66,7 @@ impl<'de> Deserialize<'de> for LayerKey {
         let s = String::deserialize(deserializer)?;
         match s.as_str() {
             "Energy" => Ok(LayerKey::Energy),
-            "Decay" => Ok(LayerKey::Decay),
+            "Decompose" => Ok(LayerKey::Decompose),
             s if s.starts_with("Pheromone_") => {
                 let n_str = s.strip_prefix("Pheromone_").unwrap();
                 n_str
@@ -75,7 +74,10 @@ impl<'de> Deserialize<'de> for LayerKey {
                     .map(LayerKey::Pheromone)
                     .map_err(serde::de::Error::custom)
             }
-            _ => Err(serde::de::Error::unknown_variant(&s, &["Energy", "Decay"])),
+            _ => Err(serde::de::Error::unknown_variant(
+                &s,
+                &["Energy", "Decompose"],
+            )),
         }
     }
 }

@@ -28,6 +28,7 @@
             "learn_factor": 0.1
         },
         "metabolism": {
+            "decay_multiplier": 10.0,
             "reproduce_threshold": 0.8,
             "reproduce_cost": 0.6,
             "node": 0.1,
@@ -37,7 +38,8 @@
         },
         "transput": {
             "muscle_efficiency": 1.0,
-            "energy_collect_rate": 1.0,
+            "energy_collect_rate": 0.5,
+            "decomposer_collect_rate": 1.0,
             "pheromone_read_efficiency": 0.05,
             "pheromone_write_efficiency": 0.1,
             "thruster_strength": 7.5,

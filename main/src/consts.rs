@@ -60,4 +60,4 @@ pub const KERNEL_CELLS: usize = 9;
 pub const PHEROMONE_LAYERS: usize = 1;
 
 // Environment display
-pub const NUM_COLORS: usize = 8;
+pub const NUM_COLORS: usize = 32;

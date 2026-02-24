@@ -1,33 +1,23 @@
 use avian2d::prelude::{
-    Collider, DistanceJoint, LinearDamping, LockedAxes, Mass, RevoluteJoint, RigidBody,
+    Collider, DistanceJoint, LinearDamping, LockedAxes, RevoluteJoint, RigidBody,
 };
 use bevy::{
     ecs::{entity::Entity, message::Message, system::Commands},
     math::{Quat, Vec2, Vec3, VectorSpace, vec2, vec3},
-    post_process::motion_blur::node,
     transform::components::Transform,
 };
-use my_derive::ConfigTag;
+
 use rand::rngs::ThreadRng;
-use serde::{Deserialize, Serialize};
 
 use crate::{
     assets::handles::{Handles, MatKey, MeshKey},
-    config::{
-        config::{Metabolism, Mutation as MutationConfig},
-        config_tag::ConfigTag,
-        plugin::load_config,
-    },
     consts::{
         BONE_WIDTH, BONE_Z, EGG_Z, JOINT_RADIUS, JOINT_Z, LINEAR_DAMPING, MIN_EGG_RADIUS,
-        MUSCLE_COMPLIANCE, MUSCLE_WIDTH, MUSCLE_Z, PHYS_LOCK_DUR, PHYS_LOCK_FINAL_DAMP,
-        PHYS_LOCK_START_DAMP, THRUSTER_BASE_LENGTH, THRUSTER_WIDTH, THRUSTER_Z,
+        MUSCLE_COMPLIANCE, MUSCLE_WIDTH, MUSCLE_Z, THRUSTER_BASE_LENGTH, THRUSTER_WIDTH,
+        THRUSTER_Z,
     },
-    physics_lock::PhysicsLockBundle,
     util::function::rand_vec2,
     world::organism::{
-        body::Body,
-        brain::Brain,
         component::{
             bone::Bone,
             egg::Egg,
@@ -35,18 +25,20 @@ use crate::{
             muscle::Muscle,
             organism::OrganismMarker,
         },
-        joint::Joint,
-        mutation::{
-            brain::Brain as BrainMut,
-            mutation::{Mut, Mutable, Mutation as OrgMut},
-        },
-        node::{energy::Energy, thruster::Thruster},
         node_type::NodeType,
         organism::Organism,
-        seed::Seed,
-        util_trait::OrganismAccessor,
     },
 };
+
+#[derive(Message)]
+pub struct DespawnOrganismMsg {
+    pub(crate) entity: Entity,
+}
+impl DespawnOrganismMsg {
+    pub fn new(entity: Entity) -> Self {
+        Self { entity }
+    }
+}
 
 #[derive(Message)]
 pub struct SpawnEggMsg {

@@ -53,6 +53,7 @@ pub struct Mutation {
 
 #[derive(ConfigTag, Default, Serialize, Deserialize, Clone, Copy, Resource)]
 pub struct Metabolism {
+    pub decay_multiplier: f32,
     pub reproduce_threshold: f32,
     pub reproduce_cost: f32,
     pub node: f32,
@@ -65,6 +66,7 @@ pub struct Metabolism {
 pub struct Transput {
     pub muscle_efficiency: f32,
     pub energy_collect_rate: f32,
+    pub decomposer_collect_rate: f32,
     pub pheromone_read_efficiency: f32,
     pub pheromone_write_efficiency: f32,
     pub thruster_strength: f32,

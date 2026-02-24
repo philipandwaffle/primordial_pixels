@@ -13,7 +13,8 @@ pub trait Env<const N: usize> {
             self.field_mut().set(x, y, 0.0);
         } else {
             *delta = 0.0;
-            self.field_mut().set(x, y, new_val);
+            let max = self.max();
+            self.field_mut().set(x, y, new_val.min(max));
         }
     }
     fn max(&self) -> f32;
