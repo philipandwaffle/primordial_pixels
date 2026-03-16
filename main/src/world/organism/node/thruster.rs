@@ -1,13 +1,17 @@
 use std::collections::VecDeque;
 
-use avian2d::prelude::{Forces, RigidBodyForces, forces::ForcesItem};
+use avian2d::{
+    math::PI,
+    prelude::{Forces, RigidBodyForces, forces::ForcesItem},
+};
 use bevy::math::Vec2;
 use serde::{Deserialize, Serialize};
 
 use crate::{
     config::config::Transput as TransputConfig,
+    consts::FRAC_PI,
     util::function::{rot_output, z_rot_to_dir, zero_one_output},
-    world::organism::transput::{Transput, remove_output},
+    world::organism::transput::{Transput, append_input, remove_output},
 };
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
@@ -33,7 +37,7 @@ impl Transput<f32, ()> for Thruster {
     }
 
     fn inputs_produced(&self) -> usize {
-        0
+        2
     }
 
     fn consume_outputs(
@@ -53,5 +57,14 @@ impl Transput<f32, ()> for Thruster {
         self.z_rot = new_z_rot;
     }
 
-    fn produce_inputs(&mut self, _: &mut f32, _: &mut VecDeque<f32>, _: &TransputConfig, _: ()) {}
+    fn produce_inputs(
+        &mut self,
+        _: &mut f32,
+        input: &mut VecDeque<f32>,
+        transput_config: &TransputConfig,
+        _: (),
+    ) {
+        append_input(input, self.thrust / transput_config.thruster_strength);
+        append_input(input, self.z_rot * FRAC_PI);
+    }
 }

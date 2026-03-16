@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     config::config_tag::{Config, ConfigTag},
+    consts::{ENV_CELLS, KERNEL_CELLS},
     world::environment::{
         accessor_trait::Env,
         field::Field,
@@ -20,14 +21,9 @@ use crate::{
         },
     },
 };
-// #[derive(ConfigTag, Clone, Resource, Serialize, Deserialize)]
-// pub struct Map(HashMap<LayerKey, f32>);
-// #[derive(Clone, Copy, Debug, Serialize, Deserialize, Hash, PartialEq, Eq)]
-// pub enum LayerKey {
-//     Energy,
-//     Pheromone(usize),
-//     Decay,
-// }
+
+pub type ConcreteEnv = Environment<ENV_CELLS, KERNEL_CELLS>;
+
 #[derive(ConfigTag, Clone, Resource, Serialize, Deserialize)]
 pub struct Environment<const N: usize, const KN: usize> {
     pub side_len: f32,

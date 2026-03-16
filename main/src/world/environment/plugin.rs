@@ -9,7 +9,7 @@ use bevy::{
 use crate::{
     consts::{ENV_CELLS, KERNEL_CELLS},
     world::environment::{
-        display::plugin::DisplayPlugin, environment::Environment, layer::layer_key::LayerKey,
+        display::plugin::DisplayPlugin, environment::{ConcreteEnv, Environment}, layer::layer_key::LayerKey,
     },
 };
 
@@ -32,7 +32,7 @@ impl EnvironmentPlugin {
         }
     }
 
-    fn update_env(time: Res<Time>, mut env: ResMut<Environment<ENV_CELLS, KERNEL_CELLS>>) {
+    fn update_env(time: Res<Time>, mut env: ResMut<ConcreteEnv>) {
         env.update_layers(time.delta_secs(), vec![LayerKey::Energy]);
     }
 }

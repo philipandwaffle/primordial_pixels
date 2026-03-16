@@ -1,5 +1,5 @@
 use avian2d::prelude::{
-    Collider, DistanceJoint, LinearDamping, LockedAxes, RevoluteJoint, RigidBody,
+    Collider, DistanceJoint, LinearDamping, LockedAxes, RevoluteJoint, RigidBody, Sensor,
 };
 use bevy::{
     ecs::{entity::Entity, message::Message, system::Commands},
@@ -13,18 +13,19 @@ use crate::{
     assets::handles::{Handles, MatKey, MeshKey},
     consts::{
         BONE_WIDTH, BONE_Z, EGG_Z, JOINT_RADIUS, JOINT_Z, LINEAR_DAMPING, MIN_EGG_RADIUS,
-        MUSCLE_COMPLIANCE, MUSCLE_WIDTH, MUSCLE_Z, THRUSTER_BASE_LENGTH, THRUSTER_WIDTH,
-        THRUSTER_Z,
+        MUSCLE_COMPLIANCE, MUSCLE_WIDTH, MUSCLE_Z, SPIKE_RADIUS, SPIKE_Z, THRUSTER_BASE_LENGTH,
+        THRUSTER_WIDTH, THRUSTER_Z,
     },
     util::function::rand_vec2,
     world::organism::{
         component::{
             bone::Bone,
             egg::Egg,
-            joint::{Joint as JointComp, Thruster as ThrusterComp},
+            joint::{Joint as JointComp, Spike as SpikeComp, Thruster as ThrusterComp},
             muscle::Muscle,
             organism::OrganismMarker,
         },
+        node::spike,
         node_type::NodeType,
         organism::Organism,
     },
@@ -135,25 +136,22 @@ impl SpawnOrganismMsg {
     }
 
     pub fn spawn_joint(pos: Vec2, nodes: &Vec<NodeType>, c: &mut Commands, h: &Handles) -> Entity {
-        let mut has_thruster = false;
+        let mut thruster_ent = None;
+        let mut spike_ent = None;
         for n in nodes {
             match n {
-                NodeType::Thruster(_) => has_thruster = true,
+                NodeType::Thruster(_) => thruster_ent = Some(Self::spawn_thruster(c, h)),
+                NodeType::Spike(_) => spike_ent = Some(Self::spawn_spike(c, h)),
                 _ => {}
             }
         }
-
-        let thruster_ent = match has_thruster {
-            true => Some(Self::spawn_thruster(c, h)),
-            false => None,
-        };
 
         let joint_ent = c
             .spawn((
                 LockedAxes::ROTATION_LOCKED,
                 LinearDamping(LINEAR_DAMPING),
                 // PhysicsLockBundle::new(PHYS_LOCK_DUR, PHYS_LOCK_START_DAMP, PHYS_LOCK_FINAL_DAMP),
-                JointComp::new(nodes, thruster_ent),
+                JointComp::new(nodes, thruster_ent, spike_ent),
                 RigidBody::Dynamic,
                 Transform::default()
                     .with_translation(pos.extend(JOINT_Z))
@@ -167,9 +165,13 @@ impl SpawnOrganismMsg {
         if let Some(thruster_ent) = thruster_ent {
             c.entity(joint_ent).add_child(thruster_ent);
         }
+        if let Some(spike_ent) = spike_ent {
+            c.entity(joint_ent).add_child(spike_ent);
+        }
 
         joint_ent
     }
+
     pub fn spawn_thruster(c: &mut Commands, h: &Handles) -> Entity {
         c.spawn((
             ThrusterComp,
@@ -178,6 +180,20 @@ impl SpawnOrganismMsg {
                 .with_scale(vec3(THRUSTER_WIDTH, THRUSTER_BASE_LENGTH, 1.0)),
             h.get_mesh2d(&MeshKey::Triangle),
             h.get_mat2d(&MatKey::Orange),
+        ))
+        .id()
+    }
+
+    pub fn spawn_spike(c: &mut Commands, h: &Handles) -> Entity {
+        c.spawn((
+            SpikeComp,
+            Collider::circle(SPIKE_RADIUS),
+            Sensor,
+            Transform::default()
+                .with_translation(vec3(0.0, 0.0, SPIKE_Z))
+                .with_scale(vec3(SPIKE_RADIUS, SPIKE_RADIUS, 1.0)),
+            h.get_mesh2d(&MeshKey::Triangle),
+            h.get_mat2d(&MatKey::LightGrey),
         ))
         .id()
     }

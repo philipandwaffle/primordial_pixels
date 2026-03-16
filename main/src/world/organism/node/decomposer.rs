@@ -7,7 +7,10 @@ use crate::{
     config::config::Transput as TransputConfig,
     consts::{ENV_CELLS, KERNEL_CELLS},
     world::{
-        environment::{environment::Environment, layer::layer_key::LayerKey},
+        environment::{
+            environment::{ConcreteEnv, Environment},
+            layer::layer_key::LayerKey,
+        },
         organism::transput::Transput,
     },
 };
@@ -23,13 +26,13 @@ impl Decomposer {
         }
     }
 }
-impl Transput<(&mut Environment<ENV_CELLS, KERNEL_CELLS>, Vec2, f32), ()> for Decomposer {
+impl Transput<(&mut ConcreteEnv, Vec2, f32), ()> for Decomposer {
     fn consume_outputs(
         &mut self,
         energy: &mut f32,
         _: &mut VecDeque<f32>,
         transput_config: &TransputConfig,
-        (env, pos, dt): (&mut Environment<ENV_CELLS, KERNEL_CELLS>, Vec2, f32),
+        (env, pos, dt): (&mut ConcreteEnv, Vec2, f32),
     ) {
         let max_collect = transput_config.decomposer_collect_rate * dt;
         let mut delta = max_collect;

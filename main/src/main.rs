@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use avian2d::prelude::*;
 use bevy::{
     prelude::*,
@@ -20,6 +22,7 @@ mod physics_lock;
 // mod runner;
 // mod sandbox;
 mod save;
+// mod spatial;
 mod util;
 mod world;
 
@@ -55,6 +58,11 @@ fn main() {
         PhysicsLockPlugin,
         WorldPlugin,
     ));
+    // .add_plugins(
+    //     AutomaticUpdate::<SpatialTracked>::new()
+    //         .with_frequency(Duration::from_secs_f32(0.3))
+    //         .with_transform(TransformMode::GlobalTransform),
+    // );
 
     a.run();
 }

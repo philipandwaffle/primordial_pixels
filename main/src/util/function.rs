@@ -46,9 +46,3 @@ pub fn zero_one_output(out: f32) -> f32 {
 pub fn rot_output(out: f32) -> f32 {
     return out * PI;
 }
-
-// fn vec2_to_polar(v: Vec2) -> (f32, f32) {
-//     let len = v.length();
-//     let z_rot = v.y.atan2(v.x);
-//     (len, z_rot)
-// }

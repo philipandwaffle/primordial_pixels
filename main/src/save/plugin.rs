@@ -31,7 +31,7 @@ use crate::{
         seed_packet::SeedPacket,
     },
     world::{
-        environment::environment::Environment,
+        environment::environment::{ConcreteEnv, Environment},
         organism::{
             component::{joint::Joint, organism::OrganismMarker},
             message::SpawnOrganismMsg,
@@ -68,7 +68,7 @@ impl SavePlugin {
     }
 
     fn load(
-        mut env: ResMut<Environment<ENV_CELLS, KERNEL_CELLS>>,
+        mut env: ResMut<ConcreteEnv>,
         mut load_message: MessageReader<LoadMsg<ENV_CELLS, KERNEL_CELLS>>,
         mut spawn_organism_msg: MessageWriter<SpawnOrganismMsg>,
     ) {
@@ -82,7 +82,7 @@ impl SavePlugin {
 
     fn save_world(
         keys: Res<ButtonInput<KeyCode>>,
-        env: Res<Environment<ENV_CELLS, KERNEL_CELLS>>,
+        env: Res<ConcreteEnv>,
         organism_query: Query<(&OrganismMarker)>,
         joint_query: Query<(&Transform), With<Joint>>,
         mut save_message: MessageWriter<SaveMsg<ENV_CELLS, KERNEL_CELLS>>,

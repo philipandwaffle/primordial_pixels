@@ -1,3 +1,8 @@
+use avian2d::math::PI;
+
+// Math
+pub const FRAC_PI: f32 = 1.0 / PI;
+
 pub const CONFIG_PATH: &'static str = "config.json";
 // Z offsets
 pub const EGG_Z: f32 = 0.0;
@@ -7,6 +12,7 @@ pub const BONE_Z: f32 = ORGANISM_Z - 0.2;
 pub const MUSCLE_Z: f32 = ORGANISM_Z - 0.3;
 
 pub const THRUSTER_Z: f32 = JOINT_Z - 0.1;
+pub const SPIKE_Z: f32 = JOINT_Z - 0.2;
 
 pub const DISPLAY_Z: f32 = -1.0;
 
@@ -24,6 +30,7 @@ pub const BONE_WIDTH: f32 = 0.5;
 pub const MUSCLE_WIDTH: f32 = 0.4;
 pub const THRUSTER_WIDTH: f32 = 0.5;
 pub const THRUSTER_BASE_LENGTH: f32 = -2.0;
+pub const SPIKE_RADIUS: f32 = JOINT_RADIUS * 2.0;
 
 // Energy
 pub const JOINT_MAX_ENERGY: f32 = 5.0;

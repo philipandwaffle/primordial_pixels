@@ -10,6 +10,7 @@ use bevy::{
     math::Vec2,
     transform::components::Transform,
 };
+use serde::de;
 
 use crate::{
     config::config::Metabolism,
@@ -60,6 +61,17 @@ impl OrganismMarker {
         //     self.cur_energy / self.max_energy * 100.0
         // );
         self.cur_energy = (self.cur_energy + delta).clamp(0.0, self.max_energy)
+    }
+
+    pub fn impale(&mut self, delta: f32) -> f32 {
+        self.cur_energy -= delta;
+
+        if self.cur_energy < 0.0 {
+            self.cur_energy = 0.0;
+            return delta + self.cur_energy;
+        } else {
+            delta
+        }
     }
 
     pub fn get_energy_level(&self) -> f32 {

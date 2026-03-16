@@ -8,12 +8,15 @@ use crate::{
     config::config::{Mutation as MutationConfig, Transput as TransputConfig},
     consts::{ENV_CELLS, KERNEL_CELLS, PHEROMONE_LAYERS},
     world::{
-        environment::{environment::Environment, layer::layer_key::LayerKey},
+        environment::{
+            environment::{ConcreteEnv, Environment},
+            layer::layer_key::LayerKey,
+        },
         organism::{
             mutation::mutation::Mut,
             node::{
-                decomposer::Decomposer, energy::Energy, read::Read, thruster::Thruster,
-                write::Write,
+                decomposer::Decomposer, energy::Energy, read::Read, spike::Spike,
+                thruster::Thruster, write::Write,
             },
             organism::Organism,
             transput::Transput,
@@ -28,6 +31,7 @@ pub enum NodeType {
     Read(Read),
     Write(Write),
     Thruster(Thruster),
+    Spike(Spike),
 }
 impl NodeType {
     pub fn can_alter(&self) -> bool {
@@ -45,33 +49,30 @@ impl PartialEq for NodeType {
             (Self::Read(a), Self::Read(b)) => a == b,
             (Self::Write(_), Self::Write(_)) => true,
             (Self::Thruster(_), Self::Thruster(_)) => true,
+            (Self::Spike(_), Self::Spike(_)) => true,
             _ => false,
         }
     }
 }
 impl Mut for NodeType {
     fn rand(rng: &mut ThreadRng, _: &MutationConfig, _: &Organism) -> Option<Self> {
-        Some(match rng.random_range(0..=4) {
+        Some(match rng.random_range(0..=5) {
             0 => Self::Energy(Energy::new()),
             1 => Self::Decomposer(Decomposer::new()),
             2 => Self::Read(Read::new(LayerKey::rand_read_layer(rng), rng)),
             3 => Self::Write(Write::new(LayerKey::rand_write_layer(rng))),
-            _ => Self::Thruster(Thruster::new()),
+            4 => Self::Thruster(Thruster::new()),
+            _ => Self::Spike(Spike::new()),
         })
     }
 }
-impl
-    Transput<
-        (&mut Environment<ENV_CELLS, KERNEL_CELLS>, Vec2, f32),
-        (&Environment<ENV_CELLS, KERNEL_CELLS>, Vec2, f32),
-    > for NodeType
-{
+impl Transput<(&mut ConcreteEnv, Vec2, f32), (&ConcreteEnv, Vec2, f32)> for NodeType {
     fn consume_outputs(
         &mut self,
         e: &mut f32,
         out: &mut VecDeque<f32>,
         transput_config: &TransputConfig,
-        args: (&mut Environment<ENV_CELLS, KERNEL_CELLS>, Vec2, f32),
+        args: (&mut ConcreteEnv, Vec2, f32),
     ) {
         match self {
             NodeType::Energy(energy) => energy.consume_outputs(e, out, transput_config, args),
@@ -87,6 +88,9 @@ impl
             NodeType::Thruster(thruster) => {
                 thruster.consume_outputs(e, out, transput_config, args.2)
             }
+            NodeType::Spike(spike) => {
+                spike.consume_outputs(e, out, transput_config, args.2);
+            }
         };
     }
 
@@ -95,7 +99,7 @@ impl
         e: &mut f32,
         input: &mut VecDeque<f32>,
         transput_config: &TransputConfig,
-        args: (&Environment<ENV_CELLS, KERNEL_CELLS>, Vec2, f32),
+        args: (&ConcreteEnv, Vec2, f32),
     ) {
         match self {
             NodeType::Energy(energy) => energy.produce_inputs(e, input, transput_config, ()),
@@ -109,6 +113,7 @@ impl
                 pheromone_write.produce_inputs(e, input, transput_config, ())
             }
             NodeType::Thruster(thruster) => thruster.produce_inputs(e, input, transput_config, ()),
+            NodeType::Spike(spike) => spike.produce_inputs(e, input, transput_config, ()),
         };
     }
 
@@ -119,6 +124,7 @@ impl
             NodeType::Read(pheromone_read) => pheromone_read.outputs_consumed(),
             NodeType::Write(pheromone_write) => pheromone_write.outputs_consumed(),
             NodeType::Thruster(thruster) => thruster.outputs_consumed(),
+            NodeType::Spike(spike) => spike.outputs_consumed(),
         }
     }
 
@@ -129,6 +135,7 @@ impl
             NodeType::Read(pheromone_read) => pheromone_read.inputs_produced(),
             NodeType::Write(pheromone_write) => pheromone_write.inputs_produced(),
             NodeType::Thruster(thruster) => thruster.inputs_produced(),
+            NodeType::Spike(spike) => spike.inputs_produced(),
         }
     }
 }

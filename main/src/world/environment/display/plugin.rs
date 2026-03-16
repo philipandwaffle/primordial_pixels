@@ -23,7 +23,7 @@ use crate::{
             bundle::DisplayCellBundle, component::DisplayCell, message::UpdateDisplayMsg,
             resource::Display,
         },
-        environment::Environment,
+        environment::{ConcreteEnv, Environment},
     },
 };
 
@@ -63,7 +63,7 @@ impl DisplayPlugin {
     fn init_display_cells(
         mut commands: Commands,
         mut display: ResMut<Display>,
-        env: Res<Environment<ENV_CELLS, KERNEL_CELLS>>,
+        env: Res<ConcreteEnv>,
         handles: Res<Handles>,
     ) {
         let cell_size = env.side_len / ENV_SIDE_CELLS as f32;
@@ -100,7 +100,7 @@ impl DisplayPlugin {
 
     fn update_display_cells(
         d: Res<Display>,
-        env: Res<Environment<ENV_CELLS, KERNEL_CELLS>>,
+        env: Res<ConcreteEnv>,
         mut cells: Query<&mut MeshMaterial2d<ColorMaterial>, With<DisplayCell>>,
         mut update_display_msg: MessageReader<UpdateDisplayMsg>,
     ) {
