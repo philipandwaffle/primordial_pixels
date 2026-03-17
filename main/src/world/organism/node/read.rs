@@ -9,7 +9,7 @@ use crate::{
     consts::{ENV_CELLS, JOINT_RADIUS, KERNEL_CELLS},
     util::function::rand_vec2,
     world::{
-        environment::{environment::Environment, layer::layer_key::LayerKey},
+        environment::{environment::{ConcreteEnv, Environment}, layer::layer_key::LayerKey},
         organism::transput::{Transput, append_input},
     },
 };
@@ -34,7 +34,7 @@ impl Read {
         }
     }
 }
-impl Transput<(), (&Environment<ENV_CELLS, KERNEL_CELLS>, Vec2, f32)> for Read {
+impl Transput<(), (&ConcreteEnv, Vec2, f32)> for Read {
     fn consume_outputs(&mut self, _: &mut f32, _: &mut VecDeque<f32>, _: &TransputConfig, _: ()) {}
 
     fn produce_inputs(
@@ -42,7 +42,7 @@ impl Transput<(), (&Environment<ENV_CELLS, KERNEL_CELLS>, Vec2, f32)> for Read {
         energy: &mut f32,
         input: &mut VecDeque<f32>,
         transput_config: &TransputConfig,
-        (env, pos, dt): (&Environment<ENV_CELLS, KERNEL_CELLS>, Vec2, f32),
+        (env, pos, dt): (&ConcreteEnv, Vec2, f32),
     ) {
         append_input(
             input,

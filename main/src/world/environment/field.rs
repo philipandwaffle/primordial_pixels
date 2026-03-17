@@ -74,40 +74,6 @@ where
         return (x.rem_euclid(l) + y.rem_euclid(l) * l) as usize;
     }
 }
-// impl<const N: usize> Field<f32, N> {
-//     pub fn get(&self, x: isize, y: isize) -> f32 {
-//         return self.space[self.get_i(x, y)];
-//     }
-//     pub fn get_mut<'a>(&'a mut self, x: isize, y: isize) -> &'a mut f32 {
-//         return &mut self.space[self.get_i(x, y)];
-//     }
-
-//     pub fn set(&mut self, x: isize, y: isize, value: f032) {
-//         self.space[self.get_i(x, y)] = value;
-//     }
-
-//     pub fn from_element(val: f32) -> Self {
-//         return Self {
-//             space: [val; N],
-//             side_len: ENV_SIDE_LEN,
-//         };
-//     }
-
-//     pub fn from_array(array: [f32; N]) -> Self {
-//         let side_len = (N as f32).sqrt();
-
-//         return Self {
-//             space: array,
-//             side_len: side_len as usize,
-//         };
-//     }
-
-//     fn get_i(&self, x: isize, y: isize) -> usize {
-//         let l = self.side_len as isize;
-
-//         return (x.rem_euclid(l) + y.rem_euclid(l) * l) as usize;
-//     }
-// }
 impl<const N: usize> Debug for Field<f32, N> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let len = self.side_len;

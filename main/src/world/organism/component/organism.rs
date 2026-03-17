@@ -2,7 +2,7 @@ use avian2d::prelude::{Collider, RigidBody};
 use bevy::{
     ecs::{
         component::Component,
-        entity::Entity,
+        entity::{Entity, EntityHashSet},
         query::With,
         system::{Commands, Query},
     },
@@ -10,6 +10,7 @@ use bevy::{
     math::Vec2,
     transform::components::Transform,
 };
+use serde::de;
 
 use crate::{
     config::config::Metabolism,
@@ -33,6 +34,7 @@ pub struct OrganismMarker {
     pub joint_ents: Vec<Entity>,
     pub bone_ents: Vec<Entity>,
     pub muscle_ents: Vec<Entity>,
+    pub col_ents: EntityHashSet,
 }
 impl OrganismMarker {
     pub fn new(
@@ -42,24 +44,49 @@ impl OrganismMarker {
         muscles: Vec<Entity>,
     ) -> Self {
         let max_energy = organism.max_energy();
+        let mut col_ents = EntityHashSet::new();
+        {
+            for e in bones.iter() {
+                col_ents.insert(*e);
+            }
+            for e in muscles.iter() {
+                col_ents.insert(*e);
+            }
+        }
+
         Self {
             organism,
             cur_energy: max_energy * 0.2,
             max_energy,
+            variable_stats: VariableStats::new(),
             joint_ents: joints,
             bone_ents: bones,
             muscle_ents: muscles,
-            variable_stats: VariableStats::new(),
+            col_ents,
         }
     }
 
+    // pub fn owns_col(&self, ent: &Entity) -> bool {
+    //     self.col_ents.contains(ent)
+    // }
+
     pub fn update_energy(&mut self, delta: f32) {
-        // info!(
-        //     "energy at {} -> {}%",
-        //     self.cur_energy,
-        //     self.cur_energy / self.max_energy * 100.0
-        // );
-        self.cur_energy = (self.cur_energy + delta).clamp(0.0, self.max_energy)
+        self.cur_energy += delta;
+        if self.cur_energy > self.max_energy {
+            self.cur_energy = self.max_energy;
+        }
+    }
+
+    pub fn impale(&mut self, delta: f32) -> f32 {
+        self.cur_energy -= delta;
+
+        let extracted = if self.cur_energy < 0.0 {
+            delta + self.cur_energy
+        } else {
+            delta
+        };
+
+        -extracted
     }
 
     pub fn get_energy_level(&self) -> f32 {

@@ -39,11 +39,13 @@
         "transput": {
             "muscle_efficiency": 1.0,
             "energy_collect_rate": 0.5,
-            "decomposer_collect_rate": 1.0,
+            "decomposer_collect_rate": 2.0,
             "pheromone_read_efficiency": 0.05,
-            "pheromone_write_efficiency": 0.1,
+            "pheromone_write_efficiency": 0.05,
             "thruster_strength": 7.5,
-            "thruster_efficiency": 0.5
+            "thruster_efficiency": 0.5,
+            "spike_collect_rate": 4.0,
+            "spike_collect_efficiency": 5.0
         }
     },
     "physics": {
@@ -59,7 +61,7 @@
     "runner": null,
     "petri_dish": {
         "init_seed": null,
-        "min_organisms": 50,
+        "min_organisms": 100,
         "initial_num_mutations": 1,
         "num_mutations": 1,
         "side_len": 500.0,

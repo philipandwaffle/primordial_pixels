@@ -8,7 +8,10 @@ use crate::{
     consts::{ENV_CELLS, KERNEL_CELLS},
     util::function::zero_one_output,
     world::{
-        environment::{environment::Environment, layer::layer_key::LayerKey},
+        environment::{
+            environment::{ConcreteEnv, Environment},
+            layer::layer_key::LayerKey,
+        },
         organism::transput::{Transput, remove_output},
     },
 };
@@ -26,16 +29,17 @@ impl Write {
         }
     }
 }
-impl Transput<(&mut Environment<ENV_CELLS, KERNEL_CELLS>, Vec2, f32), ()> for Write {
+impl Transput<(&mut ConcreteEnv, Vec2, f32), ()> for Write {
     fn consume_outputs(
         &mut self,
         energy: &mut f32,
         output: &mut VecDeque<f32>,
         transput_config: &TransputConfig,
-        (env, pos, dt): (&mut Environment<ENV_CELLS, KERNEL_CELLS>, Vec2, f32),
+        (env, pos, dt): (&mut ConcreteEnv, Vec2, f32),
     ) {
-        let max_write =
-            zero_one_output(remove_output(output)) * transput_config.pheromone_write_efficiency * dt;
+        let max_write = zero_one_output(remove_output(output))
+            * transput_config.pheromone_write_efficiency
+            * dt;
         let mut delta = max_write;
         env.delta_value(&self.layer_key, pos, &mut delta);
         *energy -= transput_config.pheromone_write_efficiency * dt * (max_write - delta);

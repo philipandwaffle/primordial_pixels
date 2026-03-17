@@ -1,10 +1,13 @@
 use std::{collections::VecDeque, f32::consts::PI};
 
-use avian2d::prelude::{DistanceJoint, DistanceLimit, Forces, RigidBody, RigidBodyForces};
+use avian2d::prelude::{
+    ContactGraph, DistanceJoint, DistanceLimit, Forces, RigidBody, RigidBodyForces,
+};
 use bevy::{
     app::{First, Last, Plugin, PostUpdate, PreUpdate, Update},
     ecs::{
-        entity::Entity,
+        entity::{Entity, EntityHashSet},
+        hierarchy::ChildOf,
         message::{MessageReader, MessageWriter},
         query::{With, Without},
         system::{Commands, Query, Res, ResMut},
@@ -18,10 +21,10 @@ use bevy::{
 use crate::{
     assets::handles::{Handles, MatKey},
     config::config::{Metabolism, Transput as TransputConfig},
-    consts::{ENV_CELLS, KERNEL_CELLS, MUSCLE_Z, THRUSTER_BASE_LENGTH, THRUSTER_WIDTH, THRUSTER_Z},
+    consts::{MUSCLE_Z, THRUSTER_BASE_LENGTH, THRUSTER_WIDTH, THRUSTER_Z},
     util::function::z_rot_to_dir,
     world::{
-        environment::{environment::Environment, layer::layer_key::LayerKey},
+        environment::{environment::ConcreteEnv, layer::layer_key::LayerKey},
         organism::{
             component::{
                 bone::Bone,
@@ -55,7 +58,14 @@ impl Plugin for OrganismPlugin {
             )
             .add_systems(PreUpdate, Self::update_brain_input)
             .add_systems(Update, Self::update_brain_output)
-            .add_systems(PostUpdate, (Self::update_muscles, Self::update_thrusters))
+            .add_systems(
+                PostUpdate,
+                (
+                    Self::update_muscles,
+                    Self::update_thrusters,
+                    Self::update_spikes,
+                ),
+            )
             .add_systems(Last, Self::despawn_organisms);
     }
 }
@@ -75,7 +85,7 @@ impl OrganismPlugin {
         bone_query: Query<&Transform, With<Bone>>,
         mut muscle_query: Query<&mut Muscle>,
         time: Res<Time>,
-        env: Option<Res<Environment<ENV_CELLS, KERNEL_CELLS>>>,
+        env: Option<Res<ConcreteEnv>>,
         transput_config: Res<TransputConfig>,
     ) {
         let dt = time.delta_secs();
@@ -137,7 +147,7 @@ impl OrganismPlugin {
         mut muscle: Query<&mut Muscle>,
         transput_config: Res<TransputConfig>,
         time: Res<Time>,
-        mut env: Option<ResMut<Environment<ENV_CELLS, KERNEL_CELLS>>>,
+        mut env: Option<ResMut<ConcreteEnv>>,
     ) {
         let dt = time.delta_secs();
         for mut organism_ent in organisms.iter_mut() {
@@ -255,12 +265,65 @@ impl OrganismPlugin {
         }
     }
 
+    fn update_spikes(
+        time: Res<Time>,
+        transput_config: Res<TransputConfig>,
+        mut organism_query: Query<&mut OrganismMarker>,
+        joint_query: Query<(&ChildOf, &Joint, &Transform)>,
+        contact_graph: Res<ContactGraph>,
+        mut env: ResMut<ConcreteEnv>,
+    ) {
+        let dt = time.delta_secs();
+        for (child_of, joint, _) in joint_query.iter() {
+            if let Some(spike_ent) = joint.spike {
+                let mut has_spike = false;
+                for node in joint.nodes.iter() {
+                    if let NodeType::Spike(_) = node {
+                        has_spike = true;
+                        break;
+                    }
+                }
+
+                if !has_spike {
+                    continue;
+                }
+
+                let ent_blacklist = organism_query
+                    .get(child_of.parent())
+                    .unwrap()
+                    .col_ents
+                    .clone();
+
+                // Iter through joint ents being impaled
+                for impaled_joint_ent in contact_graph
+                    .entities_colliding_with(spike_ent)
+                    .filter(|e| !ent_blacklist.contains(e))
+                {
+                    // Get only joints contacts
+                    if let Ok((child_of, _, trans)) = joint_query.get(impaled_joint_ent) {
+                        let mut impaled_organism =
+                            organism_query.get_mut(child_of.parent()).unwrap();
+                        let delta = transput_config.spike_collect_rate * dt;
+                        let mut collected_energy = impaled_organism.impale(delta)
+                            * transput_config.spike_collect_efficiency;
+
+                        env.delta_value(
+                            &LayerKey::Decompose,
+                            trans.translation.truncate(),
+                            &mut collected_energy,
+                        );
+                    }
+                }
+            }
+        }
+    }
+
     fn despawn_organisms(
         mut commands: Commands,
         mut despawn_organism_msg: MessageReader<DespawnOrganismMsg>,
         mut organism_query: Query<&mut OrganismMarker>,
         joint_query: Query<&Transform, With<Joint>>,
-        mut env: ResMut<Environment<ENV_CELLS, KERNEL_CELLS>>,
+        mut env: ResMut<ConcreteEnv>,
         metabolism: Res<Metabolism>,
     ) {
         for msg in despawn_organism_msg.read() {
@@ -268,7 +331,7 @@ impl OrganismPlugin {
             if let Ok(mut organism_marker) = organism_query.get_mut(organism_ent) {
                 let pos = organism_marker.get_pos(&joint_query);
                 organism_marker.despawn(&mut commands);
-                commands.entity(organism_ent).despawn();                
+                commands.entity(organism_ent).despawn();
                 let mut delta =
                     organism_marker.organism.meta.metabolic_cost * metabolism.decay_multiplier;
                 env.delta_value(&LayerKey::Decompose, pos, &mut delta);

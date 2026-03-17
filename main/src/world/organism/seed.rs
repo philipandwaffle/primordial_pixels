@@ -1,40 +1,24 @@
-use avian2d::prelude::{
-    Collider, DistanceJoint, LinearDamping, LockedAxes, RevoluteJoint, RigidBody,
-};
-use bevy::{
-    ecs::{entity::Entity, system::Commands},
-    math::{Quat, Vec2, vec2, vec3},
-    transform::components::Transform,
-};
+use bevy::math::{Vec2, vec2};
 use my_derive::ConfigTag;
 use rand::rngs::ThreadRng;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    assets::handles::{Handles, MatKey, MeshKey},
     config::{
         config::{Metabolism, Mutation as MutationConfig},
         config_tag::ConfigTag,
         plugin::load_config,
     },
-    consts::{
-        BONE_WIDTH, BONE_Z, JOINT_RADIUS, JOINT_Z, MUSCLE_COMPLIANCE, MUSCLE_WIDTH, MUSCLE_Z,
-        PHYS_LOCK_DUR, PHYS_LOCK_FINAL_DAMP, PHYS_LOCK_START_DAMP,
-    },
-    physics_lock::PhysicsLockBundle,
     world::organism::{
         body::Body,
         brain::Brain,
-        component::{
-            bone::Bone, joint::Joint as JointComp, muscle::Muscle, organism::OrganismMarker,
-        },
         joint::Joint,
         message::{SpawnEggMsg, SpawnOrganismMsg},
         mutation::{
             brain::Brain as BrainMut,
             mutation::{Mut, Mutable, Mutation as OrgMut},
         },
-        node::{energy::Energy, thruster::Thruster},
+        node::{energy::Energy, spike::Spike, thruster::Thruster},
         node_type::NodeType,
         organism::Organism,
         util_trait::OrganismAccessor,
@@ -59,7 +43,7 @@ impl Default for Seed {
                         vec2(0.0, 0.0),
                         vec![
                             NodeType::Energy(Energy::new()),
-                            // NodeType::Thruster(Thruster::new(0.0)),
+                            // NodeType::Spike(Spike::new()),
                         ],
                     )],
                     vec![],
