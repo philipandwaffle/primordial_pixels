@@ -1,13 +1,12 @@
 use std::{collections::VecDeque, f32::consts::PI};
 
 use avian2d::prelude::{
-    Collider, ContactGraph, DistanceJoint, DistanceLimit, Forces, RigidBody, RigidBodyForces,
-    SpatialQuery,
+    ContactGraph, DistanceJoint, DistanceLimit, Forces, RigidBody, RigidBodyForces,
 };
 use bevy::{
     app::{First, Last, Plugin, PostUpdate, PreUpdate, Update},
     ecs::{
-        entity::Entity,
+        entity::{Entity, EntityHashSet},
         hierarchy::ChildOf,
         message::{MessageReader, MessageWriter},
         query::{With, Without},
@@ -22,21 +21,15 @@ use bevy::{
 use crate::{
     assets::handles::{Handles, MatKey},
     config::config::{Metabolism, Transput as TransputConfig},
-    consts::{
-        ENV_CELLS, JOINT_RADIUS, KERNEL_CELLS, MUSCLE_Z, SPIKE_RADIUS, THRUSTER_BASE_LENGTH,
-        THRUSTER_WIDTH, THRUSTER_Z,
-    },
+    consts::{MUSCLE_Z, THRUSTER_BASE_LENGTH, THRUSTER_WIDTH, THRUSTER_Z},
     util::function::z_rot_to_dir,
     world::{
-        environment::{
-            environment::{ConcreteEnv, Environment},
-            layer::layer_key::LayerKey,
-        },
+        environment::{environment::ConcreteEnv, layer::layer_key::LayerKey},
         organism::{
             component::{
                 bone::Bone,
                 egg::Egg,
-                joint::{Joint, Spike as SpikeComp, Thruster as ThrusterComp},
+                joint::{Joint, Thruster as ThrusterComp},
                 muscle::Muscle,
                 organism::OrganismMarker,
             },
@@ -282,51 +275,47 @@ impl OrganismPlugin {
     ) {
         let dt = time.delta_secs();
         for (child_of, joint, _) in joint_query.iter() {
-            let sibling_joint_ents = organism_query
-                .get(child_of.parent())
-                .unwrap()
-                .joint_ents
-                .clone();
             if let Some(spike_ent) = joint.spike {
-                let mut spike_state = false;
+                let mut has_spike = false;
                 for node in joint.nodes.iter() {
-                    if let NodeType::Spike(s) = node {
-                        spike_state = s.state;
+                    if let NodeType::Spike(_) = node {
+                        has_spike = true;
                         break;
                     }
                 }
 
-                if !spike_state {
+                if !has_spike {
                     continue;
                 }
+
+                let ent_blacklist = organism_query
+                    .get(child_of.parent())
+                    .unwrap()
+                    .col_ents
+                    .clone();
 
                 // Iter through joint ents being impaled
                 for impaled_joint_ent in contact_graph
                     .entities_colliding_with(spike_ent)
-                    .filter(|e| !sibling_joint_ents.contains(e) || *e != spike_ent)
+                    .filter(|e| !ent_blacklist.contains(e))
                 {
-                    let (child_of, _, trans) = joint_query.get(impaled_joint_ent).unwrap();
-                    let mut impaled_organism = organism_query.get_mut(child_of.parent()).unwrap();
-                    let delta = transput_config.spike_collect_rate * dt;
+                    // Get only joints contacts
+                    if let Ok((child_of, _, trans)) = joint_query.get(impaled_joint_ent) {
+                        let mut impaled_organism =
+                            organism_query.get_mut(child_of.parent()).unwrap();
+                        let delta = transput_config.spike_collect_rate * dt;
+                        let mut collected_energy = impaled_organism.impale(delta)
+                            * transput_config.spike_collect_efficiency;
 
-                    env.delta_value(
-                        &LayerKey::Decompose,
-                        trans.translation.truncate(),
-                        &mut impaled_organism.impale(delta),
-                    );
+                        env.delta_value(
+                            &LayerKey::Decompose,
+                            trans.translation.truncate(),
+                            &mut collected_energy,
+                        );
+                    }
                 }
             }
         }
-        // let intersections = spatial_query.shape_intersections(
-        //     &Collider::circle(SPIKE_RAD                 IUS),
-        //     Vec3::ZERO,
-        //     Quat::default(),                 // Shape rotation
-        //     &SpatialQueryFilter::default(),  // Query filter
-        // );
-
-        // for entity in intersections.iter() {
-        //     println!("Entity: {}", entity);
-        // }
     }
 
     fn despawn_organisms(

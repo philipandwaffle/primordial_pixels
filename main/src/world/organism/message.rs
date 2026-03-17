@@ -1,9 +1,15 @@
-use avian2d::prelude::{
-    Collider, DistanceJoint, LinearDamping, LockedAxes, RevoluteJoint, RigidBody, Sensor,
+use avian2d::{
+    math::PI,
+    prelude::{
+        Collider, DistanceJoint, LinearDamping, LockedAxes, RevoluteJoint, RigidBody, Sensor,
+    },
 };
 use bevy::{
-    ecs::{entity::Entity, message::Message, system::Commands},
-    math::{Quat, Vec2, Vec3, VectorSpace, vec2, vec3},
+    ecs::{
+        entity::Entity, hierarchy::ChildOf, message::Message, relationship::RelatedSpawnerCommands,
+        system::Commands,
+    },
+    math::{Quat, Vec2, Vec3, vec2, vec3},
     transform::components::Transform,
 };
 
@@ -25,7 +31,6 @@ use crate::{
             muscle::Muscle,
             organism::OrganismMarker,
         },
-        node::spike,
         node_type::NodeType,
         organism::Organism,
     },
@@ -187,7 +192,7 @@ impl SpawnOrganismMsg {
     pub fn spawn_spike(c: &mut Commands, h: &Handles) -> Entity {
         c.spawn((
             SpikeComp,
-            Collider::circle(SPIKE_RADIUS),
+            Collider::circle(1.0),
             Sensor,
             Transform::default()
                 .with_translation(vec3(0.0, 0.0, SPIKE_Z))
@@ -195,6 +200,26 @@ impl SpawnOrganismMsg {
             h.get_mesh2d(&MeshKey::Triangle),
             h.get_mat2d(&MatKey::LightGrey),
         ))
+        .with_children(|c| {
+            fn spike(
+                c: &mut RelatedSpawnerCommands<ChildOf>,
+                h: &Handles,
+                offset: f32,
+                rot_z: f32,
+            ) {
+                c.spawn((
+                    Transform::default()
+                        .with_translation(vec3(0.0, 0.0, SPIKE_Z - offset))
+                        .with_scale(Vec3::ONE)
+                        .with_rotation(Quat::from_rotation_z(rot_z)),
+                    h.get_mesh2d(&MeshKey::Triangle),
+                    h.get_mat2d(&MatKey::LightGrey),
+                ));
+            }
+            spike(c, h, 0.01, 0.0);
+            spike(c, h, 0.03, PI * 0.222222);
+            spike(c, h, 0.02, PI * 0.444444);
+        })
         .id()
     }
 

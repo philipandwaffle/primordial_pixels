@@ -72,7 +72,7 @@ pub struct Transput {
     pub thruster_strength: f32,
     pub thruster_efficiency: f32,
     pub spike_collect_rate: f32,
-    pub spike_efficiency: f32,
+    pub spike_collect_efficiency: f32,
 }
 
 #[derive(ConfigTag, Serialize, Deserialize, Clone, Copy, Resource)]
