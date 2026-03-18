@@ -18,6 +18,7 @@ impl Plugin for ConfigPlugin {
             .insert_resource(config.camera)
             .insert_resource(config.organism.mutation)
             .insert_resource(config.organism.metabolism)
+            .insert_resource(config.organism.storage)
             .insert_resource(config.organism.transput);
 
         if config.debug.physics {

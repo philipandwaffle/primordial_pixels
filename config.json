@@ -28,12 +28,18 @@
             "learn_factor": 0.1
         },
         "metabolism": {
-            "decay_multiplier": 10.0,
+            "decay_multiplier": 0.9,
             "reproduce_threshold": 0.8,
             "reproduce_cost": 0.6,
             "node": 0.1,
             "joint": 0.2,
             "bone": 0.1,
+            "muscle": 0.0
+        },
+        "storage": {
+            "node": 0.2,
+            "joint": 2.0,
+            "bone": 1.0,
             "muscle": 0.0
         },
         "transput": {
@@ -45,7 +51,7 @@
             "thruster_strength": 7.5,
             "thruster_efficiency": 0.5,
             "spike_collect_rate": 4.0,
-            "spike_collect_efficiency": 5.0
+            "spike_collect_efficiency": 0.75
         }
     },
     "physics": {

@@ -19,7 +19,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     config::{
-        config::{Metabolism, Mutation as MutationConfig},
+        config::{Metabolism, Mutation as MutationConfig, Storage},
         config_tag::ConfigTag,
     },
     consts::JOINT_RADIUS,
@@ -88,6 +88,7 @@ impl PetriDishPlugin {
         mut info: ResMut<PetriDishInfo>,
         mutation_config: Res<MutationConfig>,
         metabolism: Res<Metabolism>,
+        storage: Res<Storage>,
     ) {
         let to_spawn = info
             .min_organisms
@@ -114,6 +115,7 @@ impl PetriDishPlugin {
             s.multi_mutate(
                 &mut rng,
                 &metabolism,
+                &storage,
                 &mutation_config,
                 info.initial_num_mutations,
             );
@@ -126,6 +128,7 @@ impl PetriDishPlugin {
     fn evaluate_organisms(
         mut info: ResMut<PetriDishInfo>,
         metabolism: Res<Metabolism>,
+        storage: Res<Storage>,
         mutation_config: Res<MutationConfig>,
         mut spawn_egg_msg: MessageWriter<SpawnEggMsg>,
         mut despawn_organism_msg: MessageWriter<DespawnOrganismMsg>,
@@ -140,7 +143,13 @@ impl PetriDishPlugin {
             } else if let Some(mut s) = organism.reproduce(&metabolism, &joint_query) {
                 info.cur_organisms += 1;
 
-                s.multi_mutate(&mut rng, &metabolism, &mutation_config, info.num_mutations);
+                s.multi_mutate(
+                    &mut rng,
+                    &metabolism,
+                    &storage,
+                    &mutation_config,
+                    info.num_mutations,
+                );
 
                 spawn_egg_msg.write(Into::<SpawnEggMsg>::into(s));
             }

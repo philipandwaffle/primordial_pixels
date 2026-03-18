@@ -20,7 +20,7 @@ use bevy::{
 
 use crate::{
     assets::handles::{Handles, MatKey},
-    config::config::{Metabolism, Transput as TransputConfig},
+    config::config::{Metabolism, Storage, Transput as TransputConfig},
     consts::{MUSCLE_Z, THRUSTER_BASE_LENGTH, THRUSTER_WIDTH, THRUSTER_Z},
     util::function::z_rot_to_dir,
     world::{
@@ -333,7 +333,7 @@ impl OrganismPlugin {
                 organism_marker.despawn(&mut commands);
                 commands.entity(organism_ent).despawn();
                 let mut delta =
-                    organism_marker.organism.meta.metabolic_cost * metabolism.decay_multiplier;
+                    organism_marker.organism.meta.max_energy * metabolism.decay_multiplier;
                 env.delta_value(&LayerKey::Decompose, pos, &mut delta);
             }
         }

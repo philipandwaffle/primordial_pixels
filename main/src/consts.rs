@@ -32,9 +32,6 @@ pub const THRUSTER_WIDTH: f32 = 0.5;
 pub const THRUSTER_BASE_LENGTH: f32 = -2.0;
 pub const SPIKE_RADIUS: f32 = JOINT_RADIUS * 4.0;
 
-// Energy
-pub const JOINT_MAX_ENERGY: f32 = 5.0;
-
 // Muscle
 pub const MIN_MUSCLE_LEN: f32 = 0.7;
 pub const MAX_MUSCLE_LEN: f32 = 1.3;

@@ -13,7 +13,7 @@ use bevy::{
 use serde::de;
 
 use crate::{
-    config::config::Metabolism,
+    config::config::{Metabolism, Storage},
     world::organism::{
         body::Body,
         brain::Brain,
@@ -29,7 +29,6 @@ use crate::{
 pub struct OrganismMarker {
     pub organism: Organism,
     cur_energy: f32,
-    pub max_energy: f32,
     variable_stats: VariableStats,
     pub joint_ents: Vec<Entity>,
     pub bone_ents: Vec<Entity>,
@@ -43,7 +42,7 @@ impl OrganismMarker {
         bones: Vec<Entity>,
         muscles: Vec<Entity>,
     ) -> Self {
-        let max_energy = organism.max_energy();
+        let max_energy = organism.meta.max_energy;
         let mut col_ents = EntityHashSet::new();
         {
             for e in bones.iter() {
@@ -57,7 +56,6 @@ impl OrganismMarker {
         Self {
             organism,
             cur_energy: max_energy * 0.2,
-            max_energy,
             variable_stats: VariableStats::new(),
             joint_ents: joints,
             bone_ents: bones,
@@ -72,8 +70,8 @@ impl OrganismMarker {
 
     pub fn update_energy(&mut self, delta: f32) {
         self.cur_energy += delta;
-        if self.cur_energy > self.max_energy {
-            self.cur_energy = self.max_energy;
+        if self.cur_energy > self.organism.meta.max_energy {
+            self.cur_energy = self.organism.meta.max_energy;
         }
     }
 
@@ -90,7 +88,7 @@ impl OrganismMarker {
     }
 
     pub fn get_energy_level(&self) -> f32 {
-        self.cur_energy / self.max_energy
+        self.cur_energy / self.organism.meta.max_energy
     }
 
     pub fn is_dead(&self) -> bool {
@@ -102,11 +100,11 @@ impl OrganismMarker {
         metabolism: &Metabolism,
         joint_query: &Query<&Transform, With<Joint>>,
     ) -> Option<Seed> {
-        if self.cur_energy <= self.max_energy * metabolism.reproduce_threshold {
+        if self.cur_energy <= self.organism.meta.max_energy * metabolism.reproduce_threshold {
             return None;
         }
 
-        self.cur_energy -= self.max_energy * metabolism.reproduce_cost;
+        self.cur_energy -= self.organism.meta.max_energy * metabolism.reproduce_cost;
         Some(self.as_seed(self.get_pos(joint_query)))
     }
 

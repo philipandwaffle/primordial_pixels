@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     config::{
-        config::{Metabolism, Mutation as MutationConfig},
+        config::{Metabolism, Mutation as MutationConfig, Storage},
         config_tag::ConfigTag,
         plugin::load_config,
     },
@@ -50,6 +50,7 @@ impl Default for Seed {
                     vec![],
                 ),
                 cfg.organism.metabolism,
+                cfg.organism.storage,
             ),
         }
     }
@@ -93,6 +94,7 @@ impl Seed {
         &mut self,
         rng: &mut ThreadRng,
         metabolism: &Metabolism,
+        storage: &Storage,
         mutation_config: &MutationConfig,
         num_muts: usize,
     ) {
@@ -104,12 +106,12 @@ impl Seed {
         self.mutate(&OrgMut::Brain(
             BrainMut::rand(rng, mutation_config, self.get_organism()).unwrap(),
         ));
-        self.update_meta(&metabolism);
+        self.update_meta(&metabolism, storage);
     }
 
-    pub fn update_meta(&mut self, metabolism: &Metabolism) {
+    pub fn update_meta(&mut self, metabolism: &Metabolism, storage: &Storage) {
         self.organism.get_mut_body().centre_joints();
-        self.organism.update_meta(metabolism)
+        self.organism.update_meta(metabolism, storage)
     }
 
     pub fn set_pos(&mut self, pos: Vec2) {
@@ -152,6 +154,7 @@ mod test {
                 Some(Brain::default()),
                 Body::new(vec![Joint::new(vec2(0.0, 0.0), vec![])], vec![], vec![]),
                 config.organism.metabolism,
+                config.organism.storage,
             ),
         );
         let path = Path::new("tmp/organism.json");

@@ -2,11 +2,8 @@ use bevy::{log::info, math::Vec2};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    config::config::Metabolism,
-    consts::{
-        BASE_INPUT, BASE_OUTPUT, JOINT_MAX_ENERGY, JOINT_RADIUS, MUSCLE_IN_PRODUCE,
-        MUSCLE_OUT_CONSUME,
-    },
+    config::config::{Metabolism, Storage},
+    consts::{BASE_INPUT, BASE_OUTPUT, JOINT_RADIUS, MUSCLE_IN_PRODUCE, MUSCLE_OUT_CONSUME},
     world::organism::{
         body::Body,
         brain::Brain,
@@ -159,24 +156,33 @@ impl Mutable for Organism {
     }
 }
 impl Organism {
-    pub fn new(brain: Option<Brain>, body: Body, metabolism: Metabolism) -> Self {
+    pub fn new(brain: Option<Brain>, body: Body, metabolism: Metabolism, storage: Storage) -> Self {
         let mut me = Self {
             brain,
             body,
             stats: Stats::new(0.5, 5.0),
             meta: Meta::default(),
         };
-        me.update_meta(&metabolism);
+        me.update_meta(&metabolism, &storage);
         me
     }
 
-    pub fn update_meta(&mut self, metabolism: &Metabolism) {
-        self.meta = self.meta.update(&self, metabolism);
+    pub fn update_meta(&mut self, metabolism: &Metabolism, storage: &Storage) {
+        self.meta = self.meta.update(&self, metabolism, storage);
     }
 
-    pub fn max_energy(&self) -> f32 {
-        return self.body.joints.len() as f32 * JOINT_MAX_ENERGY;
-    }
+    // pub fn max_energy(&self, storage: &Storage) -> f32 {
+    //     return (self
+    //         .body
+    //         .joints
+    //         .iter()
+    //         .map(|j| j.nodes.len())
+    //         .sum::<usize>() as f32
+    //         * storage.node)
+    //         + (self.body.joints.len() as f32 * storage.joint)
+    //         + (self.body.bones.len() as f32 * storage.bone)
+    //         + (self.body.muscles.len() as f32 * storage.muscle);
+    // }
 
     pub fn get_static_stats<'a>(&'a self) -> &'a Stats {
         return &self.stats;
@@ -256,7 +262,7 @@ mod tests {
     use bevy::math::vec2;
 
     use crate::{
-        config::config::Metabolism,
+        config::config::{Metabolism, Storage},
         consts::{BASE_INPUT, BASE_OUTPUT, MUSCLE_IN_PRODUCE, MUSCLE_OUT_CONSUME},
         world::{
             environment::layer::layer_key::LayerKey,
@@ -294,6 +300,7 @@ mod tests {
                 vec![[0, 1]],
             ),
             Metabolism::default(),
+            Storage::default(),
         )
     }
 

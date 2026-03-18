@@ -40,6 +40,7 @@ pub struct Camera {
 pub struct Organism {
     pub mutation: Mutation,
     pub metabolism: Metabolism,
+    pub storage: Storage,
     pub transput: Transput,
 }
 
@@ -56,6 +57,14 @@ pub struct Metabolism {
     pub decay_multiplier: f32,
     pub reproduce_threshold: f32,
     pub reproduce_cost: f32,
+    pub node: f32,
+    pub joint: f32,
+    pub bone: f32,
+    pub muscle: f32,
+}
+
+#[derive(ConfigTag, Default, Serialize, Deserialize, Clone, Copy, Resource)]
+pub struct Storage {
     pub node: f32,
     pub joint: f32,
     pub bone: f32,
