@@ -5,9 +5,8 @@ use bevy::app::Plugin;
 
 use crate::{
     config::{config::Config as CFG, config_tag::Config},
-    consts::CONFIG_PATH,
+    consts::{CONFIG_PATH, KERNEL_CELLS},
     performance_info::plugin::PerformanceInfoPlugin,
-    save::plugin::SavePlugin,
 };
 
 pub struct ConfigPlugin;
@@ -16,6 +15,7 @@ impl Plugin for ConfigPlugin {
         let config = load_config();
         app.insert_resource(Gravity(config.physics.gravity_scale))
             .insert_resource(config.camera)
+            .insert_resource(config.environment)
             .insert_resource(config.organism.mutation)
             .insert_resource(config.organism.metabolism)
             .insert_resource(config.organism.storage)
@@ -37,6 +37,6 @@ impl Plugin for ConfigPlugin {
         }
     }
 }
-pub fn load_config() -> CFG {
+pub fn load_config() -> CFG<KERNEL_CELLS> {
     CFG::load_cfg(Path::new(CONFIG_PATH))
 }

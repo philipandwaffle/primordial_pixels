@@ -137,17 +137,16 @@ impl Into<SpawnEggMsg> for Seed {
 mod test {
     use std::path::Path;
 
-    use bevy::{math::vec2, ui_render::NodeType};
+    use bevy::math::vec2;
 
     use crate::{
-        config::{config::Config as CFG, config_tag::Config, plugin::load_config},
-        consts::CONFIG_PATH,
+        config::{config_tag::Config, plugin::load_config},
         world::organism::{body::Body, brain::Brain, joint::Joint, organism::Organism, seed::Seed},
     };
 
     #[test]
     fn seed_save_load() {
-        let config = CFG::load_cfg(Path::new(&format!("../{CONFIG_PATH}")));
+        let config = load_config();
         let seed = Seed::new(
             vec2(0.0, 0.0),
             Organism::new(

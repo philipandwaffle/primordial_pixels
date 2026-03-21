@@ -1,24 +1,18 @@
-use std::{collections::HashMap, ops::Index, path::Path};
+use std::{collections::HashMap, ops::Index};
 
 use bevy::{
     ecs::resource::Resource,
-    log::tracing_subscriber::fmt::format,
     math::{Vec2, vec2},
 };
 use my_derive::ConfigTag;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    config::config_tag::{Config, ConfigTag},
+    config::{config::Environment as EnvironmentConfig, config_tag::ConfigTag},
     consts::{ENV_CELLS, KERNEL_CELLS},
     world::environment::{
         accessor_trait::Env,
-        field::Field,
-        layer::{
-            convolve::Convolve, layer_key::LayerKey, layer_type::LayerType,
-            periodic_replenish_convolve::PeriodicReplenishConvolve, replenish::Replenish,
-            replenish_convolve::ReplenishConvolve,
-        },
+        layer::{layer_key::LayerKey, layer_type::LayerType},
     },
 };
 
@@ -39,37 +33,13 @@ impl<const N: usize, const KN: usize> Index<&LayerKey> for Environment<N, KN> {
     }
 }
 impl<const N: usize, const KN: usize> Environment<N, KN> {
-    pub fn new(side_len: f32) -> Self {
+    pub fn new(environment_config: &EnvironmentConfig<KN>) -> Self {
         let mut layers = HashMap::<LayerKey, LayerType<N, KN>>::new();
-        layers.insert(
-            LayerKey::Energy,
-            LayerType::PeriodicReplenishConvolve(PeriodicReplenishConvolve::new(
-                Field::<f32, KN>::from_element(1.0 / 9.0),
-                0.1,
-                5.0,
-                0.1,
-                30.0,
-                60.0,
-            )),
-        );
-        layers.insert(
-            LayerKey::Decompose,
-            LayerType::Convolve(Convolve::new(
-                0.0,
-                Field::<f32, KN>::from_array([0.9 / 9.0; KN]),
-                0.01,
-                50.0,
-            )),
-        );
-        layers.insert(
-            LayerKey::Pheromone(0),
-            LayerType::Convolve(Convolve::new(
-                0.0,
-                Field::<f32, KN>::from_array([0.9 / 9.0; KN]),
-                0.25,
-                5.0,
-            )),
-        );
+        for (key, layer_config) in environment_config.layers.iter() {
+            layers.insert(*key, LayerType::from(layer_config.clone()));
+        }
+
+        let side_len = environment_config.side_len;
         Self {
             side_len,
             cell_len: side_len / (N as f32).sqrt(),
@@ -126,9 +96,10 @@ impl<const N: usize, const KN: usize> Environment<N, KN> {
 mod test {
     use bevy::math::vec2;
 
-    use crate::world::environment::environment::Environment;
+    use crate::{config::plugin::load_config, world::environment::environment::Environment};
     pub fn get_env() -> Environment<9, 9> {
-        Environment::new(3.0)
+        let cfg = load_config();
+        Environment::new(&cfg.environment)
     }
 
     #[test]
