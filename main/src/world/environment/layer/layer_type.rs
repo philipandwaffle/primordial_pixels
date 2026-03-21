@@ -1,10 +1,11 @@
-use std::{ops::Index, path::Path};
+use std::ops::Index;
 
 use my_derive::ConfigTag;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    config::config_tag::{Config, ConfigTag},
+    config::{config::Layer as LayerConfig, config_tag::ConfigTag},
+    consts::{ENV_CELLS, KERNEL_CELLS},
     world::environment::{
         accessor_trait::Env,
         layer::{
@@ -85,12 +86,36 @@ impl<const N: usize, const KN: usize> Env<N> for LayerType<N, KN> {
         }
     }
 }
-// impl<const N: usize, const KN: usize> Config for LayerType<N, KN> {
-//     fn load_cfg(path: &Path) -> Self {
-//         todo!()
-//     }
 
-//     fn save_cfg(&self, path: &Path) {
-//         todo!()
-//     }
-// }
+impl<const N: usize, const KN: usize> From<LayerConfig<KN>> for LayerType<N, KN> {
+    fn from(layer_config: LayerConfig<KN>) -> Self {
+        match layer_config {
+            LayerConfig::Energy {
+                kernel,
+                permeability,
+                max,
+                rate,
+                on_interval,
+                off_interval,
+            } => LayerType::PeriodicReplenishConvolve(PeriodicReplenishConvolve::new(
+                kernel,
+                permeability,
+                max,
+                rate,
+                on_interval,
+                off_interval,
+            )),
+            LayerConfig::Decompose {
+                initial_value,
+                kernel,
+                permeability,
+                max,
+            } => LayerType::Convolve(Convolve::new(initial_value, kernel, permeability, max)),
+            LayerConfig::Pheromone {
+                kernel,
+                permeability,
+                max,
+            } => LayerType::Convolve(Convolve::new(0.0, kernel, permeability, max)),
+        }
+    }
+}

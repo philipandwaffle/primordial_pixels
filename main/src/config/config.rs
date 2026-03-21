@@ -1,19 +1,25 @@
-use bevy::{ecs::resource::Resource, math::Vec2};
+use avian2d::parry::utils::hashmap::HashMap;
+use bevy::{
+    ecs::resource::Resource,
+    math::{Vec2, usize},
+};
 use serde::{Deserialize, Serialize};
 
 use crate::{
     config::config_tag::ConfigTag,
-    consts::NUM_MUTATIONS,
+    consts::{KERNEL_CELLS, NUM_MUTATIONS},
     petri_dish::plugin::PetriDishPlugin,
     // runner::plugin::RunnerPlugin,
     save::plugin::SavePlugin,
+    world::environment::{field::Field, layer::layer_key::LayerKey},
 };
 use my_derive::ConfigTag;
 
 #[derive(ConfigTag, Serialize, Deserialize, Clone, Resource)]
-pub struct Config {
+pub struct Config<const KN: usize> {
     pub debug: Debug,
     pub camera: Camera,
+    pub environment: Environment<KN>,
     pub organism: Organism,
     pub physics: Physics,
     pub save: SavePlugin,
@@ -34,6 +40,35 @@ pub struct Camera {
     pub start_zoom: Option<f32>,
     pub min_zoom: Option<f32>,
     pub max_zoom: Option<f32>,
+}
+
+#[derive(ConfigTag, Serialize, Deserialize, Clone, Resource)]
+pub struct Environment<const KN: usize> {
+    pub side_len: f32,
+    pub layers: HashMap<LayerKey, Layer<KN>>,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub enum Layer<const KN: usize> {
+    Energy {
+        kernel: Field<f32, KN>,
+        permeability: f32,
+        max: f32,
+        rate: f32,
+        on_interval: f32,
+        off_interval: f32,
+    },
+    Decompose {
+        kernel: Field<f32, KN>,
+        initial_value: f32,
+        permeability: f32,
+        max: f32,
+    },
+    Pheromone {
+        kernel: Field<f32, KN>,
+        permeability: f32,
+        max: f32,
+    },
 }
 
 #[derive(ConfigTag, Serialize, Deserialize, Clone, Copy)]

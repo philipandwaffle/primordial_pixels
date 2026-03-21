@@ -1,20 +1,19 @@
-use avian2d::prelude::{Forces, RigidBody, RigidBodyForces};
+use avian2d::prelude::{Forces, RigidBodyForces};
 use bevy::{
-    app::{First, Last, Plugin, PostUpdate, Update},
+    app::{First, Plugin, PostUpdate},
     ecs::{
         entity::Entity,
         message::MessageWriter,
         query::{Or, With},
-        schedule::IntoScheduleConfigs,
-        system::{Commands, Query, Res, ResMut},
+        system::{Query, Res, ResMut},
     },
     log::info,
-    math::{NormedVectorSpace, Vec2, vec2},
+    math::vec2,
     transform::components::Transform,
 };
 use my_derive::ConfigTag;
 use rand::{Rng, rng};
-use rand_distr::num_traits::{CheckedSub, Pow};
+use rand_distr::num_traits::Pow;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -22,17 +21,13 @@ use crate::{
         config::{Metabolism, Mutation as MutationConfig, Storage},
         config_tag::ConfigTag,
     },
-    consts::JOINT_RADIUS,
     petri_dish::resource::PetriDishInfo,
-    util::function::rand_vec2,
     world::{
         environment::plugin::EnvironmentPlugin,
         organism::{
             component::{egg::Egg, joint::Joint, organism::OrganismMarker},
             message::{DespawnOrganismMsg, SpawnEggMsg, SpawnOrganismMsg},
-            mutation::mutation::{Mut, Mutable, Mutation},
-            seed::{self, Seed},
-            util_trait::OrganismAccessor,
+            seed::Seed,
         },
     },
 };
@@ -55,10 +50,7 @@ impl Plugin for PetriDishPlugin {
             self.num_mutations,
             self.side_len,
         ))
-        .add_plugins(EnvironmentPlugin::new(
-            self.side_len,
-            self.display_update_interval,
-        ))
+        .add_plugins(EnvironmentPlugin::new(self.display_update_interval))
         .add_systems(First, Self::replenish_organisms);
         app.add_systems(PostUpdate, (Self::evaluate_organisms, Self::nudge));
     }
