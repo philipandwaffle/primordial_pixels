@@ -10,7 +10,7 @@
         "max_zoom": null
     },
     "environment": {
-        "side_len": 500.0,
+        "side_len": 250.0,
         "layers": {
             "Energy": {
                 "Energy": {
@@ -28,7 +28,7 @@
                         ],
                         "side_len": 3
                     },
-                    "permeability": 0.1,
+                    "permeability": 0.2,
                     "max": 5.0,
                     "rate": 0.1,
                     "on_interval": 30.0,
@@ -118,7 +118,7 @@
             "pheromone_read_efficiency": 0.05,
             "pheromone_write_efficiency": 0.05,
             "thruster_strength": 7.5,
-            "thruster_efficiency": 0.5,
+            "thruster_efficiency": 1.0,
             "spike_collect_rate": 4.0,
             "spike_collect_efficiency": 0.75
         }
@@ -136,10 +136,10 @@
     "runner": null,
     "petri_dish": {
         "init_seed": null,
-        "min_organisms": 100,
+        "min_organisms": 20,
         "initial_num_mutations": 1,
         "num_mutations": 1,
-        "side_len": 500.0,
+        "side_len": 250.0,
         "display_update_interval": 0.25
     }
 }
