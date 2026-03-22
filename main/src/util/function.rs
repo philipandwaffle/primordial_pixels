@@ -16,6 +16,10 @@ pub fn rand_vec2(rng: &mut ThreadRng, max_len: f32) -> Vec2 {
     return rand_normal_vec2(rng) * rng.random::<f32>() * max_len;
 }
 
+pub fn rand_z_rot(rng: &mut ThreadRng, scale: f32) -> f32 {
+    rng.random_range(-PI..PI) * scale
+}
+
 pub fn f32_to_vec(theta_radians: f32) -> Vec2 {
     return vec2(f32::sin(theta_radians), f32::cos(theta_radians));
 }

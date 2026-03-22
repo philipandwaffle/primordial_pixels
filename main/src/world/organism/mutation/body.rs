@@ -6,9 +6,11 @@ use rand::{Rng, rngs::ThreadRng, seq::SliceRandom};
 use crate::{
     config::config::Mutation as MutationConfig,
     consts::{JOINT_RADIUS, MAX_BONE_LEN, MIN_BONE_LEN},
-    util::function::{rand_normal_vec2, rand_vec2, shuffled_indexes},
+    util::function::{rand_normal_vec2, rand_vec2, rand_z_rot, shuffled_indexes},
     world::organism::{
-        distribution::Distribution, mutation::mutation::Mut, node_type::NodeType,
+        distribution::Distribution,
+        mutation::mutation::Mut,
+        node_type::{self, NodeType},
         organism::Organism,
     },
 };
@@ -105,18 +107,26 @@ impl Mut for Body {
                 }
 
                 let (joint, nodes) = &alterable_nodes[0];
-                let node = nodes[0];
+                let node_i = nodes[0];
 
-                let node_type = match o.body.joints[*joint].nodes[node] {
+                let node = o.body.joints[*joint].nodes[node_i];
+                let node_type = match node {
                     NodeType::Read(mut read) => {
                         read.read_offset += rand_vec2(rng, JOINT_RADIUS);
                         NodeType::Read(read)
                     }
-                    _ => panic!(),
+                    NodeType::Thruster(mut thruster) => {
+                        thruster.z_offset += rand_z_rot(rng, 0.25);
+                        NodeType::Thruster(thruster)
+                    }
+                    _ => panic!(
+                        "Tried to mutate a {:?} node with missing implementation",
+                        node
+                    ),
                 };
                 Some(Body::AlterNode {
                     joint: *joint,
-                    node,
+                    node: node_i,
                     node_type,
                 })
             }

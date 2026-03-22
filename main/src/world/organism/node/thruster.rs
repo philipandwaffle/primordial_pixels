@@ -17,12 +17,19 @@ use crate::{
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct Thruster {
     pub thrust: f32,
+    pub z_offset: f32,
     pub z_rot: f32,
 }
+impl PartialEq for Thruster {
+    fn eq(&self, other: &Self) -> bool {
+        self.z_offset == other.z_offset
+    }
+}
 impl Thruster {
-    pub fn new() -> Self {
+    pub fn new(z_offset: f32) -> Self {
         Self {
             thrust: 0.0,
+            z_offset,
             z_rot: 0.0,
         }
     }

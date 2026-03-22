@@ -51,7 +51,7 @@ pub const BASE_INPUT: usize = MEMORY + 2;
 pub const BASE_OUTPUT: usize = MEMORY + 0;
 
 // 3 slots for random stuff,
-pub const BASE_BRAIN_STRUCTURE: [usize; 6] = [BASE_INPUT, 8, 8, 8, 8, BASE_OUTPUT];
+pub const BASE_BRAIN_STRUCTURE: [usize; 6] = [BASE_INPUT, 15, 15, 15, 15, BASE_OUTPUT];
 
 pub const MUSCLE_IN_PRODUCE: usize = 2;
 pub const MUSCLE_OUT_CONSUME: usize = 1;

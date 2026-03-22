@@ -48,7 +48,7 @@ impl PartialEq for NodeType {
             (Self::Decomposer(_), Self::Decomposer(_)) => true,
             (Self::Read(a), Self::Read(b)) => a == b,
             (Self::Write(_), Self::Write(_)) => true,
-            (Self::Thruster(_), Self::Thruster(_)) => true,
+            (Self::Thruster(a), Self::Thruster(b)) => a == b,
             (Self::Spike(_), Self::Spike(_)) => true,
             _ => false,
         }
@@ -61,7 +61,7 @@ impl Mut for NodeType {
             1 => Self::Decomposer(Decomposer::new()),
             2 => Self::Read(Read::new(LayerKey::rand_read_layer(rng), rng)),
             3 => Self::Write(Write::new(LayerKey::rand_write_layer(rng))),
-            4 => Self::Thruster(Thruster::new()),
+            4 => Self::Thruster(Thruster::new(rng.random_range(-PI..PI))),
             _ => Self::Spike(Spike::new()),
         })
     }

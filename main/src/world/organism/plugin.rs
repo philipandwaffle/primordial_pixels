@@ -246,6 +246,7 @@ impl OrganismPlugin {
                     if let NodeType::Thruster(t) = node {
                         total_thrust += t.thrust;
                         total_z_rot += t.z_rot;
+                        total_z_rot += t.z_offset;
                     }
                 }
                 total_z_rot = total_z_rot % PI;
