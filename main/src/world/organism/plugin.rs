@@ -276,18 +276,6 @@ impl OrganismPlugin {
         let dt = time.delta_secs();
         for (child_of, joint, _) in joint_query.iter() {
             if let Some(spike_ent) = joint.spike {
-                let mut has_spike = false;
-                for node in joint.nodes.iter() {
-                    if let NodeType::Spike(_) = node {
-                        has_spike = true;
-                        break;
-                    }
-                }
-
-                if !has_spike {
-                    continue;
-                }
-
                 let ent_blacklist = organism_query
                     .get(child_of.parent())
                     .unwrap()
