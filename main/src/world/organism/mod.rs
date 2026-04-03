@@ -1,10 +1,10 @@
 pub mod body;
 pub mod brain;
-pub mod chromosome;
 pub mod component;
 mod distribution;
 pub mod joint;
 pub mod message;
+mod meta;
 pub mod mutation;
 pub mod node;
 pub mod node_type;
@@ -15,4 +15,3 @@ pub mod seed;
 pub mod stats;
 pub mod transput;
 pub mod util_trait;
- mod meta;

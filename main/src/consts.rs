@@ -38,9 +38,8 @@ pub const MAX_MUSCLE_LEN: f32 = 1.3;
 pub const MUSCLE_COMPLIANCE: f32 = 0.001;
 
 // Mutation
-pub const NUM_MUTATIONS: usize = 10;
-pub const NUM_BODY_MUTATIONS: usize = 2;
-pub const NUM_BRAIN_MUTATIONS: usize = 2;
+pub const NUM_BODY_MUTATIONS: usize = 10;
+pub const NUM_STAT_MUTATIONS: usize = 2;
 
 pub const MIN_BONE_LEN: f32 = JOINT_RADIUS * 2.5;
 pub const MAX_BONE_LEN: f32 = JOINT_RADIUS * 2.0 * 5.0;

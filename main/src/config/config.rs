@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     config::config_tag::ConfigTag,
-    consts::{KERNEL_CELLS, NUM_MUTATIONS},
+    consts::NUM_BODY_MUTATIONS,
     petri_dish::plugin::PetriDishPlugin,
     // runner::plugin::RunnerPlugin,
     save::plugin::SavePlugin,
@@ -82,7 +82,7 @@ pub struct Organism {
 #[derive(ConfigTag, Serialize, Deserialize, Clone, Copy, Resource)]
 pub struct Mutation {
     pub rate: f32,
-    pub distribution: [f32; NUM_MUTATIONS],
+    pub distribution: [f32; NUM_BODY_MUTATIONS],
     pub learn_rate: f32,
     pub learn_factor: f32,
 }
