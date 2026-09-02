@@ -6,7 +6,8 @@ use bevy::app::Plugin;
 use crate::{
     config::{config::Config as CFG, config_tag::Config},
     consts::{CONFIG_PATH, KERNEL_CELLS},
-    performance_info::plugin::PerformanceInfoPlugin,
+    debug::node::NodeDebugPlugin,
+    debug::performance::PerformanceDebugPlugin,
 };
 
 pub struct ConfigPlugin;
@@ -25,10 +26,10 @@ impl Plugin for ConfigPlugin {
             app.add_plugins(PhysicsDebugPlugin);
         }
         if config.debug.performance {
-            app.add_plugins(PerformanceInfoPlugin);
+            app.add_plugins(PerformanceDebugPlugin);
         }
         if config.debug.node {
-            app.add_plugins(NodeInfoPlugin);
+            app.add_plugins(NodeDebugPlugin);
         }
 
         app.add_plugins(config.save);

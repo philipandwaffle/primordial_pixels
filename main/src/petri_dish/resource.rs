@@ -13,7 +13,7 @@ pub struct PetriDishInfo {
     pub initial_num_mutations: usize,
     pub num_mutations: usize,
     pub threshold: f32,
-    pub side_len: f32,
+    pub boundary_width: f32,
     pub half_side_len: f32,
 }
 impl PetriDishInfo {
@@ -22,6 +22,7 @@ impl PetriDishInfo {
         min_organisms: usize,
         num_mutations: usize,
         initial_num_mutations: usize,
+        boundary_width: f32,
         side_len: f32,
     ) -> Self {
         Self {
@@ -30,8 +31,8 @@ impl PetriDishInfo {
             min_organisms,
             initial_num_mutations,
             num_mutations,
-            threshold: side_len * 0.5 * ((ENV_SIDE_CELLS - 1) as f32 / ENV_SIDE_CELLS as f32),
-            side_len,
+            threshold: (side_len * 0.5) - boundary_width,
+            boundary_width,
             half_side_len: side_len * 0.5,
         }
     }

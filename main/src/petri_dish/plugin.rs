@@ -38,6 +38,7 @@ pub struct PetriDishPlugin {
     pub min_organisms: usize,
     pub initial_num_mutations: usize,
     pub num_mutations: usize,
+    pub boundary_width: f32,
     pub side_len: f32,
     pub display_update_interval: f32,
 }
@@ -48,6 +49,7 @@ impl Plugin for PetriDishPlugin {
             self.min_organisms,
             self.initial_num_mutations,
             self.num_mutations,
+            self.boundary_width,
             self.side_len,
         ))
         .add_plugins(EnvironmentPlugin::new(self.display_update_interval))
@@ -98,8 +100,8 @@ impl PetriDishPlugin {
         let s = info.init_seed.clone();
         for _ in 0..to_spawn {
             let pos = vec2(
-                rng.random_range(-info.half_side_len..=info.half_side_len),
-                rng.random_range(-info.half_side_len..=info.half_side_len),
+                rng.random_range(-info.threshold..=info.threshold),
+                rng.random_range(-info.threshold..=info.threshold),
             );
             // let pos = vec2(0.0, 0.0);
             let mut s = s.clone();

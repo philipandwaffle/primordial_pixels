@@ -49,14 +49,14 @@ impl Default for Seed {
                         vec![
                             NodeType::Energy(Energy::new()),
                             NodeType::Thruster(Thruster::new(0.0)),
-                            NodeType::Read(Read::new(LayerKey::Energy, z_rot_to_dir(0.0))),
+                            NodeType::Read(Read::new(LayerKey::Energy, z_rot_to_dir(0.0) * 2.0)),
                             NodeType::Read(Read::new(
                                 LayerKey::Energy,
-                                z_rot_to_dir(2.0 / 3.0 * PI),
+                                z_rot_to_dir(2.0 / 3.0 * PI) * 2.0,
                             )),
                             NodeType::Read(Read::new(
                                 LayerKey::Energy,
-                                z_rot_to_dir(4.0 / 3.0 * PI),
+                                z_rot_to_dir(4.0 / 3.0 * PI) * 2.0,
                             )),
                         ],
                     )],
