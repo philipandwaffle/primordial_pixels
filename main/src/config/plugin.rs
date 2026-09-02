@@ -27,6 +27,9 @@ impl Plugin for ConfigPlugin {
         if config.debug.performance {
             app.add_plugins(PerformanceInfoPlugin);
         }
+        if config.debug.node {
+            app.add_plugins(NodeInfoPlugin);
+        }
 
         app.add_plugins(config.save);
         // if let Some(runner) = config.runner {

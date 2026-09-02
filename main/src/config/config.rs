@@ -31,6 +31,7 @@ pub struct Config<const KN: usize> {
 pub struct Debug {
     pub physics: bool,
     pub performance: bool,
+    pub node: bool,
 }
 
 #[derive(ConfigTag, Serialize, Deserialize, Clone, Copy, Resource)]

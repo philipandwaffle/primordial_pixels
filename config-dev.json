@@ -2,7 +2,7 @@
     "debug": {
         "physics": false,
         "performance": false,
-        "nodes": true
+        "node": true
     },
     "camera": {
         "move_speed": 100.0,
