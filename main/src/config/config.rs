@@ -93,9 +93,13 @@ pub struct Metabolism {
     pub reproduce_threshold: f32,
     pub reproduce_cost: f32,
     pub node: f32,
+    pub node_exponent: f32,
     pub joint: f32,
+    pub joint_exponent: f32,
     pub bone: f32,
+    pub bone_exponent: f32,
     pub muscle: f32,
+    pub muscle_exponent: f32,
 }
 
 #[derive(ConfigTag, Default, Serialize, Deserialize, Clone, Copy, Resource)]

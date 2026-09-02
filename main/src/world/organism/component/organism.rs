@@ -1,4 +1,4 @@
-use avian2d::prelude::{Collider, RigidBody};
+use avian2d::prelude::RigidBody;
 use bevy::{
     ecs::{
         component::Component,
@@ -6,14 +6,12 @@ use bevy::{
         query::With,
         system::{Commands, Query},
     },
-    log::info,
     math::Vec2,
     transform::components::Transform,
 };
-use serde::de;
 
 use crate::{
-    config::config::{Metabolism, Storage},
+    config::config::Metabolism,
     world::organism::{
         body::Body,
         brain::Brain,
@@ -109,13 +107,6 @@ impl OrganismMarker {
     }
 
     pub fn get_pos(&self, joint_query: &Query<&Transform, With<Joint>>) -> Vec2 {
-        // let test = self
-        //     .joint_ents
-        //     .iter()
-        //     .map(|j_ent| joint_query.get(*j_ent).unwrap().translation.truncate())
-        //     .collect::<Vec<Vec2>>();
-        // println!("{:?}", test);
-
         self.joint_ents
             .iter()
             .map(|j_ent| joint_query.get(*j_ent).unwrap().translation.truncate())

@@ -6,12 +6,10 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     config::config::{Mutation as MutationConfig, Transput as TransputConfig},
-    consts::{ENV_CELLS, KERNEL_CELLS, PHEROMONE_LAYERS},
+    consts::JOINT_RADIUS,
+    util::function::rand_vec2,
     world::{
-        environment::{
-            environment::{ConcreteEnv, Environment},
-            layer::layer_key::LayerKey,
-        },
+        environment::{environment::ConcreteEnv, layer::layer_key::LayerKey},
         organism::{
             mutation::mutation::Mut,
             node::{
@@ -59,7 +57,10 @@ impl Mut for NodeType {
         Some(match rng.random_range(0..=5) {
             0 => Self::Energy(Energy::new()),
             1 => Self::Decomposer(Decomposer::new()),
-            2 => Self::Read(Read::new(LayerKey::rand_read_layer(rng), rng)),
+            2 => Self::Read(Read::new(
+                LayerKey::rand_read_layer(rng),
+                rand_vec2(rng, JOINT_RADIUS),
+            )),
             3 => Self::Write(Write::new(LayerKey::rand_write_layer(rng))),
             4 => Self::Thruster(Thruster::new(rng.random_range(-PI..PI))),
             _ => Self::Spike(Spike::new()),
@@ -144,20 +145,24 @@ impl Transput<(&mut ConcreteEnv, Vec2, f32), (&ConcreteEnv, Vec2, f32)> for Node
 mod test {
     use bevy::math::vec2;
 
-    use crate::world::{
-        environment::layer::layer_key::LayerKey,
-        organism::{node::read::Read, node_type::NodeType},
+    use crate::{
+        consts::JOINT_RADIUS,
+        util::function::rand_vec2,
+        world::{
+            environment::layer::layer_key::LayerKey,
+            organism::{node::read::Read, node_type::NodeType},
+        },
     };
 
     #[test]
     fn foo() {
         let mut rng = rand::rng();
 
-        let mut a = Read::new(LayerKey::Energy, &mut rng);
+        let mut a = Read::new(LayerKey::Energy, rand_vec2(&mut rng, JOINT_RADIUS));
         a.read_offset = vec2(0.0, 0.0);
         let a = NodeType::Read(a);
 
-        let mut b = Read::new(LayerKey::Energy, &mut rng);
+        let mut b = Read::new(LayerKey::Energy, rand_vec2(&mut rng, JOINT_RADIUS));
         b.read_offset = vec2(0.0, 0.0);
         let b = NodeType::Read(b);
 

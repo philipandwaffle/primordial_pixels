@@ -116,7 +116,7 @@ impl Mut for Body {
                         NodeType::Read(read)
                     }
                     NodeType::Thruster(mut thruster) => {
-                        thruster.z_offset += rand_z_rot(rng, 0.25);
+                        thruster.z_rot_offset += rand_z_rot(rng, 0.25);
                         NodeType::Thruster(thruster)
                     }
                     _ => panic!(

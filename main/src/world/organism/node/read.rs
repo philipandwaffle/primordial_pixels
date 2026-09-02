@@ -9,7 +9,10 @@ use crate::{
     consts::{ENV_CELLS, JOINT_RADIUS, KERNEL_CELLS},
     util::function::rand_vec2,
     world::{
-        environment::{environment::{ConcreteEnv, Environment}, layer::layer_key::LayerKey},
+        environment::{
+            environment::{ConcreteEnv, Environment},
+            layer::layer_key::LayerKey,
+        },
         organism::transput::{Transput, append_input},
     },
 };
@@ -26,10 +29,10 @@ impl PartialEq for Read {
     }
 }
 impl Read {
-    pub fn new(layer_key: LayerKey, rng: &mut ThreadRng) -> Self {
+    pub fn new(layer_key: LayerKey, read_offset: Vec2) -> Self {
         Self {
             state: 0.0,
-            read_offset: rand_vec2(rng, JOINT_RADIUS),
+            read_offset,
             layer_key,
         }
     }

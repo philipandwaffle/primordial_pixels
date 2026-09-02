@@ -246,7 +246,7 @@ impl OrganismPlugin {
                     if let NodeType::Thruster(t) = node {
                         total_thrust += t.thrust;
                         total_z_rot += t.z_rot;
-                        total_z_rot += t.z_offset;
+                        total_z_rot += t.z_rot_offset;
                     }
                 }
                 total_z_rot = total_z_rot % PI;
@@ -275,7 +275,7 @@ impl OrganismPlugin {
         mut env: ResMut<ConcreteEnv>,
     ) {
         let dt = time.delta_secs();
-        for (child_of, joint, _) in joint_query.iter() {
+        for (child_of, joint, spike_trans) in joint_query.iter() {
             if let Some(spike_ent) = joint.spike {
                 let ent_blacklist = organism_query
                     .get(child_of.parent())
@@ -284,25 +284,25 @@ impl OrganismPlugin {
                     .clone();
 
                 // Iter through joint ents being impaled
+                let mut collected_energy = 0.0;
                 for impaled_joint_ent in contact_graph
                     .entities_colliding_with(spike_ent)
                     .filter(|e| !ent_blacklist.contains(e))
                 {
                     // Get only joints contacts
-                    if let Ok((child_of, _, trans)) = joint_query.get(impaled_joint_ent) {
+                    if let Ok((child_of, _, _)) = joint_query.get(impaled_joint_ent) {
                         let mut impaled_organism =
                             organism_query.get_mut(child_of.parent()).unwrap();
                         let delta = transput_config.spike_collect_rate * dt;
-                        let mut collected_energy = impaled_organism.impale(delta)
+                        collected_energy += impaled_organism.impale(delta)
                             * transput_config.spike_collect_efficiency;
-
-                        env.delta_value(
-                            &LayerKey::Decompose,
-                            trans.translation.truncate(),
-                            &mut collected_energy,
-                        );
                     }
                 }
+                env.delta_value(
+                    &LayerKey::Decompose,
+                    spike_trans.translation.truncate(),
+                    &mut collected_energy,
+                );
             }
         }
     }

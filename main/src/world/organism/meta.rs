@@ -24,10 +24,10 @@ impl Meta {
         let num_bones = o.body.bones.len() as f32;
         let num_muscles = o.body.muscles.len() as f32;
 
-        self.metabolic_cost = -(num_nodes * metabolism.node
-            + (num_joints * metabolism.joint)
-            + (num_bones * metabolism.bone)
-            + (num_muscles * metabolism.muscle));
+        self.metabolic_cost = -(f32::powf(num_nodes * metabolism.node, metabolism.node_exponent)
+            + f32::powf(num_joints * metabolism.joint, metabolism.joint_exponent)
+            + f32::powf(num_bones * metabolism.bone, metabolism.bone_exponent)
+            + f32::powf(num_muscles * metabolism.muscle, metabolism.muscle_exponent));
 
         self.max_energy = num_nodes * storage.node
             + (num_joints * storage.joint)

@@ -1,7 +1,8 @@
 {
     "debug": {
         "physics": false,
-        "performance": false
+        "performance": false,
+        "nodes": true
     },
     "camera": {
         "move_speed": 100.0,
@@ -60,20 +61,20 @@
                 "Pheromone": {
                     "kernel": {
                         "space": [
-                            0.1,
-                            0.1,
-                            0.1,
-                            0.1,
-                            0.1,
-                            0.1,
-                            0.1,
-                            0.1,
-                            0.1
+                            0.111,
+                            0.111,
+                            0.111,
+                            0.111,
+                            0.111,
+                            0.111,
+                            0.111,
+                            0.111,
+                            0.111
                         ],
                         "side_len": 3
                     },
                     "permeability": 0.05,
-                    "max": 50.0
+                    "max": 0.5
                 }
             }
         }
@@ -98,29 +99,33 @@
         },
         "metabolism": {
             "decay_multiplier": 0.9,
-            "reproduce_threshold": 0.8,
+            "reproduce_threshold": 1.8,
             "reproduce_cost": 0.6,
             "node": 0.1,
+            "node_exponent": 1.5,
             "joint": 0.2,
+            "joint_exponent": 0.7,
             "bone": 0.1,
-            "muscle": 0.0
+            "bone_exponent": 1.0,
+            "muscle": 0.0,
+            "muscle_exponent": 1.0
         },
         "storage": {
             "node": 0.2,
-            "joint": 2.0,
+            "joint": 10.0,
             "bone": 1.0,
             "muscle": 0.0
         },
         "transput": {
             "muscle_efficiency": 1.0,
-            "energy_collect_rate": 0.5,
+            "energy_collect_rate": 0.4,
             "decomposer_collect_rate": 2.0,
-            "pheromone_read_efficiency": 0.05,
-            "pheromone_write_efficiency": 0.05,
+            "pheromone_read_efficiency": 0.01,
+            "pheromone_write_efficiency": 0.01,
             "thruster_strength": 7.5,
-            "thruster_efficiency": 1.0,
+            "thruster_efficiency": 0.5,
             "spike_collect_rate": 4.0,
-            "spike_collect_efficiency": 0.75
+            "spike_collect_efficiency": 0.9
         }
     },
     "physics": {
@@ -136,9 +141,9 @@
     "runner": null,
     "petri_dish": {
         "init_seed": null,
-        "min_organisms": 20,
-        "initial_num_mutations": 1,
-        "num_mutations": 1,
+        "min_organisms": 1,
+        "initial_num_mutations": 0,
+        "num_mutations": 0,
         "side_len": 250.0,
         "display_update_interval": 0.25
     }

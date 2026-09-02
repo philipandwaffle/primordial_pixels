@@ -263,7 +263,8 @@ mod tests {
 
     use crate::{
         config::config::{Metabolism, Storage},
-        consts::{BASE_INPUT, BASE_OUTPUT, MUSCLE_IN_PRODUCE, MUSCLE_OUT_CONSUME},
+        consts::{BASE_INPUT, BASE_OUTPUT, JOINT_RADIUS, MUSCLE_IN_PRODUCE, MUSCLE_OUT_CONSUME},
+        util::function::rand_vec2,
         world::{
             environment::layer::layer_key::LayerKey,
             organism::{
@@ -287,7 +288,10 @@ mod tests {
                         vec2(-5.0, 0.0),
                         vec![
                             NodeType::Thruster(Thruster::new(0.0)),
-                            NodeType::Read(Read::new(LayerKey::Energy, &mut rng)),
+                            NodeType::Read(Read::new(
+                                LayerKey::Energy,
+                                rand_vec2(&mut rng, JOINT_RADIUS),
+                            )),
                         ],
                     ),
                     Joint::new(

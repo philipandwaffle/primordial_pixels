@@ -1,3 +1,4 @@
+use avian2d::math::PI;
 use bevy::math::{Vec2, vec2};
 use my_derive::ConfigTag;
 use rand::rngs::ThreadRng;
@@ -9,19 +10,23 @@ use crate::{
         config_tag::ConfigTag,
         plugin::load_config,
     },
-    world::organism::{
-        body::Body,
-        brain::Brain,
-        joint::Joint,
-        message::{SpawnEggMsg, SpawnOrganismMsg},
-        mutation::{
-            brain::Brain as BrainMut,
-            mutation::{Mut, Mutable, Mutation as OrgMut},
+    util::function::z_rot_to_dir,
+    world::{
+        environment::layer::layer_key::LayerKey,
+        organism::{
+            body::Body,
+            brain::Brain,
+            joint::Joint,
+            message::{SpawnEggMsg, SpawnOrganismMsg},
+            mutation::{
+                brain::Brain as BrainMut,
+                mutation::{Mut, Mutable, Mutation as OrgMut},
+            },
+            node::{energy::Energy, read::Read, spike::Spike, thruster::Thruster},
+            node_type::NodeType,
+            organism::Organism,
+            util_trait::OrganismAccessor,
         },
-        node::{energy::Energy, spike::Spike, thruster::Thruster},
-        node_type::NodeType,
-        organism::Organism,
-        util_trait::OrganismAccessor,
     },
 };
 
@@ -36,14 +41,23 @@ impl Default for Seed {
         Self {
             pos: Default::default(),
             organism: Organism::new(
-                // Some(Brain::new(vec![1, 5, 5, 2])),
-                None,
+                Some(Brain::new(vec![7, 5, 5, 2])),
+                // None,
                 Body::new(
                     vec![Joint::new(
                         vec2(0.0, 0.0),
                         vec![
                             NodeType::Energy(Energy::new()),
-                            // NodeType::Spike(Spike::new()),
+                            NodeType::Thruster(Thruster::new(0.0)),
+                            NodeType::Read(Read::new(LayerKey::Energy, z_rot_to_dir(0.0))),
+                            NodeType::Read(Read::new(
+                                LayerKey::Energy,
+                                z_rot_to_dir(2.0 / 3.0 * PI),
+                            )),
+                            NodeType::Read(Read::new(
+                                LayerKey::Energy,
+                                z_rot_to_dir(4.0 / 3.0 * PI),
+                            )),
                         ],
                     )],
                     vec![],
