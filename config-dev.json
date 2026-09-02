@@ -1,0 +1,150 @@
+{
+    "debug": {
+        "physics": false,
+        "performance": false,
+        "nodes": true
+    },
+    "camera": {
+        "move_speed": 100.0,
+        "zoom_speed": 0.5,
+        "min_zoom": 0.01,
+        "max_zoom": null
+    },
+    "environment": {
+        "side_len": 250.0,
+        "layers": {
+            "Energy": {
+                "Energy": {
+                    "kernel": {
+                        "space": [
+                            0.111111111111111,
+                            0.111111111111111,
+                            0.111111111111111,
+                            0.111111111111111,
+                            0.111111111111111,
+                            0.111111111111111,
+                            0.111111111111111,
+                            0.111111111111111,
+                            0.111111111111111
+                        ],
+                        "side_len": 3
+                    },
+                    "permeability": 0.2,
+                    "max": 5.0,
+                    "rate": 0.1,
+                    "on_interval": 30.0,
+                    "off_interval": 60.0
+                }
+            },
+            "Decompose": {
+                "Decompose": {
+                    "kernel": {
+                        "space": [
+                            0.111111111111111,
+                            0.111111111111111,
+                            0.111111111111111,
+                            0.111111111111111,
+                            0.111111111111111,
+                            0.111111111111111,
+                            0.111111111111111,
+                            0.111111111111111,
+                            0.111111111111111
+                        ],
+                        "side_len": 3
+                    },
+                    "initial_value": 0.0,
+                    "permeability": 0.05,
+                    "max": 50.0
+                }
+            },
+            "Pheromone_0": {
+                "Pheromone": {
+                    "kernel": {
+                        "space": [
+                            0.111,
+                            0.111,
+                            0.111,
+                            0.111,
+                            0.111,
+                            0.111,
+                            0.111,
+                            0.111,
+                            0.111
+                        ],
+                        "side_len": 3
+                    },
+                    "permeability": 0.05,
+                    "max": 0.5
+                }
+            }
+        }
+    },
+    "organism": {
+        "mutation": {
+            "rate": 0.05,
+            "distribution": [
+                0.02,
+                0.12,
+                0.12,
+                0.12,
+                0.12,
+                0.12,
+                0.95,
+                0.95,
+                0.95,
+                0.95
+            ],
+            "learn_rate": 0.5,
+            "learn_factor": 0.1
+        },
+        "metabolism": {
+            "decay_multiplier": 0.9,
+            "reproduce_threshold": 1.8,
+            "reproduce_cost": 0.6,
+            "node": 0.1,
+            "node_exponent": 1.5,
+            "joint": 0.2,
+            "joint_exponent": 0.7,
+            "bone": 0.1,
+            "bone_exponent": 1.0,
+            "muscle": 0.0,
+            "muscle_exponent": 1.0
+        },
+        "storage": {
+            "node": 0.2,
+            "joint": 10.0,
+            "bone": 1.0,
+            "muscle": 0.0
+        },
+        "transput": {
+            "muscle_efficiency": 1.0,
+            "energy_collect_rate": 0.4,
+            "decomposer_collect_rate": 2.0,
+            "pheromone_read_efficiency": 0.01,
+            "pheromone_write_efficiency": 0.01,
+            "thruster_strength": 7.5,
+            "thruster_efficiency": 0.5,
+            "spike_collect_rate": 4.0,
+            "spike_collect_efficiency": 0.9
+        }
+    },
+    "physics": {
+        "gravity_scale": [
+            0.0,
+            0.0
+        ]
+    },
+    "save": {
+        "log_dir": "./saves/generation",
+        "load_dir": null
+    },
+    "runner": null,
+    "petri_dish": {
+        "init_seed": null,
+        "min_organisms": 1,
+        "initial_num_mutations": 0,
+        "num_mutations": 0,
+        "side_len": 250.0,
+        "display_update_interval": 0.25
+    }
+}
