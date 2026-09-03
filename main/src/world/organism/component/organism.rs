@@ -118,6 +118,14 @@ impl OrganismMarker {
             / (self.joint_ents.len() as f32)
     }
 
+    pub fn get_pos_from_mut(&self, joint_query: &Query<&mut Transform, With<Joint>>) -> Vec2 {
+        self.joint_ents
+            .iter()
+            .map(|j_ent| joint_query.get(*j_ent).unwrap().translation.truncate())
+            .sum::<Vec2>()
+            / (self.joint_ents.len() as f32)
+    }
+
     pub fn update_variable_stats(&mut self, dt: f32) {
         self.variable_stats.time_alive += dt;
     }

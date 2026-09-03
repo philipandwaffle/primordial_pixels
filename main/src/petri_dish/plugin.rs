@@ -4,11 +4,12 @@ use bevy::{
     ecs::{
         entity::Entity,
         message::MessageWriter,
-        query::{Or, With},
+        query::{Or, With, Without},
+        schedule::And,
         system::{Query, Res, ResMut},
     },
     log::info,
-    math::{Vec2, vec2},
+    math::{Vec2, Vec3, vec2},
     transform::components::Transform,
 };
 use my_derive::ConfigTag;
@@ -25,7 +26,7 @@ use crate::{
     world::{
         environment::plugin::EnvironmentPlugin,
         organism::{
-            component::{egg::Egg, joint::Joint, organism::OrganismMarker},
+            component::{bone::Bone, egg::Egg, joint::Joint, organism::OrganismMarker},
             message::{DespawnOrganismMsg, SpawnEggMsg, SpawnOrganismMsg},
             seed::Seed,
         },
@@ -54,7 +55,7 @@ impl Plugin for PetriDishPlugin {
         ))
         .add_plugins(EnvironmentPlugin::new(self.display_update_interval))
         .add_systems(First, Self::replenish_organisms);
-        app.add_systems(PostUpdate, (Self::evaluate_organisms, Self::nudge));
+        app.add_systems(PostUpdate, (Self::evaluate_organisms, Self::warp));
     }
 }
 
@@ -79,6 +80,36 @@ impl PetriDishPlugin {
 
             if nudge != Vec2::ZERO {
                 forces.apply_force(nudge);
+            }
+        }
+    }
+
+    fn warp(
+        info: Res<PetriDishInfo>,
+        mut joints: Query<&mut Transform, With<Joint>>,
+        mut bones: Query<&mut Transform, (With<Bone>, Without<Joint>)>,
+        organisms: Query<&OrganismMarker>,
+    ) {
+        for o in organisms.iter() {
+            let pos = o.get_pos_from_mut(&joints);
+
+            let delta = (info.threshold * 2.0) - info.boundary_width * 0.5;
+            let offset = match (pos.x.abs() > info.threshold, pos.y.abs() > info.threshold) {
+                (true, true) => vec2(delta * pos.x.signum(), delta * pos.y.signum()),
+                (true, false) => vec2(delta * pos.x.signum(), 0.0),
+                (false, true) => vec2(0.0, delta * pos.y.signum()),
+                _ => continue,
+            };
+
+            for j_ent in o.joint_ents.iter() {
+                if let Ok(mut j_trans) = joints.get_mut(*j_ent) {
+                    j_trans.translation -= offset.extend(0.0);
+                }
+            }
+            for b_ent in o.bone_ents.iter() {
+                if let Ok(mut b_trans) = bones.get_mut(*b_ent) {
+                    b_trans.translation -= offset.extend(0.0);
+                }
             }
         }
     }

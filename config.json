@@ -144,7 +144,7 @@
         "min_organisms": 50,
         "initial_num_mutations": 1,
         "num_mutations": 1,
-        "boundary_width": 25.0,
+        "boundary_width": 5.0,
         "side_len": 250.0,
         "display_update_interval": 0.25
     }

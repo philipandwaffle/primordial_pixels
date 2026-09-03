@@ -41,22 +41,30 @@ impl Default for Seed {
         Self {
             pos: Default::default(),
             organism: Organism::new(
-                Some(Brain::new(vec![7, 16, 16, 16, 16, 6])),
+                Some(vec![16, 16, 16, 16]),
                 // None,
                 Body::new(
                     vec![Joint::new(
                         vec2(0.0, 0.0),
-                        vec![
-                            NodeType::Energy(Energy::new()),
-                            NodeType::Thruster(Thruster::new(0.0)),
-                            NodeType::Read(Read::new(LayerKey::Energy, 0.0, 2.0)),
-                            NodeType::Read(Read::new(LayerKey::Energy, 2.0 / 3.0 * PI, 2.0)),
-                            NodeType::Read(Read::new(LayerKey::Energy, 4.0 / 3.0 * PI, 2.0)),
-                        ],
+                        vec![NodeType::Energy(Energy::new())],
                     )],
                     vec![],
                     vec![],
                 ),
+                // Body::new(
+                //     vec![Joint::new(
+                //         vec2(0.0, 0.0),
+                //         vec![
+                //             NodeType::Energy(Energy::new()),
+                //             NodeType::Thruster(Thruster::new(0.0)),
+                //             NodeType::Read(Read::new(LayerKey::Energy, 0.0, 2.0)),
+                //             NodeType::Read(Read::new(LayerKey::Energy, 2.0 / 3.0 * PI, 2.0)),
+                //             NodeType::Read(Read::new(LayerKey::Energy, 4.0 / 3.0 * PI, 2.0)),
+                //         ],
+                //     )],
+                //     vec![],
+                //     vec![],
+                // ),
                 cfg.organism.metabolism,
                 cfg.organism.storage,
             ),
@@ -158,7 +166,7 @@ mod test {
         let seed = Seed::new(
             vec2(0.0, 0.0),
             Organism::new(
-                Some(Brain::default()),
+                None,
                 Body::new(vec![Joint::new(vec2(0.0, 0.0), vec![])], vec![], vec![]),
                 config.organism.metabolism,
                 config.organism.storage,

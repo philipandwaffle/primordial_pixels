@@ -47,13 +47,13 @@ pub const MIN_BONE_LEN: f32 = JOINT_RADIUS * 2.5;
 pub const MAX_BONE_LEN: f32 = JOINT_RADIUS * 2.0 * 5.0;
 
 // Brain
-const MEMORY: usize = 0;
+pub const MEMORY: usize = 0;
 
 // mem + energy + metronome
 pub const BASE_INPUT: usize = MEMORY + 2;
 
 // mem + reproduce
-pub const BASE_OUTPUT: usize = MEMORY + 0;
+pub const BASE_OUTPUT: usize = MEMORY + 1;
 
 // 3 slots for random stuff,
 pub const BASE_BRAIN_STRUCTURE: [usize; 6] = [BASE_INPUT, 15, 15, 15, 15, BASE_OUTPUT];

@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     config::config_tag::ConfigTag,
-    consts::{BASE_BRAIN_STRUCTURE, BASE_INPUT, BASE_OUTPUT},
+    consts::{BASE_BRAIN_STRUCTURE, BASE_INPUT, BASE_OUTPUT, MEMORY},
     world::{
         matrix::MxNMatrix as Matrix,
         organism::mutation::{
@@ -77,7 +77,7 @@ impl Brain {
         return Self {
             weights,
             biases,
-            memory: vec![0.0; BASE_OUTPUT],
+            memory: vec![0.0; MEMORY],
             input: VecDeque::from(vec![0.0; BASE_INPUT]),
             output: VecDeque::from(vec![0.0; BASE_OUTPUT]),
         };

@@ -12,7 +12,7 @@ use bevy::{
         query::{With, Without},
         system::{Commands, Query, Res, ResMut},
     },
-    math::{Quat, vec3},
+    math::{Quat, Vec2, VectorSpace, vec3},
     sprite_render::{ColorMaterial, MeshMaterial2d},
     time::Time,
     transform::components::Transform,

@@ -3,7 +3,10 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     config::config::{Metabolism, Storage},
-    consts::{BASE_INPUT, BASE_OUTPUT, JOINT_RADIUS, MUSCLE_IN_PRODUCE, MUSCLE_OUT_CONSUME},
+    consts::{
+        BASE_BRAIN_STRUCTURE, BASE_INPUT, BASE_OUTPUT, JOINT_RADIUS, MUSCLE_IN_PRODUCE,
+        MUSCLE_OUT_CONSUME,
+    },
     world::organism::{
         body::Body,
         brain::Brain,
@@ -156,7 +159,39 @@ impl Mutable for Organism {
     }
 }
 impl Organism {
-    pub fn new(brain: Option<Brain>, body: Body, metabolism: Metabolism, storage: Storage) -> Self {
+    pub fn new(
+        brain_hidden_layer: Option<Vec<usize>>,
+        body: Body,
+        metabolism: Metabolism,
+        storage: Storage,
+    ) -> Self {
+        let brain = match brain_hidden_layer {
+            Some(mut hidden_layer) => {
+                let mut structure = vec![
+                    BASE_INPUT
+                        + body
+                            .joints
+                            .iter()
+                            .map(|j| j.nodes.iter().map(|n| n.inputs_produced()).sum::<usize>())
+                            .sum::<usize>(),
+                ];
+                structure.append(&mut hidden_layer);
+                structure.push(
+                    BASE_OUTPUT
+                        + body
+                            .joints
+                            .iter()
+                            .map(|j| j.nodes.iter().map(|n| n.outputs_consumed()).sum::<usize>())
+                            .sum::<usize>(),
+                );
+
+                println!("{structure:?}");
+
+                Some(Brain::new(structure))
+            }
+            None => None,
+        };
+
         let mut me = Self {
             brain,
             body,
@@ -281,7 +316,7 @@ mod tests {
     fn get_organism() -> Organism {
         let mut rng = rand::rng();
         Organism::new(
-            Some(Brain::new(vec![2, 4, 1])),
+            Some(vec![4]),
             Body::new(
                 vec![
                     Joint::new(
