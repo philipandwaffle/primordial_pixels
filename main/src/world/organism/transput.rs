@@ -36,17 +36,6 @@ pub trait Transput<C, P> {
     }
 }
 
-// pub trait TransputUtil<C, P> {
-//     fn remove_output(output: &mut VecDeque<f32>) -> f32 {
-//         output.pop_back().unwrap()
-//     }
-
-//     fn append_input(input: &mut VecDeque<f32>, val: f32) {
-//         input.push_front(val);
-//     }
-// }
-// impl<C, P, T> TransputUtil<C, P> for T where T: Transput<C, P> {}
-
 pub fn remove_output(output: &mut VecDeque<f32>) -> f32 {
     output.pop_back().unwrap()
 }

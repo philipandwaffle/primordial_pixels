@@ -30,6 +30,8 @@ pub const BONE_WIDTH: f32 = 0.5;
 pub const MUSCLE_WIDTH: f32 = 0.4;
 pub const THRUSTER_WIDTH: f32 = 0.5;
 pub const THRUSTER_BASE_LENGTH: f32 = -2.0;
+pub const READ_WRITE_MIN_DIST: f32 = JOINT_RADIUS;
+pub const READ_WRITE_MAX_DIST: f32 = JOINT_RADIUS * 4.0;
 pub const SPIKE_RADIUS: f32 = JOINT_RADIUS * 4.0;
 
 // Muscle
@@ -46,7 +48,11 @@ pub const MAX_BONE_LEN: f32 = JOINT_RADIUS * 2.0 * 5.0;
 
 // Brain
 const MEMORY: usize = 0;
+
+// mem + energy + metronome
 pub const BASE_INPUT: usize = MEMORY + 2;
+
+// mem + reproduce
 pub const BASE_OUTPUT: usize = MEMORY + 0;
 
 // 3 slots for random stuff,

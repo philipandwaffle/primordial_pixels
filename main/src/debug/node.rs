@@ -7,9 +7,12 @@ use bevy::{
     transform::components::Transform,
 };
 
-use crate::world::organism::{
-    component::{joint::Joint, organism::OrganismMarker},
-    node_type::NodeType,
+use crate::{
+    util::function::z_rot_to_dir,
+    world::organism::{
+        component::{joint::Joint, organism::OrganismMarker},
+        node_type::NodeType,
+    },
 };
 
 pub struct NodeDebugPlugin;
@@ -36,7 +39,10 @@ impl NodeDebugPlugin {
                                     Isometry3d {
                                         rotation: Quat::IDENTITY,
                                         translation: Vec3A::from(
-                                            joint_trans.translation + read.read_offset.extend(0.0),
+                                            joint_trans.translation
+                                                + (z_rot_to_dir(read.z_rot + read.z_rot_offset)
+                                                    * read.dist)
+                                                    .extend(0.0),
                                         ),
                                     },
                                     0.01,

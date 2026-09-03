@@ -59,7 +59,8 @@ impl Mut for NodeType {
             1 => Self::Decomposer(Decomposer::new()),
             2 => Self::Read(Read::new(
                 LayerKey::rand_read_layer(rng),
-                rand_vec2(rng, JOINT_RADIUS),
+                rng.random_range(-PI..PI),
+                rng.random_range(JOINT_RADIUS..JOINT_RADIUS * 4.0),
             )),
             3 => Self::Write(Write::new(LayerKey::rand_write_layer(rng))),
             4 => Self::Thruster(Thruster::new(rng.random_range(-PI..PI))),
@@ -141,32 +142,32 @@ impl Transput<(&mut ConcreteEnv, Vec2, f32), (&ConcreteEnv, Vec2, f32)> for Node
     }
 }
 
-#[cfg(test)]
-mod test {
-    use bevy::math::vec2;
+// #[cfg(test)]
+// mod test {
+//     use bevy::math::vec2;
 
-    use crate::{
-        consts::JOINT_RADIUS,
-        util::function::rand_vec2,
-        world::{
-            environment::layer::layer_key::LayerKey,
-            organism::{node::read::Read, node_type::NodeType},
-        },
-    };
+//     use crate::{
+//         consts::JOINT_RADIUS,
+//         util::function::rand_vec2,
+//         world::{
+//             environment::layer::layer_key::LayerKey,
+//             organism::{node::read::Read, node_type::NodeType},
+//         },
+//     };
 
-    #[test]
-    fn foo() {
-        let mut rng = rand::rng();
+//     #[test]
+//     fn foo() {
+//         let mut rng = rand::rng();
 
-        let mut a = Read::new(LayerKey::Energy, rand_vec2(&mut rng, JOINT_RADIUS));
-        a.read_offset = vec2(0.0, 0.0);
-        let a = NodeType::Read(a);
+//         let mut a = Read::new(LayerKey::Energy, rand_vec2(&mut rng, JOINT_RADIUS));
+//         a.read_offset = vec2(0.0, 0.0);
+//         let a = NodeType::Read(a);
 
-        let mut b = Read::new(LayerKey::Energy, rand_vec2(&mut rng, JOINT_RADIUS));
-        b.read_offset = vec2(0.0, 0.0);
-        let b = NodeType::Read(b);
+//         let mut b = Read::new(LayerKey::Energy, rand_vec2(&mut rng, JOINT_RADIUS));
+//         b.read_offset = vec2(0.0, 0.0);
+//         let b = NodeType::Read(b);
 
-        let nodes = vec![a];
-        println!("{:?} {:?} {:?}", a, b, nodes.contains(&b));
-    }
-}
+//         let nodes = vec![a];
+//         println!("{:?} {:?} {:?}", a, b, nodes.contains(&b));
+//     }
+// }

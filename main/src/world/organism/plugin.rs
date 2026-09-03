@@ -35,7 +35,7 @@ use crate::{
             },
             message::{DespawnOrganismMsg, SpawnEggMsg, SpawnOrganismMsg},
             node_type::NodeType,
-            transput::{Transput, append_input},
+            transput::{Transput, append_input, remove_output},
             util_trait::OrganismAccessor,
         },
     },
@@ -101,7 +101,8 @@ impl OrganismPlugin {
                     let beat = (organism_ent.get_variable_stats().time_alive % mb) / mb;
                     let energy_level = (2.0 * organism_ent.get_energy_level()) - 1.0;
 
-                    append_input(&mut input, beat);
+                    // append_input(&mut input, beat);
+                    append_input(&mut input, 0.0);
                     append_input(&mut input, energy_level);
 
                     input
@@ -158,6 +159,7 @@ impl OrganismPlugin {
                 None => VecDeque::with_capacity(0),
             };
 
+            organism_ent.turned_off = remove_output(&mut output) > 0.5;
             // joint output
             if let Some(mut env) = env.as_mut() {
                 for joint_ent in organism_ent.joint_ents.iter() {

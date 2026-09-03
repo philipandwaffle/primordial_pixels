@@ -288,10 +288,7 @@ mod tests {
                         vec2(-5.0, 0.0),
                         vec![
                             NodeType::Thruster(Thruster::new(0.0)),
-                            NodeType::Read(Read::new(
-                                LayerKey::Energy,
-                                rand_vec2(&mut rng, JOINT_RADIUS),
-                            )),
+                            NodeType::Read(Read::new(LayerKey::Energy, 0.0, 0.0)),
                         ],
                     ),
                     Joint::new(

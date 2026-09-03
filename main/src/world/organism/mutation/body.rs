@@ -5,7 +5,7 @@ use rand::{Rng, rngs::ThreadRng, seq::SliceRandom};
 
 use crate::{
     config::config::Mutation as MutationConfig,
-    consts::{JOINT_RADIUS, MAX_BONE_LEN, MIN_BONE_LEN},
+    consts::{MAX_BONE_LEN, MIN_BONE_LEN, READ_WRITE_MAX_DIST, READ_WRITE_MIN_DIST},
     util::function::{rand_normal_vec2, rand_vec2, rand_z_rot, shuffled_indexes},
     world::organism::{
         distribution::Distribution,
@@ -112,7 +112,10 @@ impl Mut for Body {
                 let node = o.body.joints[*joint].nodes[node_i];
                 let node_type = match node {
                     NodeType::Read(mut read) => {
-                        read.read_offset += rand_vec2(rng, JOINT_RADIUS);
+                        read.z_rot;
+                        read.dist += rng.random_range(-0.5..0.5);
+                        read.dist = read.dist.clamp(READ_WRITE_MIN_DIST, READ_WRITE_MAX_DIST);
+
                         NodeType::Read(read)
                     }
                     NodeType::Thruster(mut thruster) => {

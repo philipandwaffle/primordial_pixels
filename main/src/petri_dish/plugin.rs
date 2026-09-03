@@ -8,7 +8,7 @@ use bevy::{
         system::{Query, Res, ResMut},
     },
     log::info,
-    math::vec2,
+    math::{Vec2, vec2},
     transform::components::Transform,
 };
 use my_derive::ConfigTag;
@@ -66,13 +66,19 @@ impl PetriDishPlugin {
         for (mut forces, trans) in joint_query.iter_mut() {
             let pos = trans.translation.truncate();
 
-            let x = pos.x.abs();
-            let y = pos.y.abs();
+            let x_abs = pos.x.abs();
+            let y_abs = pos.y.abs();
 
-            if x > info.threshold || y > info.threshold {
-                let dist = x.max(y) - info.threshold;
+            let mut nudge = Vec2::ZERO;
+            if x_abs > info.threshold {
+                nudge.x = (info.threshold * pos.x.signum()) - pos.x;
+            }
+            if y_abs > info.threshold {
+                nudge.y = (info.threshold * pos.y.signum()) - pos.y;
+            }
 
-                forces.apply_force(-pos.normalize() * (1.0 + dist.pow(2.0)));
+            if nudge != Vec2::ZERO {
+                forces.apply_force(nudge);
             }
         }
     }
@@ -84,6 +90,12 @@ impl PetriDishPlugin {
         metabolism: Res<Metabolism>,
         storage: Res<Storage>,
     ) {
+        // Guarantee mutation occurs on spawn
+        let mut mutation_config = mutation_config.clone();
+        mutation_config.rate = 1.0;
+        mutation_config.learn_rate = 1.0;
+        mutation_config.learn_factor = 1.0;
+
         let to_spawn = info
             .min_organisms
             .checked_sub(info.cur_organisms)

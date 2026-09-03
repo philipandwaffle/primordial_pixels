@@ -27,6 +27,7 @@ use crate::{
 pub struct OrganismMarker {
     pub organism: Organism,
     cur_energy: f32,
+    pub turned_off: bool,
     variable_stats: VariableStats,
     pub joint_ents: Vec<Entity>,
     pub bone_ents: Vec<Entity>,
@@ -54,6 +55,7 @@ impl OrganismMarker {
         Self {
             organism,
             cur_energy: max_energy * 0.2,
+            turned_off: false,
             variable_stats: VariableStats::new(),
             joint_ents: joints,
             bone_ents: bones,
@@ -98,7 +100,9 @@ impl OrganismMarker {
         metabolism: &Metabolism,
         joint_query: &Query<&Transform, With<Joint>>,
     ) -> Option<Seed> {
-        if self.cur_energy <= self.organism.meta.max_energy * metabolism.reproduce_threshold {
+        if self.turned_off
+            || self.cur_energy <= self.organism.meta.max_energy * metabolism.reproduce_cost
+        {
             return None;
         }
 

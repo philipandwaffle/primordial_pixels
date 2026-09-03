@@ -29,11 +29,11 @@
                         ],
                         "side_len": 3
                     },
-                    "permeability": 0.2,
+                    "permeability": 0.3,
                     "max": 5.0,
-                    "rate": 0.1,
+                    "rate": 0.025,
                     "on_interval": 30.0,
-                    "off_interval": 60.0
+                    "off_interval": 0.0
                 }
             },
             "Decompose": {
@@ -81,20 +81,20 @@
     },
     "organism": {
         "mutation": {
-            "rate": 0.05,
+            "rate": 0.01,
             "distribution": [
-                0.02,
-                0.12,
-                0.12,
-                0.12,
-                0.12,
-                0.12,
-                0.95,
-                0.95,
-                0.95,
-                0.95
+                0.1,
+                0.1,
+                0.1,
+                0.1,
+                0.1,
+                0.1,
+                0.1,
+                0.1,
+                0.1,
+                0.1
             ],
-            "learn_rate": 0.5,
+            "learn_rate": 0.1,
             "learn_factor": 0.1
         },
         "metabolism": {
@@ -118,7 +118,7 @@
         },
         "transput": {
             "muscle_efficiency": 1.0,
-            "energy_collect_rate": 1.0,
+            "energy_collect_rate": 0.8,
             "decomposer_collect_rate": 2.0,
             "pheromone_read_efficiency": 0.001,
             "pheromone_write_efficiency": 0.01,

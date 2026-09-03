@@ -91,7 +91,7 @@ pub struct Mutation {
 #[derive(ConfigTag, Default, Serialize, Deserialize, Clone, Copy, Resource)]
 pub struct Metabolism {
     pub decay_multiplier: f32,
-    pub reproduce_threshold: f32,
+    // pub reproduce_threshold: f32,
     pub reproduce_cost: f32,
     pub node: f32,
     pub node_exponent: f32,
