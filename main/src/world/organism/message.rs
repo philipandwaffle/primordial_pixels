@@ -3,23 +3,25 @@ use avian2d::{
     prelude::{
         Collider, DistanceJoint, LinearDamping, LockedAxes, RevoluteJoint, RigidBody, Sensor,
     },
+    spatial_query::RayCaster,
 };
 use bevy::{
     ecs::{
         entity::Entity, hierarchy::ChildOf, message::Message, relationship::RelatedSpawnerCommands,
         system::Commands,
     },
-    math::{Quat, Vec2, Vec3, vec2, vec3},
+    math::{Dir2, Quat, Vec2, Vec3, vec2, vec3},
     transform::components::Transform,
 };
 
 use rand::rngs::ThreadRng;
+use rand_distr::num_traits;
 
 use crate::{
     assets::handles::{Handles, MatKey, MeshKey},
     config::config::Storage,
     consts::{
-        BONE_WIDTH, BONE_Z, EGG_Z, JOINT_RADIUS, JOINT_Z, LINEAR_DAMPING, MIN_EGG_RADIUS,
+        BONE_WIDTH, BONE_Z, EGG_Z, EYE_Z, JOINT_RADIUS, JOINT_Z, LINEAR_DAMPING, MIN_EGG_RADIUS,
         MUSCLE_COMPLIANCE, MUSCLE_WIDTH, MUSCLE_Z, SPIKE_RADIUS, SPIKE_Z, THRUSTER_BASE_LENGTH,
         THRUSTER_WIDTH, THRUSTER_Z,
     },
@@ -28,10 +30,13 @@ use crate::{
         component::{
             bone::Bone,
             egg::Egg,
-            joint::{Joint as JointComp, Spike as SpikeComp, Thruster as ThrusterComp},
+            joint::{
+                Eye as EyeComp, Joint as JointComp, Spike as SpikeComp, Thruster as ThrusterComp,
+            },
             muscle::Muscle,
             organism::OrganismMarker,
         },
+        node::eye::Eye,
         node_type::NodeType,
         organism::Organism,
     },
@@ -144,10 +149,12 @@ impl SpawnOrganismMsg {
     pub fn spawn_joint(pos: Vec2, nodes: &Vec<NodeType>, c: &mut Commands, h: &Handles) -> Entity {
         let mut thruster_ent = None;
         let mut spike_ent = None;
+        let mut eye_ent = None;
         for n in nodes {
             match n {
                 NodeType::Thruster(_) => thruster_ent = Some(Self::spawn_thruster(c, h)),
                 NodeType::Spike(_) => spike_ent = Some(Self::spawn_spike(c, h)),
+                NodeType::Eye(eye) => eye_ent = Some(Self::spawn_eye(c, h, eye)),
                 _ => {}
             }
         }
@@ -173,6 +180,9 @@ impl SpawnOrganismMsg {
         }
         if let Some(spike_ent) = spike_ent {
             c.entity(joint_ent).add_child(spike_ent);
+        }
+        if let Some(eye_ent) = eye_ent {
+            c.entity(joint_ent).add_child(eye_ent);
         }
 
         joint_ent
@@ -222,6 +232,44 @@ impl SpawnOrganismMsg {
             spike(c, h, 0.02, PI * 0.444444);
         })
         .id()
+    }
+
+    pub fn spawn_eye(c: &mut Commands, h: &Handles, eye: &Eye) -> Entity {
+        c.spawn((EyeComp, Transform::default()))
+            .with_children(|c| {
+                fn ray(
+                    c: &mut RelatedSpawnerCommands<ChildOf>,
+                    h: &Handles,
+                    z_rot: f32,
+                    ray_dist: f32,
+                ) {
+                    c.spawn((
+                        Transform::default()
+                            .with_translation(vec3(0.0, 0.0, EYE_Z))
+                            .with_scale(vec3(0.02, ray_dist, 1.0))
+                            .with_rotation(Quat::from_rotation_z(z_rot)),
+                        RayCaster::default()
+                            .with_solidness(false)
+                            .with_max_distance(ray_dist),
+                        h.get_mesh2d(&MeshKey::Rectangle),
+                        h.get_mat2d(&MatKey::LightGrey),
+                    ));
+                }
+
+                let num_rays = eye.get_num_rays();
+                let z_rot = eye.get_z_rot();
+                let fov = eye.get_fov();
+                let ray_dist = eye.get_ray_dist();
+
+                let mut cur_z_rot = z_rot - (fov * 0.5);
+                let step = fov / num_rays as f32;
+
+                for _ in 0..num_rays {
+                    ray(c, h, cur_z_rot, ray_dist);
+                    cur_z_rot += step;
+                }
+            })
+            .id()
     }
 
     fn spawn_bone(

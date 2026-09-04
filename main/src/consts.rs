@@ -13,6 +13,7 @@ pub const MUSCLE_Z: f32 = ORGANISM_Z - 0.3;
 
 pub const THRUSTER_Z: f32 = JOINT_Z - 0.1;
 pub const SPIKE_Z: f32 = JOINT_Z - 0.2;
+pub const EYE_Z: f32 = JOINT_Z - 0.3;
 
 pub const DISPLAY_Z: f32 = -1.0;
 

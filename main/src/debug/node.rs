@@ -52,6 +52,7 @@ impl NodeDebugPlugin {
                             NodeType::Write(write) => {}
                             NodeType::Thruster(thruster) => {}
                             NodeType::Spike(spike) => {}
+                            NodeType::Eye(eye) => {}
                         }
                     }
                 }

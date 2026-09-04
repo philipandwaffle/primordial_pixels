@@ -23,3 +23,6 @@ pub struct Thruster;
 
 #[derive(Component)]
 pub struct Spike;
+
+#[derive(Component)]
+pub struct Eye;

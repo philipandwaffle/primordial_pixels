@@ -13,7 +13,7 @@ use crate::{
         organism::{
             mutation::mutation::Mut,
             node::{
-                decomposer::Decomposer, energy::Energy, read::Read, spike::Spike,
+                decomposer::Decomposer, energy::Energy, eye::Eye, read::Read, spike::Spike,
                 thruster::Thruster, write::Write,
             },
             organism::Organism,
@@ -30,6 +30,7 @@ pub enum NodeType {
     Write(Write),
     Thruster(Thruster),
     Spike(Spike),
+    Eye(Eye),
 }
 impl NodeType {
     pub fn can_alter(&self) -> bool {
@@ -48,6 +49,7 @@ impl PartialEq for NodeType {
             (Self::Write(_), Self::Write(_)) => true,
             (Self::Thruster(a), Self::Thruster(b)) => a == b,
             (Self::Spike(_), Self::Spike(_)) => true,
+            (Self::Eye(a), Self::Eye(b)) => a == b,
             _ => false,
         }
     }
@@ -88,10 +90,15 @@ impl Transput<(&mut ConcreteEnv, Vec2, f32), (&ConcreteEnv, Vec2, f32)> for Node
                 pheromone_write.consume_outputs(e, out, transput_config, args)
             }
             NodeType::Thruster(thruster) => {
-                thruster.consume_outputs(e, out, transput_config, args.2)
+                let (_, _, dt) = args;
+                thruster.consume_outputs(e, out, transput_config, dt)
             }
             NodeType::Spike(spike) => {
-                spike.consume_outputs(e, out, transput_config, args.2);
+                let (_, _, dt) = args;
+                spike.consume_outputs(e, out, transput_config, dt);
+            }
+            NodeType::Eye(eye) => {
+                eye.consume_outputs(e, out, transput_config, ());
             }
         };
     }
@@ -116,6 +123,10 @@ impl Transput<(&mut ConcreteEnv, Vec2, f32), (&ConcreteEnv, Vec2, f32)> for Node
             }
             NodeType::Thruster(thruster) => thruster.produce_inputs(e, input, transput_config, ()),
             NodeType::Spike(spike) => spike.produce_inputs(e, input, transput_config, ()),
+            NodeType::Eye(eye) => {
+                let (_, _, dt) = args;
+                eye.produce_inputs(e, input, transput_config, dt);
+            }
         };
     }
 
@@ -127,6 +138,7 @@ impl Transput<(&mut ConcreteEnv, Vec2, f32), (&ConcreteEnv, Vec2, f32)> for Node
             NodeType::Write(pheromone_write) => pheromone_write.outputs_consumed(),
             NodeType::Thruster(thruster) => thruster.outputs_consumed(),
             NodeType::Spike(spike) => spike.outputs_consumed(),
+            NodeType::Eye(eye) => eye.outputs_consumed(),
         }
     }
 
@@ -138,6 +150,7 @@ impl Transput<(&mut ConcreteEnv, Vec2, f32), (&ConcreteEnv, Vec2, f32)> for Node
             NodeType::Write(pheromone_write) => pheromone_write.inputs_produced(),
             NodeType::Thruster(thruster) => thruster.inputs_produced(),
             NodeType::Spike(spike) => spike.inputs_produced(),
+            NodeType::Eye(eye) => eye.inputs_produced(),
         }
     }
 }

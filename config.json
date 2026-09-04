@@ -130,8 +130,8 @@
             "pheromone_read_efficiency": 0.001,
             "pheromone_write_efficiency": 0.01,
             "thruster_strength": 5,
-            "thruster_efficiency": 0.5,
-            "spike_collect_rate": 4.0,
+            "thruster_efficiency": 2.0,
+            "spike_collect_rate": 6.0,
             "spike_collect_efficiency": 0.9
         }
     },
