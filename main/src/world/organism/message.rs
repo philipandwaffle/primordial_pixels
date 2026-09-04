@@ -6,6 +6,7 @@ use avian2d::{
     spatial_query::RayCaster,
 };
 use bevy::{
+    camera::visibility::Visibility,
     ecs::{
         entity::Entity, hierarchy::ChildOf, message::Message, relationship::RelatedSpawnerCommands,
         system::Commands,
@@ -25,13 +26,14 @@ use crate::{
         MUSCLE_COMPLIANCE, MUSCLE_WIDTH, MUSCLE_Z, SPIKE_RADIUS, SPIKE_Z, THRUSTER_BASE_LENGTH,
         THRUSTER_WIDTH, THRUSTER_Z,
     },
-    util::function::rand_vec2,
+    util::function::{rand_vec2, z_rot_to_dir},
     world::organism::{
         component::{
             bone::Bone,
             egg::Egg,
             joint::{
-                Eye as EyeComp, Joint as JointComp, Spike as SpikeComp, Thruster as ThrusterComp,
+                Eye as EyeComp, EyeRay, Joint as JointComp, Spike as SpikeComp,
+                Thruster as ThrusterComp,
             },
             muscle::Muscle,
             organism::OrganismMarker,
@@ -138,6 +140,7 @@ impl SpawnOrganismMsg {
                     bone_ents.clone(),
                     muscle_ents.clone(),
                 ),
+                Visibility::default(),
                 Transform::default(),
             ))
             .add_children(joint_ents.as_slice())
@@ -164,7 +167,7 @@ impl SpawnOrganismMsg {
                 LockedAxes::ROTATION_LOCKED,
                 LinearDamping(LINEAR_DAMPING),
                 // PhysicsLockBundle::new(PHYS_LOCK_DUR, PHYS_LOCK_START_DAMP, PHYS_LOCK_FINAL_DAMP),
-                JointComp::new(nodes, thruster_ent, spike_ent),
+                JointComp::new(nodes, thruster_ent, spike_ent, eye_ent),
                 RigidBody::Dynamic,
                 Transform::default()
                     .with_translation(pos.extend(JOINT_Z))
@@ -205,11 +208,7 @@ impl SpawnOrganismMsg {
             SpikeComp,
             Collider::circle(1.0),
             Sensor,
-            Transform::default()
-                .with_translation(vec3(0.0, 0.0, SPIKE_Z))
-                .with_scale(vec3(SPIKE_RADIUS, SPIKE_RADIUS, 1.0)),
-            h.get_mesh2d(&MeshKey::Triangle),
-            h.get_mat2d(&MatKey::LightGrey),
+            Visibility::default(),
         ))
         .with_children(|c| {
             fn spike(
@@ -235,7 +234,7 @@ impl SpawnOrganismMsg {
     }
 
     pub fn spawn_eye(c: &mut Commands, h: &Handles, eye: &Eye) -> Entity {
-        c.spawn((EyeComp, Transform::default()))
+        c.spawn((EyeComp, Transform::default(), Visibility::default()))
             .with_children(|c| {
                 fn ray(
                     c: &mut RelatedSpawnerCommands<ChildOf>,
@@ -244,16 +243,24 @@ impl SpawnOrganismMsg {
                     ray_dist: f32,
                 ) {
                     c.spawn((
+                        EyeRay,
                         Transform::default()
                             .with_translation(vec3(0.0, 0.0, EYE_Z))
-                            .with_scale(vec3(0.02, ray_dist, 1.0))
-                            .with_rotation(Quat::from_rotation_z(z_rot)),
+                            .with_rotation(Quat::from_rotation_z(-z_rot)),
+                        Visibility::default(),
                         RayCaster::default()
                             .with_solidness(false)
                             .with_max_distance(ray_dist),
-                        h.get_mesh2d(&MeshKey::Rectangle),
-                        h.get_mat2d(&MatKey::LightGrey),
-                    ));
+                    ))
+                    .with_children(|c| {
+                        c.spawn((
+                            Transform::default()
+                                .with_translation(vec3(0.0, ray_dist * 0.5, 0.0))
+                                .with_scale(vec3(0.05, ray_dist, 1.0)),
+                            h.get_mesh2d(&MeshKey::Rectangle),
+                            h.get_mat2d(&MatKey::LightGrey),
+                        ));
+                    });
                 }
 
                 let num_rays = eye.get_num_rays();
@@ -261,8 +268,8 @@ impl SpawnOrganismMsg {
                 let fov = eye.get_fov();
                 let ray_dist = eye.get_ray_dist();
 
-                let mut cur_z_rot = z_rot - (fov * 0.5);
                 let step = fov / num_rays as f32;
+                let mut cur_z_rot = z_rot - (fov * 0.5) + (step * 0.5);
 
                 for _ in 0..num_rays {
                     ray(c, h, cur_z_rot, ray_dist);

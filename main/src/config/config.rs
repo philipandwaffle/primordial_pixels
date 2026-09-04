@@ -123,7 +123,7 @@ pub struct Transput {
     pub spike_collect_rate: f32,
     pub spike_collect_efficiency: f32,
     pub eye_ray_efficiency: f32,
-    pub eye_distance_efficiency: f32,
+    pub eye_dist_efficiency: f32,
 }
 
 #[derive(ConfigTag, Serialize, Deserialize, Clone, Copy, Resource)]

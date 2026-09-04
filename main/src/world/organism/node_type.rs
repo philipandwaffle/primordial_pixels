@@ -36,6 +36,8 @@ impl NodeType {
     pub fn can_alter(&self) -> bool {
         match self {
             NodeType::Read(_) => true,
+            NodeType::Thruster(_) => true,
+            NodeType::Eye(_) => true,
             _ => false,
         }
     }
@@ -56,7 +58,7 @@ impl PartialEq for NodeType {
 }
 impl Mut for NodeType {
     fn rand(rng: &mut ThreadRng, _: &MutationConfig, _: &Organism) -> Option<Self> {
-        Some(match rng.random_range(0..=5) {
+        Some(match rng.random_range(0..=6) {
             0 => Self::Energy(Energy::new()),
             1 => Self::Decomposer(Decomposer::new()),
             2 => Self::Read(Read::new(
@@ -66,7 +68,8 @@ impl Mut for NodeType {
             )),
             3 => Self::Write(Write::new(LayerKey::rand_write_layer(rng))),
             4 => Self::Thruster(Thruster::new(rng.random_range(-PI..PI))),
-            _ => Self::Spike(Spike::new()),
+            5 => Self::Spike(Spike::new()),
+            _ => Self::Eye(Eye::new(rng)),
         })
     }
 }

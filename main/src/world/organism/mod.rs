@@ -1,7 +1,7 @@
 pub mod body;
 pub mod brain;
 pub mod component;
-mod distribution;
+pub mod distribution;
 pub mod joint;
 pub mod message;
 mod meta;

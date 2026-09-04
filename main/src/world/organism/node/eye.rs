@@ -1,7 +1,11 @@
 use crate::{
     config::config::Transput as TransputConfig,
+    consts::{EYE_MAX_FOV, EYE_MAX_RANGE, EYE_MIN_RANGE},
+    util::function::rand_z_rot,
     world::organism::transput::{Transput, append_input},
 };
+use bevy::ecs::entity::hash_set::Iter;
+use rand::{Rng, rngs::ThreadRng};
 use serde::{Deserialize, Serialize};
 use serde_big_array::BigArray;
 use std::collections::VecDeque;
@@ -15,8 +19,41 @@ pub enum Eye {
     Eye5(GenericEye<5>),
 }
 impl Eye {
+    pub fn new(rng: &mut ThreadRng) -> Self {
+        let z_rot = rand_z_rot(rng, 1.0);
+        let ray_dist = rng.random_range(EYE_MIN_RANGE..=EYE_MAX_RANGE);
+        let fov = rng.random_range(EYE_MAX_FOV..=EYE_MAX_FOV);
+
+        match rng.random_range(0..=5) {
+            1 => Self::Eye1(GenericEye::new(z_rot, ray_dist, fov)),
+            2 => Self::Eye2(GenericEye::new(z_rot, ray_dist, fov)),
+            3 => Self::Eye3(GenericEye::new(z_rot, ray_dist, fov)),
+            4 => Self::Eye4(GenericEye::new(z_rot, ray_dist, fov)),
+            _ => Self::Eye5(GenericEye::new(z_rot, ray_dist, fov)),
+        }
+    }
     pub fn get_num_rays(&self) -> usize {
         self.inputs_produced()
+    }
+
+    pub fn set_hit(&mut self, i: usize, val: f32) {
+        match self {
+            Eye::Eye1(e) => e.hits[i] = val,
+            Eye::Eye2(e) => e.hits[i] = val,
+            Eye::Eye3(e) => e.hits[i] = val,
+            Eye::Eye4(e) => e.hits[i] = val,
+            Eye::Eye5(e) => e.hits[i] = val,
+        }
+    }
+
+    pub fn get_hits(&self) -> Vec<f32> {
+        match self {
+            Eye::Eye1(e) => e.hits.to_vec(),
+            Eye::Eye2(e) => e.hits.to_vec(),
+            Eye::Eye3(e) => e.hits.to_vec(),
+            Eye::Eye4(e) => e.hits.to_vec(),
+            Eye::Eye5(e) => e.hits.to_vec(),
+        }
     }
 
     pub fn get_z_rot(&self) -> f32 {
@@ -46,6 +83,15 @@ impl Eye {
             Eye::Eye3(e) => e.fov,
             Eye::Eye4(e) => e.fov,
             Eye::Eye5(e) => e.fov,
+        }
+    }
+    pub fn get_fov_mut(&mut self) -> &mut f32 {
+        match self {
+            Eye::Eye1(e) => &mut e.fov,
+            Eye::Eye2(e) => &mut e.fov,
+            Eye::Eye3(e) => &mut e.fov,
+            Eye::Eye4(e) => &mut e.fov,
+            Eye::Eye5(e) => &mut e.fov,
         }
     }
 }
@@ -177,7 +223,7 @@ impl<const RAYS: usize> Transput<(), f32> for GenericEye<RAYS> {
         }
 
         *energy -= ((transput_config.eye_ray_efficiency * RAYS as f32)
-            + (transput_config.eye_distance_efficiency * self.ray_dist))
+            + (transput_config.eye_dist_efficiency * self.ray_dist))
             * dt;
     }
 

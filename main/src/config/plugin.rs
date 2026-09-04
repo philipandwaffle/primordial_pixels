@@ -8,6 +8,7 @@ use crate::{
     consts::{CONFIG_PATH, KERNEL_CELLS},
     debug::node::NodeDebugPlugin,
     debug::performance::PerformanceDebugPlugin,
+    world::organism::distribution::Distribution,
 };
 
 pub struct ConfigPlugin;
@@ -42,5 +43,10 @@ impl Plugin for ConfigPlugin {
     }
 }
 pub fn load_config() -> CFG<KERNEL_CELLS> {
-    CFG::load_cfg(Path::new(CONFIG_PATH))
+    let mut cfg = CFG::load_cfg(Path::new(CONFIG_PATH));
+    cfg.organism.mutation.type_distribution.normalise();
+    cfg.organism.mutation.body_distribution.normalise();
+    cfg.organism.mutation.stats_distribution.normalise();
+
+    cfg
 }

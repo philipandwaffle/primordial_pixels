@@ -1,13 +1,14 @@
 use std::{collections::VecDeque, f32::consts::PI};
 
-use avian2d::prelude::{
-    ContactGraph, DistanceJoint, DistanceLimit, Forces, RigidBody, RigidBodyForces,
+use avian2d::{
+    prelude::{ContactGraph, DistanceJoint, DistanceLimit, Forces, RigidBody, RigidBodyForces},
+    spatial_query::{RayCaster, RayHits},
 };
 use bevy::{
     app::{First, Last, Plugin, PostUpdate, PreUpdate, Update},
     ecs::{
         entity::{Entity, EntityHashSet},
-        hierarchy::ChildOf,
+        hierarchy::{ChildOf, Children},
         message::{MessageReader, MessageWriter},
         query::{With, Without},
         system::{Commands, Query, Res, ResMut},
@@ -29,7 +30,7 @@ use crate::{
             component::{
                 bone::Bone,
                 egg::Egg,
-                joint::{Joint, Thruster as ThrusterComp},
+                joint::{Eye as EyeComp, EyeRay, Joint, Thruster as ThrusterComp},
                 muscle::Muscle,
                 organism::OrganismMarker,
             },
@@ -64,6 +65,7 @@ impl Plugin for OrganismPlugin {
                     Self::update_muscles,
                     Self::update_thrusters,
                     Self::update_spikes,
+                    Self::update_eyes,
                 ),
             )
             .add_systems(Last, Self::despawn_organisms);
@@ -305,6 +307,44 @@ impl OrganismPlugin {
                     spike_trans.translation.truncate(),
                     &mut collected_energy,
                 );
+            }
+        }
+    }
+
+    fn update_eyes(
+        time: Res<Time>,
+        mut joint_query: Query<&mut Joint>,
+        eye_root_query: Query<&Children, With<EyeComp>>,
+        eye_ray_query: Query<&RayHits, With<EyeRay>>,
+    ) {
+        for mut joint in joint_query.iter_mut() {
+            if let Some(eye_ent) = joint.eye {
+                if let NodeType::Eye(eye) = joint
+                    .nodes
+                    .iter_mut()
+                    .find(|n| matches!(n, NodeType::Eye(_)))
+                    .unwrap()
+                {
+                    match eye_root_query.get(eye_ent) {
+                        Ok(children) => {
+                            for (i, ray_ent) in children.iter().enumerate() {
+                                match eye_ray_query.get(*ray_ent) {
+                                    Ok(ray_hits) => {
+                                        let dist = ray_hits
+                                            .iter_sorted()
+                                            .next()
+                                            .and_then(|hit| Some(hit.distance))
+                                            .unwrap_or(-1.0 as f32);
+
+                                        eye.set_hit(i, dist)
+                                    }
+                                    Err(_) => todo!(),
+                                };
+                            }
+                        }
+                        Err(_) => todo!(),
+                    }
+                }
             }
         }
     }

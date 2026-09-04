@@ -1,13 +1,14 @@
 use bevy::{
     app::{Plugin, Update},
-    color::palettes::css::GREEN,
+    color::palettes::css::{GREEN, RED},
     ecs::{query::Without, system::Query},
     gizmos::gizmos::Gizmos,
-    math::{Isometry3d, Quat, Vec3A, vec3a},
+    math::{Isometry3d, Quat, Vec3A, vec3, vec3a},
     transform::components::Transform,
 };
 
 use crate::{
+    assets::handles::MatKey::Red,
     util::function::z_rot_to_dir,
     world::organism::{
         component::{joint::Joint, organism::OrganismMarker},
@@ -52,7 +53,35 @@ impl NodeDebugPlugin {
                             NodeType::Write(write) => {}
                             NodeType::Thruster(thruster) => {}
                             NodeType::Spike(spike) => {}
-                            NodeType::Eye(eye) => {}
+                            NodeType::Eye(eye) => {
+                                let num_rays = eye.get_num_rays();
+                                let z_rot = eye.get_z_rot();
+                                let fov = eye.get_fov();
+                                let ray_dist = eye.get_ray_dist();
+
+                                let step = fov / num_rays as f32;
+                                let mut cur_z_rot = z_rot - (fov * 0.5) + (step * 0.5);
+
+                                for mut dist in eye.get_hits() {
+                                    if dist < 0.0 {
+                                        dist = ray_dist;
+                                    } else {
+                                        dist *= ray_dist;
+                                    }
+
+                                    gizmos.circle(
+                                        Isometry3d {
+                                            rotation: Quat::from_rotation_z(-cur_z_rot),
+                                            translation: Vec3A::from(
+                                                joint_trans.translation + vec3(0.0, dist, 0.0),
+                                            ),
+                                        },
+                                        0.05,
+                                        RED,
+                                    );
+                                    cur_z_rot += step;
+                                }
+                            }
                         }
                     }
                 }

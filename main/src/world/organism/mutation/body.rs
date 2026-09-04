@@ -5,7 +5,10 @@ use rand::{Rng, rngs::ThreadRng, seq::SliceRandom};
 
 use crate::{
     config::config::Mutation as MutationConfig,
-    consts::{MAX_BONE_LEN, MIN_BONE_LEN, READ_WRITE_MAX_DIST, READ_WRITE_MIN_DIST},
+    consts::{
+        EYE_MAX_FOV, EYE_MIN_FOV, MAX_BONE_LEN, MIN_BONE_LEN, READ_WRITE_MAX_DIST,
+        READ_WRITE_MIN_DIST,
+    },
     util::function::{rand_normal_vec2, rand_vec2, rand_z_rot, shuffled_indexes},
     world::organism::{
         distribution::Distribution,
@@ -121,6 +124,13 @@ impl Mut for Body {
                     NodeType::Thruster(mut thruster) => {
                         thruster.z_rot_offset += rand_z_rot(rng, 0.25);
                         NodeType::Thruster(thruster)
+                    }
+                    NodeType::Eye(mut eye) => {
+                        let fov = eye.get_fov_mut();
+                        *fov += rng.random_range(-0.5..0.5);
+                        *fov = fov.clamp(EYE_MIN_FOV, EYE_MAX_FOV);
+
+                        NodeType::Eye(eye)
                     }
                     _ => panic!(
                         "Tried to mutate a {:?} node with missing implementation",

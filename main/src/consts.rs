@@ -35,6 +35,12 @@ pub const READ_WRITE_MIN_DIST: f32 = JOINT_RADIUS;
 pub const READ_WRITE_MAX_DIST: f32 = JOINT_RADIUS * 4.0;
 pub const SPIKE_RADIUS: f32 = JOINT_RADIUS * 4.0;
 
+// Eye
+pub const EYE_MAX_RANGE: f32 = 50.0;
+pub const EYE_MIN_RANGE: f32 = 10.0;
+pub const EYE_MIN_FOV: f32 = PI * 0.25;
+pub const EYE_MAX_FOV: f32 = PI * 1.0;
+
 // Muscle
 pub const MIN_MUSCLE_LEN: f32 = 0.7;
 pub const MAX_MUSCLE_LEN: f32 = 1.3;
