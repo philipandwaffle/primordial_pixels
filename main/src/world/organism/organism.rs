@@ -144,10 +144,12 @@ impl Mutable for Organism {
             Mutation::Stats(stat_mut) => {
                 match stat_mut {
                     StatsMut::MetronomeBeat { delta } => {
+                        info!("mutating metronome beat: {:?}", delta);
                         self.stats.metronome_beat =
                             (self.stats.metronome_beat + delta).clamp(0.1, 10.0)
                     }
                     StatsMut::IncubationPeriod { delta } => {
+                        info!("mutating incubation period: {:?}", delta);
                         self.stats.incubation_period =
                             (self.stats.incubation_period + delta).clamp(0.1, 60.0)
                     }

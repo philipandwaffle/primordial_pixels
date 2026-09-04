@@ -1,16 +1,8 @@
-use std::collections::HashMap;
-
-use bevy::math::Vec2;
-use rand::{Rng, random_range, rngs::ThreadRng, seq::SliceRandom};
+use rand::{Rng, rngs::ThreadRng};
 
 use crate::{
     config::config::Mutation as MutationConfig,
-    consts::{JOINT_RADIUS, MAX_BONE_LEN, MIN_BONE_LEN},
-    util::function::{rand_normal_vec2, rand_vec2, shuffled_indexes},
-    world::organism::{
-        distribution::Distribution, mutation::mutation::Mut, node_type::NodeType,
-        organism::Organism,
-    },
+    world::organism::{distribution::Distribution, mutation::mutation::Mut, organism::Organism},
 };
 
 #[derive(Debug)]
@@ -20,8 +12,8 @@ pub enum Stats {
 }
 impl Stats {}
 impl Mut for Stats {
-    fn rand(rng: &mut ThreadRng, mutation_config: &MutationConfig, o: &Organism) -> Option<Self> {
-        match random_range(0..=1) {
+    fn rand(rng: &mut ThreadRng, mutation_config: &MutationConfig, _: &Organism) -> Option<Self> {
+        match mutation_config.stats_distribution.get_index(rng) {
             0 => Some(Self::MetronomeBeat {
                 delta: rng.random_range(-0.5..0.5),
             }),

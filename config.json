@@ -11,7 +11,7 @@
         "max_zoom": null
     },
     "environment": {
-        "side_len": 250.0,
+        "side_len": 300.0,
         "layers": {
             "Energy": {
                 "Energy": {
@@ -29,11 +29,11 @@
                         ],
                         "side_len": 3
                     },
-                    "permeability": 0.3,
+                    "permeability": 0.5,
                     "max": 5.0,
                     "rate": 0.025,
-                    "on_interval": 30.0,
-                    "off_interval": 0.0
+                    "on_interval": 20.0,
+                    "off_interval": 15.0
                 }
             },
             "Decompose": {
@@ -82,7 +82,11 @@
     "organism": {
         "mutation": {
             "rate": 0.01,
-            "distribution": [
+            "type_distribution": [
+                0.5,
+                0.5
+            ],
+            "body_distribution": [
                 0.1,
                 0.1,
                 0.1,
@@ -94,12 +98,15 @@
                 0.1,
                 0.1
             ],
+            "stats_distribution": [
+                0.5,
+                0.5
+            ],
             "learn_rate": 0.1,
             "learn_factor": 0.1
         },
         "metabolism": {
             "decay_multiplier": 0.9,
-            "reproduce_threshold": 0.8,
             "reproduce_cost": 0.6,
             "node": 0.1,
             "node_exponent": 1.5,
@@ -145,7 +152,7 @@
         "initial_num_mutations": 1,
         "num_mutations": 1,
         "boundary_width": 5.0,
-        "side_len": 250.0,
+        "side_len": 300.0,
         "display_update_interval": 0.25
     }
 }

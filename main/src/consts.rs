@@ -62,7 +62,7 @@ pub const MUSCLE_IN_PRODUCE: usize = 2;
 pub const MUSCLE_OUT_CONSUME: usize = 1;
 
 // Environment
-pub const ENV_SIDE_CELLS: usize = 151;
+pub const ENV_SIDE_CELLS: usize = 201;
 pub const ENV_CELLS: usize = ENV_SIDE_CELLS * ENV_SIDE_CELLS;
 pub const KERNEL_CELLS: usize = 9;
 

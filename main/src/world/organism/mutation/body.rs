@@ -78,7 +78,7 @@ impl Body {
 }
 impl Mut for Body {
     fn rand(rng: &mut ThreadRng, mutation_config: &MutationConfig, o: &Organism) -> Option<Self> {
-        let i = mutation_config.distribution.get_index(rng);
+        let i = mutation_config.body_distribution.get_index(rng);
         match i {
             // AlterNode
             0 => {

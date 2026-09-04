@@ -3,6 +3,7 @@ use rand::rngs::ThreadRng;
 use crate::{
     config::config::Mutation as MutationConfig,
     world::organism::{
+        distribution::Distribution,
         mutation::{body::Body, brain::Brain, stats::Stats},
         organism::Organism,
     },
@@ -19,10 +20,20 @@ impl Mut for Mutation {
     where
         Self: Sized,
     {
-        if let Some(body_mutation) = Body::rand(rng, mutation_config, o) {
-            return Some(Mutation::Body(body_mutation));
+        match mutation_config.type_distribution.get_index(rng) {
+            0 => {
+                if let Some(body_mutation) = Body::rand(rng, mutation_config, o) {
+                    return Some(Mutation::Body(body_mutation));
+                }
+                None
+            }
+            _ => {
+                if let Some(stats_mutation) = Stats::rand(rng, mutation_config, o) {
+                    return Some(Mutation::Stats(stats_mutation));
+                }
+                None
+            }
         }
-        None
     }
 }
 

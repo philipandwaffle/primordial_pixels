@@ -7,9 +7,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     config::config_tag::ConfigTag,
-    consts::NUM_BODY_MUTATIONS,
+    consts::{NUM_BODY_MUTATIONS, NUM_STAT_MUTATIONS},
     petri_dish::plugin::PetriDishPlugin,
-    // runner::plugin::RunnerPlugin,
     save::plugin::SavePlugin,
     world::environment::{field::Field, layer::layer_key::LayerKey},
 };
@@ -83,7 +82,9 @@ pub struct Organism {
 #[derive(ConfigTag, Serialize, Deserialize, Clone, Copy, Resource)]
 pub struct Mutation {
     pub rate: f32,
-    pub distribution: [f32; NUM_BODY_MUTATIONS],
+    pub type_distribution: [f32; 2],
+    pub body_distribution: [f32; NUM_BODY_MUTATIONS],
+    pub stats_distribution: [f32; NUM_STAT_MUTATIONS],
     pub learn_rate: f32,
     pub learn_factor: f32,
 }
@@ -91,7 +92,6 @@ pub struct Mutation {
 #[derive(ConfigTag, Default, Serialize, Deserialize, Clone, Copy, Resource)]
 pub struct Metabolism {
     pub decay_multiplier: f32,
-    // pub reproduce_threshold: f32,
     pub reproduce_cost: f32,
     pub node: f32,
     pub node_exponent: f32,
