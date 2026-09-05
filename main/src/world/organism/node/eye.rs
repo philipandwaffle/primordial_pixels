@@ -13,8 +13,8 @@ use std::collections::VecDeque;
 pub enum Eye {
     Eye1(GenericEye<1>),
     Eye3(GenericEye<3>),
-    Eye9(GenericEye<9>),
-    Eye15(GenericEye<15>),
+    Eye5(GenericEye<5>),
+    Eye7(GenericEye<7>),
 }
 impl Eye {
     pub fn new(rng: &mut ThreadRng) -> Self {
@@ -25,8 +25,8 @@ impl Eye {
         match rng.random_range(0..=3) {
             0 => Self::Eye1(GenericEye::new(z_rot, ray_dist, fov)),
             1 => Self::Eye3(GenericEye::new(z_rot, ray_dist, fov)),
-            2 => Self::Eye9(GenericEye::new(z_rot, ray_dist, fov)),
-            _ => Self::Eye15(GenericEye::new(z_rot, ray_dist, fov)),
+            2 => Self::Eye5(GenericEye::new(z_rot, ray_dist, fov)),
+            _ => Self::Eye7(GenericEye::new(z_rot, ray_dist, fov)),
         }
     }
     pub fn get_num_rays(&self) -> usize {
@@ -45,8 +45,8 @@ impl Eye {
         match self {
             Eye::Eye1(e) => e.hits[i] = new_val,
             Eye::Eye3(e) => e.hits[i] = new_val,
-            Eye::Eye9(e) => e.hits[i] = new_val,
-            Eye::Eye15(e) => e.hits[i] = new_val,
+            Eye::Eye5(e) => e.hits[i] = new_val,
+            Eye::Eye7(e) => e.hits[i] = new_val,
         }
     }
 
@@ -54,8 +54,8 @@ impl Eye {
         match self {
             Eye::Eye1(e) => e.hits.to_vec(),
             Eye::Eye3(e) => e.hits.to_vec(),
-            Eye::Eye9(e) => e.hits.to_vec(),
-            Eye::Eye15(e) => e.hits.to_vec(),
+            Eye::Eye5(e) => e.hits.to_vec(),
+            Eye::Eye7(e) => e.hits.to_vec(),
         }
     }
 
@@ -63,8 +63,8 @@ impl Eye {
         match self {
             Eye::Eye1(e) => e.z_rot,
             Eye::Eye3(e) => e.z_rot,
-            Eye::Eye9(e) => e.z_rot,
-            Eye::Eye15(e) => e.z_rot,
+            Eye::Eye5(e) => e.z_rot,
+            Eye::Eye7(e) => e.z_rot,
         }
     }
 
@@ -72,8 +72,8 @@ impl Eye {
         match self {
             Eye::Eye1(e) => e.z_rot_offset,
             Eye::Eye3(e) => e.z_rot_offset,
-            Eye::Eye9(e) => e.z_rot_offset,
-            Eye::Eye15(e) => e.z_rot_offset,
+            Eye::Eye5(e) => e.z_rot_offset,
+            Eye::Eye7(e) => e.z_rot_offset,
         }
     }
 
@@ -81,8 +81,8 @@ impl Eye {
         match self {
             Eye::Eye1(e) => e.ray_dist,
             Eye::Eye3(e) => e.ray_dist,
-            Eye::Eye9(e) => e.ray_dist,
-            Eye::Eye15(e) => e.ray_dist,
+            Eye::Eye5(e) => e.ray_dist,
+            Eye::Eye7(e) => e.ray_dist,
         }
     }
 
@@ -90,16 +90,16 @@ impl Eye {
         match self {
             Eye::Eye1(e) => e.fov,
             Eye::Eye3(e) => e.fov,
-            Eye::Eye9(e) => e.fov,
-            Eye::Eye15(e) => e.fov,
+            Eye::Eye5(e) => e.fov,
+            Eye::Eye7(e) => e.fov,
         }
     }
     pub fn get_fov_mut(&mut self) -> &mut f32 {
         match self {
             Eye::Eye1(e) => &mut e.fov,
             Eye::Eye3(e) => &mut e.fov,
-            Eye::Eye9(e) => &mut e.fov,
-            Eye::Eye15(e) => &mut e.fov,
+            Eye::Eye5(e) => &mut e.fov,
+            Eye::Eye7(e) => &mut e.fov,
         }
     }
 }
@@ -108,8 +108,8 @@ impl PartialEq for Eye {
         return match (self, other) {
             (Eye::Eye1(a), Eye::Eye1(b)) => a == b,
             (Eye::Eye3(a), Eye::Eye3(b)) => a == b,
-            (Eye::Eye9(a), Eye::Eye9(b)) => a == b,
-            (Eye::Eye15(a), Eye::Eye15(b)) => a == b,
+            (Eye::Eye5(a), Eye::Eye5(b)) => a == b,
+            (Eye::Eye7(a), Eye::Eye7(b)) => a == b,
 
             _ => false,
         };
@@ -130,10 +130,10 @@ impl Transput<(), f32> for Eye {
             Eye::Eye3(generic_eye) => {
                 generic_eye.consume_outputs(energy, output, transput_config, args)
             }
-            Eye::Eye9(generic_eye) => {
+            Eye::Eye5(generic_eye) => {
                 generic_eye.consume_outputs(energy, output, transput_config, args)
             }
-            Eye::Eye15(generic_eye) => {
+            Eye::Eye7(generic_eye) => {
                 generic_eye.consume_outputs(energy, output, transput_config, args)
             }
         }
@@ -153,10 +153,10 @@ impl Transput<(), f32> for Eye {
             Eye::Eye3(generic_eye) => {
                 generic_eye.produce_inputs(energy, input, transput_config, dt)
             }
-            Eye::Eye9(generic_eye) => {
+            Eye::Eye5(generic_eye) => {
                 generic_eye.produce_inputs(energy, input, transput_config, dt)
             }
-            Eye::Eye15(generic_eye) => {
+            Eye::Eye7(generic_eye) => {
                 generic_eye.produce_inputs(energy, input, transput_config, dt)
             }
         }
@@ -166,8 +166,8 @@ impl Transput<(), f32> for Eye {
         match self {
             Eye::Eye1(generic_eye) => generic_eye.outputs_consumed(),
             Eye::Eye3(generic_eye) => generic_eye.outputs_consumed(),
-            Eye::Eye9(generic_eye) => generic_eye.outputs_consumed(),
-            Eye::Eye15(generic_eye) => generic_eye.outputs_consumed(),
+            Eye::Eye5(generic_eye) => generic_eye.outputs_consumed(),
+            Eye::Eye7(generic_eye) => generic_eye.outputs_consumed(),
         }
     }
 
@@ -175,8 +175,8 @@ impl Transput<(), f32> for Eye {
         match self {
             Eye::Eye1(generic_eye) => generic_eye.inputs_produced(),
             Eye::Eye3(generic_eye) => generic_eye.inputs_produced(),
-            Eye::Eye9(generic_eye) => generic_eye.inputs_produced(),
-            Eye::Eye15(generic_eye) => generic_eye.inputs_produced(),
+            Eye::Eye5(generic_eye) => generic_eye.inputs_produced(),
+            Eye::Eye7(generic_eye) => generic_eye.inputs_produced(),
         }
     }
 }

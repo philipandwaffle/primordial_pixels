@@ -21,8 +21,8 @@ use crate::{
     assets::handles::{Handles, MatKey, MeshKey},
     consts::{
         BONE_WIDTH, BONE_Z, EGG_Z, EYE_Z, JOINT_RADIUS, JOINT_Z, LINEAR_DAMPING, MIN_EGG_RADIUS,
-        MUSCLE_COMPLIANCE, MUSCLE_WIDTH, MUSCLE_Z, SPIKE_Z, THRUSTER_BASE_LENGTH, THRUSTER_WIDTH,
-        THRUSTER_Z,
+        MUSCLE_COMPLIANCE, MUSCLE_WIDTH, MUSCLE_Z, SPIKE_RADIUS, SPIKE_Z, THRUSTER_BASE_LENGTH,
+        THRUSTER_WIDTH, THRUSTER_Z,
     },
     util::function::rand_vec2,
     world::organism::{
@@ -198,7 +198,7 @@ impl SpawnOrganismMsg {
         c.spawn((
             ThrusterComp,
             Transform::default()
-                .with_translation((vec2( THRUSTER_BASE_LENGTH * 0.5,0.0)).extend(THRUSTER_Z))
+                .with_translation((vec2(THRUSTER_BASE_LENGTH * 0.5, 0.0)).extend(THRUSTER_Z))
                 .with_scale(vec3(THRUSTER_WIDTH, THRUSTER_BASE_LENGTH, 1.0)),
             h.get_mesh2d(&MeshKey::Triangle),
             h.get_mat2d(&MatKey::Orange),
@@ -211,6 +211,7 @@ impl SpawnOrganismMsg {
             SpikeComp,
             Collider::circle(1.0),
             Sensor,
+            Transform::default().with_scale(vec3(SPIKE_RADIUS, SPIKE_RADIUS, 1.0)),
             Visibility::default(),
         ))
         .with_children(|c| {
