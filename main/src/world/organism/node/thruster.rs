@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     config::config::Transput as TransputConfig,
     consts::FRAC_PI,
-    util::function::{rot_output, z_rot_to_dir, zero_one_output},
+    util::function::{rot_output, zero_one_output},
     world::organism::transput::{Transput, append_input, remove_output},
 };
 
@@ -33,10 +33,6 @@ impl Thruster {
             z_rot: 0.0,
         }
     }
-
-    // pub fn get_thrust(&self) -> Vec2 {
-    //     z_rot_to_dir(self.z_rot) * self.thrust
-    // }
 }
 impl Transput<f32, ()> for Thruster {
     fn outputs_consumed(&self) -> usize {

@@ -133,8 +133,8 @@
             "thruster_efficiency": 2.0,
             "spike_collect_rate": 6.0,
             "spike_collect_efficiency": 0.9,
-            "eye_ray_efficiency": 0.001,
-            "eye_dist_efficiency": 0.001
+            "eye_ray_efficiency": 0.0001,
+            "eye_dist_efficiency": 0.0001
         }
     },
     "physics": {

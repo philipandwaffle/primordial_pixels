@@ -2,7 +2,7 @@ use std::{collections::VecDeque, f32::consts::PI};
 
 use avian2d::{
     prelude::{ContactGraph, DistanceJoint, DistanceLimit, Forces, RigidBody, RigidBodyForces},
-    spatial_query::{RayCaster, RayHits},
+    spatial_query::{RayCaster, RayHitData, RayHits},
 };
 use bevy::{
     app::{First, Last, Plugin, PostUpdate, PreUpdate, Update},
@@ -253,7 +253,7 @@ impl OrganismPlugin {
                         total_z_rot += t.z_rot_offset;
                     }
                 }
-                total_z_rot = total_z_rot % PI;
+                // total_z_rot = total_z_rot % PI;
 
                 let thrust_vec = z_rot_to_dir(total_z_rot) * total_thrust;
 
@@ -261,8 +261,8 @@ impl OrganismPlugin {
                     let visual_vec =
                         thrust_vec * THRUSTER_BASE_LENGTH / transput_config.thruster_strength;
                     trans.translation = (visual_vec * 0.5).extend(THRUSTER_Z);
-                    trans.scale = vec3(THRUSTER_WIDTH, -visual_vec.length(), 1.0);
-                    trans.rotation = Quat::from_rotation_z(-total_z_rot);
+                    trans.scale = vec3(THRUSTER_WIDTH, visual_vec.length(), 1.0);
+                    trans.rotation = Quat::from_rotation_z((PI * 0.5) + total_z_rot);
                 }
 
                 forces.apply_force(thrust_vec * dt);
@@ -312,37 +312,39 @@ impl OrganismPlugin {
     }
 
     fn update_eyes(
-        time: Res<Time>,
-        mut joint_query: Query<&mut Joint>,
-        eye_root_query: Query<&Children, With<EyeComp>>,
+        mut joint_query: Query<(Entity, &mut Joint)>,
+        mut eye_root_query: Query<(&EyeComp, &mut Transform)>,
         eye_ray_query: Query<&RayHits, With<EyeRay>>,
     ) {
-        for mut joint in joint_query.iter_mut() {
-            if let Some(eye_ent) = joint.eye {
-                if let NodeType::Eye(eye) = joint
-                    .nodes
-                    .iter_mut()
-                    .find(|n| matches!(n, NodeType::Eye(_)))
-                    .unwrap()
-                {
-                    match eye_root_query.get(eye_ent) {
-                        Ok(children) => {
-                            for (i, ray_ent) in children.iter().enumerate() {
-                                match eye_ray_query.get(*ray_ent) {
-                                    Ok(ray_hits) => {
-                                        let dist = ray_hits
-                                            .iter_sorted()
-                                            .next()
-                                            .and_then(|hit| Some(hit.distance))
-                                            .unwrap_or(-1.0 as f32);
+        for (joint_ent, mut joint) in joint_query.iter_mut() {
+            if let Some(eye_ents) = joint.eyes.clone() {
+                let mut eye_ent_iter = eye_ents.iter();
 
-                                        eye.set_hit(i, dist)
-                                    }
-                                    Err(_) => todo!(),
-                                };
-                            }
-                        }
-                        Err(_) => todo!(),
+                for node in joint.nodes.iter_mut() {
+                    let NodeType::Eye(eye) = node else { continue };
+                    let Some(eye_ent) = eye_ent_iter.next() else {
+                        continue;
+                    };
+
+                    let Ok((eye_comp, mut eye_trans)) = eye_root_query.get_mut(*eye_ent) else {
+                        continue;
+                    };
+
+                    eye_trans.rotation =
+                        Quat::from_rotation_z(eye.get_z_rot() + eye.get_z_rot_offset());
+                    for (i, ray_ent) in eye_comp.get_ray_ents().iter().enumerate() {
+                        let Ok(ray_hits) = eye_ray_query.get(*ray_ent) else {
+                            continue;
+                        };
+
+                        let dist = ray_hits
+                            .iter_sorted()
+                            .filter(|hit_data| hit_data.entity != joint_ent)
+                            .next()
+                            .map(|hit| hit.distance)
+                            .unwrap_or(-1.0);
+
+                        eye.set_hit(i, dist);
                     }
                 }
             }

@@ -38,8 +38,8 @@ pub const SPIKE_RADIUS: f32 = JOINT_RADIUS * 4.0;
 // Eye
 pub const EYE_MAX_RANGE: f32 = 50.0;
 pub const EYE_MIN_RANGE: f32 = 10.0;
-pub const EYE_MIN_FOV: f32 = PI * 0.25;
-pub const EYE_MAX_FOV: f32 = PI * 1.0;
+pub const EYE_MIN_FOV: f32 = PI * 0.125;
+pub const EYE_MAX_FOV: f32 = PI * 0.75;
 
 // Muscle
 pub const MIN_MUSCLE_LEN: f32 = 0.7;
@@ -63,7 +63,7 @@ pub const BASE_INPUT: usize = MEMORY + 2;
 pub const BASE_OUTPUT: usize = MEMORY + 1;
 
 // 3 slots for random stuff,
-pub const BASE_BRAIN_STRUCTURE: [usize; 6] = [BASE_INPUT, 15, 15, 15, 15, BASE_OUTPUT];
+pub const BASE_BRAIN_STRUCTURE: [usize; 7] = [BASE_INPUT, 64, 64, 64, 64, 64, BASE_OUTPUT];
 
 pub const MUSCLE_IN_PRODUCE: usize = 2;
 pub const MUSCLE_OUT_CONSUME: usize = 1;

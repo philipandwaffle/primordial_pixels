@@ -7,20 +7,20 @@ pub struct Joint {
     pub nodes: Vec<NodeType>,
     pub thruster: Option<Entity>,
     pub spike: Option<Entity>,
-    pub eye: Option<Entity>,
+    pub eyes: Option<Vec<Entity>>,
 }
 impl Joint {
     pub fn new(
         nodes: &Vec<NodeType>,
         thruster: Option<Entity>,
         spike: Option<Entity>,
-        eye: Option<Entity>,
+        eyes: Option<Vec<Entity>>,
     ) -> Self {
         Self {
             nodes: nodes.clone(),
             thruster,
             spike,
-            eye,
+            eyes,
         }
     }
 }
@@ -32,7 +32,21 @@ pub struct Thruster;
 pub struct Spike;
 
 #[derive(Component)]
-pub struct Eye;
+pub struct Eye {
+    rays: Vec<Entity>,
+}
+impl Eye {
+    pub fn new(rays: Vec<Entity>) -> Self {
+        return Self { rays };
+    }
+    pub fn get_ray_ents(&self) -> &Vec<Entity> {
+        &self.rays
+    }
+
+    pub fn with_rays(&mut self, rays: Vec<Entity>) {
+        self.rays = rays;
+    }
+}
 
 #[derive(Component)]
 pub struct EyeRay;

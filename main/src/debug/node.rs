@@ -55,14 +55,15 @@ impl NodeDebugPlugin {
                             NodeType::Spike(spike) => {}
                             NodeType::Eye(eye) => {
                                 let num_rays = eye.get_num_rays();
-                                let z_rot = eye.get_z_rot();
+                                let z_rot = eye.get_z_rot() + eye.get_z_rot_offset();
                                 let fov = eye.get_fov();
                                 let ray_dist = eye.get_ray_dist();
 
                                 let step = fov / num_rays as f32;
                                 let mut cur_z_rot = z_rot - (fov * 0.5) + (step * 0.5);
 
-                                for mut dist in eye.get_hits() {
+                                let hits = eye.get_hits();
+                                for mut dist in hits {
                                     if dist < 0.0 {
                                         dist = ray_dist;
                                     } else {
@@ -71,9 +72,10 @@ impl NodeDebugPlugin {
 
                                     gizmos.circle(
                                         Isometry3d {
-                                            rotation: Quat::from_rotation_z(-cur_z_rot),
+                                            rotation: Quat::IDENTITY,
                                             translation: Vec3A::from(
-                                                joint_trans.translation + vec3(0.0, dist, 0.0),
+                                                joint_trans.translation
+                                                    + z_rot_to_dir(cur_z_rot).extend(0.0) * dist,
                                             ),
                                         },
                                         0.05,

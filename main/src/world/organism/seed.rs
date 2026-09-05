@@ -10,32 +10,25 @@ use crate::{
         config_tag::ConfigTag,
         plugin::load_config,
     },
-    util::function::z_rot_to_dir,
-    world::{
-        environment::layer::layer_key::LayerKey,
-        organism::{
-            body::Body,
-            brain::Brain,
-            joint::Joint,
-            message::{SpawnEggMsg, SpawnOrganismMsg},
-            mutation::{
-                brain::Brain as BrainMut,
-                mutation::{Mut, Mutable, Mutation as OrgMut},
-            },
-            node::{
-                energy::Energy,
-                eye::{
-                    Eye::{Eye1, Eye2, Eye3, Eye4, Eye5},
-                    GenericEye,
-                },
-                read::Read,
-                spike::Spike,
-                thruster::Thruster,
-            },
-            node_type::NodeType,
-            organism::Organism,
-            util_trait::OrganismAccessor,
+    world::organism::{
+        body::Body,
+        brain::Brain,
+        joint::Joint,
+        message::{SpawnEggMsg, SpawnOrganismMsg},
+        mutation::{
+            brain::Brain as BrainMut,
+            mutation::{Mut, Mutable, Mutation as OrgMut},
         },
+        node::{
+            energy::Energy,
+            eye::{Eye::*, GenericEye},
+            read::Read,
+            spike::Spike,
+            thruster::Thruster,
+        },
+        node_type::NodeType,
+        organism::Organism,
+        util_trait::OrganismAccessor,
     },
 };
 
@@ -47,21 +40,23 @@ pub struct Seed {
 impl Default for Seed {
     fn default() -> Self {
         let cfg = load_config();
+
         Self {
             pos: Default::default(),
             organism: Organism::new(
-                Some(vec![16, 16, 16, 16]),
+                Some(vec![64, 64, 64, 64, 64]),
                 // None,
                 Body::new(
                     vec![Joint::new(
                         vec2(0.0, 0.0),
                         vec![
                             NodeType::Energy(Energy::new()),
-                            NodeType::Eye(Eye1(GenericEye::<1>::new(0.0, 20.0, PI))),
+                            // NodeType::Thruster(Thruster::new(0.0)),
+                            // NodeType::Eye(Eye1(GenericEye::<1>::new(0.0, 20.0, PI))),
                             // NodeType::Eye(Eye2(GenericEye::<2>::new(0.0, 20.0, PI))),
                             // NodeType::Eye(Eye3(GenericEye::<3>::new(0.0, 20.0, PI))),
                             // NodeType::Eye(Eye4(GenericEye::<4>::new(0.0, 20.0, PI))),
-                            // NodeType::Eye(Eye5(GenericEye::<5>::new(0.0, 20.0, PI))),
+                            // NodeType::Eye(Eye5(GenericEye::<5>::new(0.0, 20.0, PI * 0.25))),
                         ],
                     )],
                     vec![],

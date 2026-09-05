@@ -36,7 +36,7 @@ pub fn quat_z_rot(q: Quat) -> f32 {
 }
 
 pub fn z_rot_to_dir(z_rot: f32) -> Vec2 {
-    vec2(sin(z_rot), cos(z_rot))
+    vec2(cos(z_rot), sin(z_rot))
 }
 
 pub fn rot_input(input: f32) -> f32 {

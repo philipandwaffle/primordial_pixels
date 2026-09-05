@@ -16,17 +16,15 @@ use bevy::{
 };
 
 use rand::rngs::ThreadRng;
-use rand_distr::num_traits;
 
 use crate::{
     assets::handles::{Handles, MatKey, MeshKey},
-    config::config::Storage,
     consts::{
         BONE_WIDTH, BONE_Z, EGG_Z, EYE_Z, JOINT_RADIUS, JOINT_Z, LINEAR_DAMPING, MIN_EGG_RADIUS,
-        MUSCLE_COMPLIANCE, MUSCLE_WIDTH, MUSCLE_Z, SPIKE_RADIUS, SPIKE_Z, THRUSTER_BASE_LENGTH,
-        THRUSTER_WIDTH, THRUSTER_Z,
+        MUSCLE_COMPLIANCE, MUSCLE_WIDTH, MUSCLE_Z, SPIKE_Z, THRUSTER_BASE_LENGTH, THRUSTER_WIDTH,
+        THRUSTER_Z,
     },
-    util::function::{rand_vec2, z_rot_to_dir},
+    util::function::rand_vec2,
     world::organism::{
         component::{
             bone::Bone,
@@ -152,12 +150,15 @@ impl SpawnOrganismMsg {
     pub fn spawn_joint(pos: Vec2, nodes: &Vec<NodeType>, c: &mut Commands, h: &Handles) -> Entity {
         let mut thruster_ent = None;
         let mut spike_ent = None;
-        let mut eye_ent = None;
+        let mut eye_ents: Option<Vec<Entity>> = None;
         for n in nodes {
             match n {
                 NodeType::Thruster(_) => thruster_ent = Some(Self::spawn_thruster(c, h)),
                 NodeType::Spike(_) => spike_ent = Some(Self::spawn_spike(c, h)),
-                NodeType::Eye(eye) => eye_ent = Some(Self::spawn_eye(c, h, eye)),
+                NodeType::Eye(eye) => match eye_ents.as_mut() {
+                    Some(eye_ents) => eye_ents.push(Self::spawn_eye(c, h, eye)),
+                    None => eye_ents = Some(vec![Self::spawn_eye(c, h, eye)]),
+                },
                 _ => {}
             }
         }
@@ -167,7 +168,7 @@ impl SpawnOrganismMsg {
                 LockedAxes::ROTATION_LOCKED,
                 LinearDamping(LINEAR_DAMPING),
                 // PhysicsLockBundle::new(PHYS_LOCK_DUR, PHYS_LOCK_START_DAMP, PHYS_LOCK_FINAL_DAMP),
-                JointComp::new(nodes, thruster_ent, spike_ent, eye_ent),
+                JointComp::new(nodes, thruster_ent, spike_ent, eye_ents.clone()),
                 RigidBody::Dynamic,
                 Transform::default()
                     .with_translation(pos.extend(JOINT_Z))
@@ -184,8 +185,10 @@ impl SpawnOrganismMsg {
         if let Some(spike_ent) = spike_ent {
             c.entity(joint_ent).add_child(spike_ent);
         }
-        if let Some(eye_ent) = eye_ent {
-            c.entity(joint_ent).add_child(eye_ent);
+        if let Some(eye_ents) = eye_ents.as_ref() {
+            for eye_ent in eye_ents {
+                c.entity(joint_ent).add_child(*eye_ent);
+            }
         }
 
         joint_ent
@@ -195,7 +198,7 @@ impl SpawnOrganismMsg {
         c.spawn((
             ThrusterComp,
             Transform::default()
-                .with_translation((vec2(0.0, THRUSTER_BASE_LENGTH * 0.5)).extend(THRUSTER_Z))
+                .with_translation((vec2( THRUSTER_BASE_LENGTH * 0.5,0.0)).extend(THRUSTER_Z))
                 .with_scale(vec3(THRUSTER_WIDTH, THRUSTER_BASE_LENGTH, 1.0)),
             h.get_mesh2d(&MeshKey::Triangle),
             h.get_mat2d(&MatKey::Orange),
@@ -234,49 +237,52 @@ impl SpawnOrganismMsg {
     }
 
     pub fn spawn_eye(c: &mut Commands, h: &Handles, eye: &Eye) -> Entity {
-        c.spawn((EyeComp, Transform::default(), Visibility::default()))
-            .with_children(|c| {
-                fn ray(
-                    c: &mut RelatedSpawnerCommands<ChildOf>,
-                    h: &Handles,
-                    z_rot: f32,
-                    ray_dist: f32,
-                ) {
+        let num_rays = eye.get_num_rays();
+        let z_rot = eye.get_z_rot();
+        let fov = eye.get_fov();
+        let ray_dist = eye.get_ray_dist();
+
+        let step = fov / num_rays as f32;
+
+        let mut cur_z_rot = -(fov * 0.5) + (step * 0.5);
+        let mut eye_ray_ents = vec![];
+        for _ in 0..num_rays {
+            let eye_ray_ent = c
+                .spawn((
+                    EyeRay,
+                    Transform::default()
+                        .with_translation(vec3(0.0, 0.0, EYE_Z))
+                        .with_rotation(Quat::from_rotation_z(cur_z_rot)),
+                    Visibility::default(),
+                    RayCaster::default()
+                        .with_solidness(false)
+                        .with_max_distance(ray_dist),
+                ))
+                .with_children(|c| {
                     c.spawn((
-                        EyeRay,
                         Transform::default()
-                            .with_translation(vec3(0.0, 0.0, EYE_Z))
-                            .with_rotation(Quat::from_rotation_z(-z_rot)),
-                        Visibility::default(),
-                        RayCaster::default()
-                            .with_solidness(false)
-                            .with_max_distance(ray_dist),
-                    ))
-                    .with_children(|c| {
-                        c.spawn((
-                            Transform::default()
-                                .with_translation(vec3(0.0, ray_dist * 0.5, 0.0))
-                                .with_scale(vec3(0.05, ray_dist, 1.0)),
-                            h.get_mesh2d(&MeshKey::Rectangle),
-                            h.get_mat2d(&MatKey::LightGrey),
-                        ));
-                    });
-                }
+                            .with_translation(vec3(ray_dist, 0.0, 0.0))
+                            .with_scale((vec2(ray_dist, 0.1) / JOINT_RADIUS).extend(1.0)),
+                        h.get_mesh2d(&MeshKey::Rectangle),
+                        h.get_mat2d(&MatKey::LightGrey),
+                    ));
+                })
+                .id();
+            eye_ray_ents.push(eye_ray_ent);
 
-                let num_rays = eye.get_num_rays();
-                let z_rot = eye.get_z_rot();
-                let fov = eye.get_fov();
-                let ray_dist = eye.get_ray_dist();
+            cur_z_rot += step;
+        }
 
-                let step = fov / num_rays as f32;
-                let mut cur_z_rot = z_rot - (fov * 0.5) + (step * 0.5);
+        let eye_ent = c
+            .spawn((
+                EyeComp::new(eye_ray_ents.clone()),
+                Transform::default().with_rotation(Quat::from_rotation_z(z_rot)),
+                Visibility::default(),
+            ))
+            .id();
+        c.entity(eye_ent).add_children(&eye_ray_ents);
 
-                for _ in 0..num_rays {
-                    ray(c, h, cur_z_rot, ray_dist);
-                    cur_z_rot += step;
-                }
-            })
-            .id()
+        eye_ent
     }
 
     fn spawn_bone(
