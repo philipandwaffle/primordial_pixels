@@ -230,7 +230,7 @@ impl<const RAYS: usize> Transput<(), f32> for GenericEye<RAYS> {
     }
 
     fn outputs_consumed(&self) -> usize {
-        1
+        0
     }
 
     fn inputs_produced(&self) -> usize {

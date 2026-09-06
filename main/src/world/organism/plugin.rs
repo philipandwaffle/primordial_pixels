@@ -13,6 +13,7 @@ use bevy::{
         query::{With, Without},
         system::{Commands, Query, Res, ResMut},
     },
+    log::warn,
     math::{Quat, Vec2, VectorSpace, vec3},
     sprite_render::{ColorMaterial, MeshMaterial2d},
     time::Time,
@@ -204,7 +205,6 @@ impl OrganismPlugin {
             // Update muscle length
             let muscle_length = m.get_absolute_len();
             dist_joint.limits = DistanceLimit::new(muscle_length, muscle_length);
-            // dist_joint.with_limits(muscle_length, muscle_length);
 
             // Update muscle mat
             mat.0 = if m.get_cur_len() <= 0.2 {
@@ -220,16 +220,21 @@ impl OrganismPlugin {
             };
 
             // Update muscle pos and rot
-            if let Ok([trans_a, trans_b]) = bones.get_many([dist_joint.body1, dist_joint.body2]) {
-                let pos_a = trans_a.translation.truncate();
-                let pos_b: bevy::math::Vec2 = trans_b.translation.truncate();
+            match bones.get_many([dist_joint.body1, dist_joint.body2]) {
+                Ok([trans_a, trans_b]) => {
+                    let pos_a = trans_a.translation.truncate();
+                    let pos_b: bevy::math::Vec2 = trans_b.translation.truncate();
 
-                let dir = pos_a - pos_b;
-                let z_rot = dir.y.atan2(dir.x);
+                    let dir = pos_a - pos_b;
+                    let z_rot = dir.y.atan2(dir.x);
 
-                trans.translation = pos_a.midpoint(pos_b).extend(MUSCLE_Z);
-                trans.rotation = Quat::from_rotation_z(z_rot);
-                trans.scale.x = muscle_length;
+                    trans.translation = pos_a.midpoint(pos_b).extend(MUSCLE_Z);
+                    trans.rotation = Quat::from_rotation_z(z_rot);
+                    trans.scale.x = muscle_length;
+                }
+                Err(err) => {
+                    warn!("Failed to get bones that muscle is attached to, {err}")
+                }
             }
         }
     }
@@ -242,30 +247,35 @@ impl OrganismPlugin {
     ) {
         let dt = time.delta_secs();
         for (mut forces, joint) in joint_query.iter_mut() {
-            if let Some(thruster_ent) = joint.thruster {
-                let mut total_thrust = 0.0;
-                let mut total_z_rot = 0.0;
+            let Some(thruster_ent) = joint.thruster else {
+                continue;
+            };
 
-                for node in joint.nodes.iter() {
-                    if let NodeType::Thruster(t) = node {
-                        total_thrust += t.thrust;
-                        total_z_rot += t.z_rot;
-                        total_z_rot += t.z_rot_offset;
-                    }
+            let mut total_thrust = 0.0;
+            let mut total_z_rot = 0.0;
+
+            for node in joint.nodes.iter() {
+                if let NodeType::Thruster(t) = node {
+                    total_thrust += t.thrust;
+                    total_z_rot += t.z_rot;
+                    total_z_rot += t.z_rot_offset;
                 }
+            }
 
-                let thrust_vec = z_rot_to_dir(total_z_rot) * total_thrust;
+            let thrust_vec = z_rot_to_dir(total_z_rot) * total_thrust;
 
-                if let Ok(mut trans) = thruster_query.get_mut(thruster_ent) {
+            match thruster_query.get_mut(thruster_ent) {
+                Ok(mut trans) => {
                     let visual_vec =
                         thrust_vec * THRUSTER_BASE_LENGTH / transput_config.thruster_strength;
                     trans.translation = (visual_vec * 0.5).extend(THRUSTER_Z);
                     trans.scale = vec3(THRUSTER_WIDTH, visual_vec.length(), 1.0);
                     trans.rotation = Quat::from_rotation_z((PI * 0.5) + total_z_rot);
                 }
-
-                forces.apply_force(thrust_vec * dt);
+                Err(err) => warn!("Failed to get thruster attached to node, {err}"),
             }
+
+            forces.apply_force(thrust_vec * dt);
         }
     }
 
@@ -279,34 +289,42 @@ impl OrganismPlugin {
     ) {
         let dt = time.delta_secs();
         for (child_of, joint, spike_trans) in joint_query.iter() {
-            if let Some(spike_ent) = joint.spike {
-                let ent_blacklist = organism_query
-                    .get(child_of.parent())
-                    .unwrap()
-                    .col_ents
-                    .clone();
+            let Some(spike_ent) = joint.spike else {
+                continue;
+            };
 
-                // Iter through joint ents being impaled
-                let mut collected_energy = 0.0;
-                for impaled_joint_ent in contact_graph
-                    .entities_colliding_with(spike_ent)
-                    .filter(|e| !ent_blacklist.contains(e))
-                {
-                    // Get only joints contacts
-                    if let Ok((child_of, _, _)) = joint_query.get(impaled_joint_ent) {
-                        let mut impaled_organism =
-                            organism_query.get_mut(child_of.parent()).unwrap();
+            let ent_blacklist = organism_query
+                .get(child_of.parent())
+                .unwrap()
+                .col_ents
+                .clone();
+
+            // Iter through joint ents being impaled
+            let mut collected_energy = 0.0;
+            for impaled_joint_ent in contact_graph
+                .entities_colliding_with(spike_ent)
+                .filter(|e| !ent_blacklist.contains(e))
+            {
+                // Get only joints contacts
+                let Ok((child_of, _, _)) = joint_query.get(impaled_joint_ent) else {
+                    continue;
+                };
+
+                match organism_query.get_mut(child_of.parent()) {
+                    Ok(mut impaled_organism) => {
                         let delta = transput_config.spike_collect_rate * dt;
                         collected_energy += impaled_organism.impale(delta)
                             * transput_config.spike_collect_efficiency;
                     }
+                    Err(err) => warn!("Failed to get impaled organism: {err}"),
                 }
-                env.delta_value(
-                    &LayerKey::Decompose,
-                    spike_trans.translation.truncate(),
-                    &mut collected_energy,
-                );
             }
+
+            env.delta_value(
+                &LayerKey::Decompose,
+                spike_trans.translation.truncate(),
+                &mut collected_energy,
+            );
         }
     }
 
