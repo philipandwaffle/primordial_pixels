@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use bevy::math::Vec2;
-use rand::{Rng, rngs::ThreadRng, seq::SliceRandom};
+use rand::{RngExt, rngs::ThreadRng, seq::SliceRandom};
 
 use crate::{
     config::config::Mutation as MutationConfig,

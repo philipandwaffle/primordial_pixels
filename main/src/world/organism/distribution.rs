@@ -1,4 +1,4 @@
-use rand::{Rng, rngs::ThreadRng};
+use rand::{RngExt, rngs::ThreadRng};
 
 pub trait Distribution<const NUM_TYPES: usize> {
     fn normalise(&mut self);

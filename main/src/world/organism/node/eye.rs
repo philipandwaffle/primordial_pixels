@@ -4,7 +4,7 @@ use crate::{
     util::function::{rand_z_rot, rot_output},
     world::organism::transput::{Transput, append_input, remove_output},
 };
-use rand::{Rng, rngs::ThreadRng};
+use rand::{RngExt, rngs::ThreadRng};
 use serde::{Deserialize, Serialize};
 use serde_big_array::BigArray;
 use std::collections::VecDeque;

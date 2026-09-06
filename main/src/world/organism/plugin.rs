@@ -1,14 +1,15 @@
 use std::{collections::VecDeque, f32::consts::PI};
 
 use avian2d::{
-    prelude::{ContactGraph, DistanceJoint, DistanceLimit, Forces, RigidBody, RigidBodyForces},
-    spatial_query::{RayCaster, RayHitData, RayHits},
+    dynamics::rigid_body::forces::WriteRigidBodyForces,
+    prelude::{ContactGraph, DistanceJoint, DistanceLimit, Forces, RigidBody},
+    spatial_query::RayHits,
 };
 use bevy::{
     app::{First, Last, Plugin, PostUpdate, PreUpdate, Update},
     ecs::{
-        entity::{Entity, EntityHashSet},
-        hierarchy::{ChildOf, Children},
+        entity::Entity,
+        hierarchy::ChildOf,
         message::{MessageReader, MessageWriter},
         query::{With, Without},
         system::{Commands, Query, Res, ResMut},

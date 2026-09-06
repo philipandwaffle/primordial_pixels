@@ -1,6 +1,6 @@
 use my_derive::ConfigTag;
 use nalgebra::DMatrix;
-use rand::Rng;
+use rand::RngExt;
 use serde::{Deserialize, Deserializer, Serialize, de::Visitor, ser::SerializeSeq};
 
 use crate::config::config_tag::ConfigTag;
