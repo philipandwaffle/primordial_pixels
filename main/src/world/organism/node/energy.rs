@@ -1,6 +1,6 @@
 use std::collections::VecDeque;
 
-use bevy::{log::info, math::Vec2};
+use bevy::math::Vec2;
 use serde::{Deserialize, Serialize};
 
 use crate::{

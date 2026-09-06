@@ -1,4 +1,5 @@
 use avian2d::math::PI;
+use rand_distr::uniform::SampleRange;
 
 // Math
 pub const FRAC_PI: f32 = 1.0 / PI;
@@ -47,6 +48,9 @@ pub const MAX_MUSCLE_LEN: f32 = 1.3;
 pub const MUSCLE_COMPLIANCE: f32 = 0.001;
 
 // Mutation
+pub const LOWER_SCALAR_MUTATION_BOUND: f32 = -0.25;
+pub const UPPER_SCALAR_MUTATION_BOUND: f32 = 0.25;
+
 pub const NUM_BODY_MUTATIONS: usize = 10;
 pub const NUM_STAT_MUTATIONS: usize = 2;
 

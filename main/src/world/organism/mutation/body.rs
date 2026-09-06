@@ -6,14 +6,12 @@ use rand::{Rng, rngs::ThreadRng, seq::SliceRandom};
 use crate::{
     config::config::Mutation as MutationConfig,
     consts::{
-        EYE_MAX_FOV, EYE_MIN_FOV, MAX_BONE_LEN, MIN_BONE_LEN, READ_WRITE_MAX_DIST,
-        READ_WRITE_MIN_DIST,
+        EYE_MAX_FOV, EYE_MIN_FOV, LOWER_SCALAR_MUTATION_BOUND, MAX_BONE_LEN, MIN_BONE_LEN,
+        READ_WRITE_MAX_DIST, READ_WRITE_MIN_DIST, UPPER_SCALAR_MUTATION_BOUND,
     },
-    util::function::{rand_normal_vec2, rand_vec2, rand_z_rot, shuffled_indexes},
+    util::function::{rand_normal_vec2, rand_z_rot, shuffled_indexes},
     world::organism::{
-        distribution::Distribution,
-        mutation::mutation::Mut,
-        node_type::{self, NodeType},
+        distribution::Distribution, mutation::mutation::Mut, node_type::NodeType,
         organism::Organism,
     },
 };
@@ -109,14 +107,15 @@ impl Mut for Body {
                     return None;
                 }
 
-                let (joint, nodes) = &alterable_nodes[0];
+                let (joint_i, nodes) = &alterable_nodes[0];
                 let node_i = nodes[0];
 
-                let node = o.body.joints[*joint].nodes[node_i];
+                let node = o.body.joints[*joint_i].nodes[node_i];
                 let node_type = match node {
                     NodeType::Read(mut read) => {
                         read.z_rot;
-                        read.dist += rng.random_range(-0.5..0.5);
+                        read.dist += rng
+                            .random_range(LOWER_SCALAR_MUTATION_BOUND..UPPER_SCALAR_MUTATION_BOUND);
                         read.dist = read.dist.clamp(READ_WRITE_MIN_DIST, READ_WRITE_MAX_DIST);
 
                         NodeType::Read(read)
@@ -127,7 +126,8 @@ impl Mut for Body {
                     }
                     NodeType::Eye(mut eye) => {
                         let fov = eye.get_fov_mut();
-                        *fov += rng.random_range(-0.5..0.5);
+                        *fov += rng
+                            .random_range(LOWER_SCALAR_MUTATION_BOUND..UPPER_SCALAR_MUTATION_BOUND);
                         *fov = fov.clamp(EYE_MIN_FOV, EYE_MAX_FOV);
 
                         NodeType::Eye(eye)
@@ -138,7 +138,7 @@ impl Mut for Body {
                     ),
                 };
                 Some(Body::AlterNode {
-                    joint: *joint,
+                    joint: *joint_i,
                     node: node_i,
                     node_type,
                 })

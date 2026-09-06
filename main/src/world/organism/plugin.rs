@@ -253,7 +253,6 @@ impl OrganismPlugin {
                         total_z_rot += t.z_rot_offset;
                     }
                 }
-                // total_z_rot = total_z_rot % PI;
 
                 let thrust_vec = z_rot_to_dir(total_z_rot) * total_thrust;
 
@@ -317,10 +316,9 @@ impl OrganismPlugin {
         eye_ray_query: Query<&RayHits, With<EyeRay>>,
     ) {
         for (joint_ent, mut joint) in joint_query.iter_mut() {
-            let mut ent_blacklist = if let Some(spike_ent) = &joint.spike {
-                vec![spike_ent.clone()]
-            } else {
-                vec![]
+            let mut ent_blacklist = match &joint.spike {
+                Some(spike_ent) => vec![spike_ent.clone()],
+                None => vec![],
             };
 
             if let Some(eye_ents) = joint.eyes.clone() {
@@ -336,8 +334,8 @@ impl OrganismPlugin {
                         continue;
                     };
 
-                    eye_trans.rotation =
-                        Quat::from_rotation_z(eye.get_z_rot() + eye.get_z_rot_offset());
+                    // eye_trans.rotation =
+                    //     Quat::from_rotation_z(eye.get_z_rot() + eye.get_z_rot_offset());
                     for (i, ray_ent) in eye_comp.get_ray_ents().iter().enumerate() {
                         let Ok(ray_hits) = eye_ray_query.get(*ray_ent) else {
                             continue;

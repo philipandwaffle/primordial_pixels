@@ -1,20 +1,14 @@
-use std::collections::VecDeque;
-
-use bevy::math::Vec2;
-use serde::{Deserialize, Serialize};
-
 use crate::{
     config::config::Transput as TransputConfig,
-    consts::{ENV_CELLS, KERNEL_CELLS},
     util::function::zero_one_output,
     world::{
-        environment::{
-            environment::{ConcreteEnv, Environment},
-            layer::layer_key::LayerKey,
-        },
+        environment::{environment::ConcreteEnv, layer::layer_key::LayerKey},
         organism::transput::{Transput, remove_output},
     },
 };
+use bevy::math::Vec2;
+use serde::{Deserialize, Serialize};
+use std::collections::VecDeque;
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct Write {

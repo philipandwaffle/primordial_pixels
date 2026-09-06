@@ -1,18 +1,11 @@
-use std::collections::VecDeque;
-
-use avian2d::{
-    math::PI,
-    prelude::{Forces, RigidBodyForces, forces::ForcesItem},
-};
-use bevy::math::Vec2;
-use serde::{Deserialize, Serialize};
-
 use crate::{
     config::config::Transput as TransputConfig,
     consts::FRAC_PI,
     util::function::{rot_output, zero_one_output},
     world::organism::transput::{Transput, append_input, remove_output},
 };
+use serde::{Deserialize, Serialize};
+use std::collections::VecDeque;
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct Thruster {
