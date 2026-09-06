@@ -317,6 +317,12 @@ impl OrganismPlugin {
         eye_ray_query: Query<&RayHits, With<EyeRay>>,
     ) {
         for (joint_ent, mut joint) in joint_query.iter_mut() {
+            let mut ent_blacklist = if let Some(spike_ent) = &joint.spike {
+                vec![spike_ent.clone()]
+            } else {
+                vec![]
+            };
+
             if let Some(eye_ents) = joint.eyes.clone() {
                 let mut eye_ent_iter = eye_ents.iter();
 
@@ -336,10 +342,11 @@ impl OrganismPlugin {
                         let Ok(ray_hits) = eye_ray_query.get(*ray_ent) else {
                             continue;
                         };
+                        ent_blacklist.push(joint_ent);
 
                         let dist = ray_hits
                             .iter_sorted()
-                            .filter(|hit_data| hit_data.entity != joint_ent)
+                            .filter(|hit_data| !ent_blacklist.contains(&hit_data.entity))
                             .next()
                             .map(|hit| hit.distance)
                             .unwrap_or(-1.0);
