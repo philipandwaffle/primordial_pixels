@@ -5,7 +5,7 @@ use bevy::math::{
     ops::{cos, sin},
     vec2,
 };
-use rand::{Rng, rngs::ThreadRng, seq::SliceRandom};
+use rand::{RngExt, rngs::ThreadRng, seq::SliceRandom};
 
 pub fn rand_normal_vec2(rng: &mut ThreadRng) -> Vec2 {
     let theta = rng.random::<f32>() * 2.0 * PI;

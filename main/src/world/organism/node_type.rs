@@ -1,7 +1,7 @@
 use std::{collections::VecDeque, f32::consts::PI};
 
 use bevy::math::Vec2;
-use rand::{Rng, rngs::ThreadRng};
+use rand::{RngExt, rngs::ThreadRng};
 use serde::{Deserialize, Serialize};
 
 use crate::{

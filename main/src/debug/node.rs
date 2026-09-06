@@ -55,7 +55,8 @@ impl NodeDebugPlugin {
                             NodeType::Spike(spike) => {}
                             NodeType::Eye(eye) => {
                                 let num_rays = eye.get_num_rays();
-                                let z_rot = eye.get_z_rot() + eye.get_z_rot_offset();
+                                let z_rot = eye.get_z_rot();
+                                // let z_rot = eye.get_z_rot() + eye.get_z_rot_offset();
                                 let fov = eye.get_fov();
                                 let ray_dist = eye.get_ray_dist();
 

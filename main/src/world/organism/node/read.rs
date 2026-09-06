@@ -1,21 +1,14 @@
-use std::collections::VecDeque;
-
-use bevy::math::{Vec2, VectorSpace};
-use rand::rngs::ThreadRng;
-use serde::{Deserialize, Serialize};
-
 use crate::{
     config::config::Transput as TransputConfig,
-    consts::{ENV_CELLS, JOINT_RADIUS, KERNEL_CELLS},
     util::function::{rand_vec2, rot_output, z_rot_to_dir},
     world::{
-        environment::{
-            environment::{ConcreteEnv, Environment},
-            layer::layer_key::LayerKey,
-        },
+        environment::{environment::ConcreteEnv, layer::layer_key::LayerKey},
         organism::transput::{Transput, append_input, remove_output},
     },
 };
+use bevy::math::Vec2;
+use serde::{Deserialize, Serialize};
+use std::collections::VecDeque;
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct Read {

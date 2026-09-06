@@ -1,20 +1,18 @@
-use avian2d::prelude::{Forces, RigidBodyForces};
+use avian2d::{dynamics::rigid_body::forces::WriteRigidBodyForces, prelude::Forces};
 use bevy::{
     app::{First, Plugin, PostUpdate},
     ecs::{
         entity::Entity,
         message::MessageWriter,
         query::{Or, With, Without},
-        schedule::And,
         system::{Query, Res, ResMut},
     },
     log::info,
-    math::{Vec2, Vec3, vec2},
+    math::{Vec2, vec2},
     transform::components::Transform,
 };
 use my_derive::ConfigTag;
-use rand::{Rng, rng};
-use rand_distr::num_traits::Pow;
+use rand::{RngExt, rng};
 use serde::{Deserialize, Serialize};
 
 use crate::{

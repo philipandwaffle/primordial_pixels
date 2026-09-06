@@ -1,4 +1,3 @@
-use bevy::log::info;
 use rand::rngs::ThreadRng;
 
 use crate::{

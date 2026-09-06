@@ -4,7 +4,7 @@ use crate::{
     util::function::{rand_z_rot, rot_output},
     world::organism::transput::{Transput, append_input, remove_output},
 };
-use rand::{Rng, rngs::ThreadRng};
+use rand::{RngExt, rngs::ThreadRng};
 use serde::{Deserialize, Serialize};
 use serde_big_array::BigArray;
 use std::collections::VecDeque;
@@ -68,14 +68,14 @@ impl Eye {
         }
     }
 
-    pub fn get_z_rot_offset(&self) -> f32 {
-        match self {
-            Eye::Eye1(e) => e.z_rot_offset,
-            Eye::Eye3(e) => e.z_rot_offset,
-            Eye::Eye5(e) => e.z_rot_offset,
-            Eye::Eye7(e) => e.z_rot_offset,
-        }
-    }
+    // pub fn get_z_rot_offset(&self) -> f32 {
+    //     match self {
+    //         Eye::Eye1(e) => e.z_rot_offset,
+    //         Eye::Eye3(e) => e.z_rot_offset,
+    //         Eye::Eye5(e) => e.z_rot_offset,
+    //         Eye::Eye7(e) => e.z_rot_offset,
+    //     }
+    // }
 
     pub fn get_ray_dist(&self) -> f32 {
         match self {
@@ -184,11 +184,11 @@ impl Transput<(), f32> for Eye {
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct GenericEye<const RAYS: usize> {
     #[serde(with = "BigArray")]
-    pub hits: [f32; RAYS],
+    hits: [f32; RAYS],
     z_rot: f32,
     ray_dist: f32,
     fov: f32,
-    pub z_rot_offset: f32,
+    // pub z_rot_offset: f32,
 }
 impl<const RAYS: usize> GenericEye<RAYS> {
     pub fn new(z_rot: f32, ray_dist: f32, fov: f32) -> Self {
@@ -197,7 +197,7 @@ impl<const RAYS: usize> GenericEye<RAYS> {
             z_rot,
             ray_dist,
             fov,
-            z_rot_offset: 0.0,
+            // z_rot_offset: 0.0,
         };
     }
 }
@@ -210,7 +210,7 @@ impl<const RAYS: usize> PartialEq for GenericEye<RAYS> {
 }
 impl<const RAYS: usize> Transput<(), f32> for GenericEye<RAYS> {
     fn consume_outputs(&mut self, _: &mut f32, out: &mut VecDeque<f32>, _: &TransputConfig, _: ()) {
-        self.z_rot_offset = rot_output(remove_output(out));
+        // self.z_rot_offset = rot_output(remove_output(out));
     }
 
     fn produce_inputs(
@@ -230,7 +230,7 @@ impl<const RAYS: usize> Transput<(), f32> for GenericEye<RAYS> {
     }
 
     fn outputs_consumed(&self) -> usize {
-        1
+        0
     }
 
     fn inputs_produced(&self) -> usize {

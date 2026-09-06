@@ -3,7 +3,7 @@ use std::collections::VecDeque;
 use bevy::{log::info, math::usize};
 use my_derive::ConfigTag;
 use nalgebra::DMatrix;
-use rand::{Rng, rngs::ThreadRng};
+use rand::{RngExt, rngs::ThreadRng};
 use serde::{Deserialize, Serialize};
 
 use crate::{
